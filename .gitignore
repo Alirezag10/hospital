@@ -1,0 +1,16 @@
+# Local secrets and database configuration
+.env
+.env.*
+!.env.example
+/config/db.php
+
+# Installed PHP packages
+/vendor/
+
+# Yii generated files
+/runtime/
+/web/assets/
+
+# Editor files
+/.idea/
+/.vscode/
