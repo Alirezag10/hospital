@@ -14,3 +14,9 @@
 # Editor files
 /.idea/
 /.vscode/
+
+# Yii application inside app/
+/app/vendor/
+/app/runtime/
+/app/web/assets/
+/app/config/db.php
