@@ -76,16 +76,22 @@ class SiteController extends Controller
      *
      * @return string
      */
-    public function actionIndex(): string
+    public function actionIndex()
     {
-        return $this->render('index');
-    }
+        $patients = \app\models\Patient::find()->count();
 
-    /**
-     * Login action.
-     *
-     * @return Response|string
-     */
+        $activeAdmissions = \app\models\Admission::find()
+            ->where(['status' => 'admitted'])
+            ->count();
+
+        $discharges = \app\models\Discharge::find()->count();
+
+        return $this->render('index', [
+            'patients' => $patients,
+            'activeAdmissions' => $activeAdmissions,
+            'discharges' => $discharges,
+        ]);
+    }
     public function actionLogin(): Response|string
     {
         if (!Yii::$app->user->isGuest) {
@@ -120,36 +126,11 @@ class SiteController extends Controller
      *
      * @return Response|string
      */
-    public function actionContact(): Response|string
-    {
-        $model = new ContactForm();
-
-        $contact = $model->load($this->request->post()) && $model->contact(
-            $this->mailer,
-            Yii::$app->params['adminEmail'],
-            Yii::$app->params['senderEmail'],
-            Yii::$app->params['senderName'],
-        );
-
-        if ($contact) {
-            Yii::$app->session->setFlash(
-                'success',
-                'Thank you for contacting us. We will respond to you as soon as possible.',
-            );
-
-            return $this->refresh();
-        }
-
-        return $this->render('contact', ['model' => $model]);
-    }
 
     /**
      * Displays about page.
      *
      * @return string
      */
-    public function actionAbout(): string
-    {
-        return $this->render('about');
-    }
+
 }

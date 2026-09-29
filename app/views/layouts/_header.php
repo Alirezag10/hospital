@@ -10,16 +10,28 @@ use yii\helpers\Html;
 
 $items = [
     [
-        'label' => 'Home',
+        'label' => 'داشبورد',
         'url' => ['/site/index'],
     ],
     [
-        'label' => 'About',
-        'url' => ['/site/about'],
+        'label' => 'بیماران',
+        'url' => ['/patient/index'],
     ],
     [
-        'label' => 'Contact',
-        'url' => ['/site/contact'],
+        'label' => 'پذیرش‌ها',
+        'url' => ['/admission/index'],
+    ],
+    [
+        'label' => 'خدمات',
+        'url' => ['/service/index'],
+    ],
+    [
+        'label' => 'خدمات پذیرش',
+        'url' => ['/admission-service/index'],
+    ],
+    [
+        'label' => 'ترخیص‌ها',
+        'url' => ['/discharge/index'],
     ],
     [
         'label' => 'Login',
