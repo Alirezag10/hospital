@@ -2,19 +2,44 @@
 
 namespace app\controllers;
 
-use Yii;
 use app\models\Discharge;
 use app\models\DischargeSearch;
+use Yii;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
 class DischargeController extends Controller
 {
+    public function behaviors()
+    {
+        return array_merge(parent::behaviors(), [
+            'access' => [
+                'class' => AccessControl::class,
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
+        ]);
+    }
+
     public function actionIndex()
     {
         $searchModel = new DischargeSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider = $searchModel->search(
+            $this->request->queryParams
+        );
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -33,43 +58,74 @@ class DischargeController extends Controller
     {
         $model = new Discharge();
 
-        if ($this->request->isPost && $model->load($this->request->post())) {
+        if (
+            $this->request->isPost
+            && $model->load($this->request->post())
+            && $model->validate(['admission_id', 'description'])
+        ) {
             $db = Yii::$app->db;
             $transaction = $db->beginTransaction();
 
             try {
                 $status = $db->createCommand(
-                    'SELECT status FROM admissions WHERE id = :id FOR UPDATE',
-                    [':id' => (int) $model->admission_id]
+                    'SELECT status
+                     FROM admissions
+                     WHERE id = :id
+                     FOR UPDATE',
+                    [':id' => $model->admission_id]
                 )->queryScalar();
 
-                if ($status !== 'admitted') {
+                $alreadyDischarged = Discharge::find()
+                    ->where([
+                        'admission_id' => $model->admission_id,
+                    ])
+                    ->exists();
+
+                if ($alreadyDischarged) {
                     $model->addError(
                         'admission_id',
-                        'یک پذیرش فعال و ترخیص‌نشده انتخاب کنید.'
+                        'برای این پذیرش قبلاً ترخیص ثبت شده است.'
                     );
+
+                    $transaction->rollBack();
+                } elseif ($status !== 'admitted') {
+                    $model->addError(
+                        'admission_id',
+                        'یک پذیرش بستری و ترخیص‌نشده انتخاب کنید.'
+                    );
+
                     $transaction->rollBack();
                 } else {
                     $model->total_amount = (int) $db->createCommand(
-                        'SELECT COALESCE(SUM(quantity * unit_price), 0)
-                         FROM admission_services WHERE admission_id = :id',
-                        [':id' => (int) $model->admission_id]
+                        'SELECT COALESCE(
+                            SUM(quantity * unit_price),
+                            0
+                         )
+                         FROM admission_services
+                         WHERE admission_id = :id',
+                        [':id' => $model->admission_id]
                     )->queryScalar();
 
-                    $model->discharge_date = $db
-                        ->createCommand('SELECT NOW()')
-                        ->queryScalar();
+                    $now = $db->createCommand(
+                        'SELECT NOW()'
+                    )->queryScalar();
+
+                    $model->discharge_date = $now;
+                    $model->created_at = $now;
 
                     if ($model->save()) {
                         $updated = $db->createCommand()->update(
                             'admissions',
                             ['status' => 'discharged'],
-                            ['id' => $model->admission_id, 'status' => 'admitted']
+                            [
+                                'id' => $model->admission_id,
+                                'status' => 'admitted',
+                            ]
                         )->execute();
 
                         if ($updated !== 1) {
                             throw new \RuntimeException(
-                                'وضعیت پذیرش به‌روزرسانی نشد.'
+                                'وضعیت پذیرش تغییر نکرد.'
                             );
                         }
 
@@ -99,12 +155,16 @@ class DischargeController extends Controller
 
     public function actionUpdate($id)
     {
-        throw new ForbiddenHttpException('ترخیص ثبت‌شده قابل ویرایش نیست.');
+        throw new ForbiddenHttpException(
+            'ترخیص ثبت‌شده قابل ویرایش نیست.'
+        );
     }
 
     public function actionDelete($id)
     {
-        throw new ForbiddenHttpException('ترخیص ثبت‌شده قابل حذف نیست.');
+        throw new ForbiddenHttpException(
+            'ترخیص ثبت‌شده قابل حذف نیست.'
+        );
     }
 
     protected function findModel($id)
@@ -115,6 +175,8 @@ class DischargeController extends Controller
             return $model;
         }
 
-        throw new NotFoundHttpException('ترخیص موردنظر پیدا نشد.');
+        throw new NotFoundHttpException(
+            'ترخیص موردنظر پیدا نشد.'
+        );
     }
 }

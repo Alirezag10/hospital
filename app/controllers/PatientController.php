@@ -1,12 +1,13 @@
 <?php
-
 namespace app\controllers;
 
+use Yii;
 use app\models\Patient;
 use app\models\PatientSearch;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * PatientController implements the CRUD actions for Patient model.
@@ -21,8 +22,18 @@ class PatientController extends Controller
         return array_merge(
             parent::behaviors(),
             [
-                'verbs' => [
-                    'class' => VerbFilter::className(),
+                'access' => [
+                    'class' => AccessControl::class,
+                    'rules' => [
+                        [
+                            'allow' => true,
+                            'roles' => ['@'],
+                        ],
+                    ],
+                ],
+
+                'verbs'  => [
+                    'class'   => VerbFilter::class,
                     'actions' => [
                         'delete' => ['POST'],
                     ],
@@ -30,7 +41,6 @@ class PatientController extends Controller
             ]
         );
     }
-
     /**
      * Lists all Patient models.
      *
@@ -38,11 +48,11 @@ class PatientController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new PatientSearch();
+        $searchModel  = new PatientSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
         return $this->render('index', [
-            'searchModel' => $searchModel,
+            'searchModel'  => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
@@ -111,7 +121,18 @@ class PatientController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+
+        try {
+            $model->delete();
+        } catch (\yii\db\IntegrityException $error) {
+            // MySQL: a referenced record cannot be deleted.
+            if ((int) ($error->errorInfo[1] ?? 0) !== 1451) {
+                throw $error;
+            }
+
+            \Yii::$app->session->setFlash('error', 'این بیمار پذیرش ثبت‌شده دارد و قابل حذف نیست.');
+        }
 
         return $this->redirect(['index']);
     }

@@ -61,13 +61,14 @@ class PatientSearch extends Patient
         $query->andFilterWhere([
             'id' => $this->id,
             'birth_date' => $this->birth_date,
-            'created_at' => $this->created_at,
         ]);
 
         $query->andFilterWhere(['like', 'first_name', $this->first_name])
             ->andFilterWhere(['like', 'last_name', $this->last_name])
             ->andFilterWhere(['like', 'national_code', $this->national_code])
             ->andFilterWhere(['like', 'mobile', $this->mobile]);
+
+        \app\helpers\DateFilter::apply($query, 'created_at', $this->created_at);
 
         return $dataProvider;
     }

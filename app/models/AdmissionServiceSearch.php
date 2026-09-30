@@ -64,8 +64,9 @@ class AdmissionServiceSearch extends AdmissionService
             'service_id' => $this->service_id,
             'quantity' => $this->quantity,
             'unit_price' => $this->unit_price,
-            'created_at' => $this->created_at,
         ]);
+
+        \app\helpers\DateFilter::apply($query, 'created_at', $this->created_at);
 
         return $dataProvider;
     }

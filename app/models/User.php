@@ -4,94 +4,88 @@ declare(strict_types=1);
 
 namespace app\models;
 
-use yii\base\BaseObject;
+use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 
-class User extends BaseObject implements IdentityInterface
+class User extends ActiveRecord implements IdentityInterface
 {
-    public int|string $id = '';
-    public string $username = '';
-    public string $passwordHash = '';
-    public string $authKey = '';
-    public string $accessToken = '';
-    private static array $_users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            // password: admin
-            'passwordHash' => '$2y$13$gYAywKSkhfZDq9FLNdm7buKnvlRxDexf5xipSMAxQPDUxpaptmZJu',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            // password: demo
-            'passwordHash' => '$2y$13$alRLq1PGVMlGYwS/Y3iy3ewQns1Z8ol8Iq6Zb5k7ZwEhblA1aL29y',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
-    /**
-     * {@inheritdoc}
-     */
-    public static function findIdentity($id): static|null
+    public static function tableName()
     {
-        return isset(self::$_users[$id]) ? new static(self::$_users[$id]) : null;
+        return 'users';
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function findIdentityByAccessToken($token, $type = null): static|null
-    {
-        foreach (self::$_users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
 
-        return null;
+    public static function findIdentity($id): ?static
+    {
+        return static::findOne($id);
     }
 
-    /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
-     */
-    public static function findByUsername(string $username): static|null
-    {
-        foreach (self::$_users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
 
-        return null;
+    public static function findIdentityByAccessToken($token, $type = null): ?static
+    {
+        return static::findOne(['access_token' => $token]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
+
+    public static function findByUsername(string $username): ?static
+    {
+        return static::findOne(['username' => $username]);
+    }
+
+
     public function getId(): int|string
     {
         return $this->id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getAuthKey(): string|null
+
+    public function getAuthKey(): ?string
     {
-        return $this->authKey;
+        return $this->auth_key;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+
     public function validateAuthKey($authKey): bool
     {
-        return $this->authKey === $authKey;
+        return $this->auth_key === $authKey;
+    }
+
+
+    public function validatePassword(string $password): bool
+    {
+        return password_verify($password, $this->password_hash);
+    }
+
+
+    public function rules()
+    {
+        return [
+            [['username', 'password_hash'], 'required'],
+            [['username'], 'string', 'max' => 50],
+            [['password_hash'], 'string', 'max' => 255],
+            [['role'], 'string', 'max' => 20],
+        ];
+    }
+
+
+    public function attributeLabels()
+    {
+        return [
+            'id' => 'شناسه',
+            'username' => 'نام کاربری',
+            'password_hash' => 'رمز عبور',
+            'role' => 'نقش',
+            'created_at' => 'تاریخ ثبت',
+        ];
+    }
+    public function isAdmin(): bool
+{
+    return $this->role === 'admin';
+}
+
+
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
     }
 }

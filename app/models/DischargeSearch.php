@@ -61,12 +61,13 @@ class DischargeSearch extends Discharge
         $query->andFilterWhere([
             'id' => $this->id,
             'admission_id' => $this->admission_id,
-            'discharge_date' => $this->discharge_date,
             'total_amount' => $this->total_amount,
-            'created_at' => $this->created_at,
         ]);
 
         $query->andFilterWhere(['like', 'description', $this->description]);
+
+        \app\helpers\DateFilter::apply($query, 'discharge_date', $this->discharge_date);
+        \app\helpers\DateFilter::apply($query, 'created_at', $this->created_at);
 
         return $dataProvider;
     }

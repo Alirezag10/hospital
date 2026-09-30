@@ -1,57 +1,52 @@
 <?php
+
 namespace app\controllers;
 
 use app\models\Admission;
 use app\models\AdmissionSearch;
+use Yii;
+use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
-/**
- * AdmissionController implements the CRUD actions for Admission model.
- */
 class AdmissionController extends Controller
 {
-    /**
-     * @inheritDoc
-     */
     public function behaviors()
     {
-        return array_merge(
-            parent::behaviors(),
-            [
-                'verbs' => [
-                    'class'   => VerbFilter::className(),
-                    'actions' => [
-                        'delete' => ['POST'],
+        return array_merge(parent::behaviors(), [
+            'access' => [
+                'class' => AccessControl::class,
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
                     ],
                 ],
-            ]
-        );
+            ],
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
+        ]);
     }
 
-    /**
-     * Lists all Admission models.
-     *
-     * @return string
-     */
     public function actionIndex()
     {
-        $searchModel  = new AdmissionSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $searchModel = new AdmissionSearch();
+        $dataProvider = $searchModel->search(
+            $this->request->queryParams
+        );
 
         return $this->render('index', [
-            'searchModel'  => $searchModel,
+            'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
 
-    /**
-     * Displays a single Admission model.
-     * @param int $id ID
-     * @return string
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     public function actionView($id)
     {
         return $this->render('view', [
@@ -59,21 +54,27 @@ class AdmissionController extends Controller
         ]);
     }
 
-    /**
-     * Creates a new Admission model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return string|\yii\web\Response
-     */
     public function actionCreate()
     {
         $model = new Admission();
+        $model->loadDefaultValues();
+        $model->status = 'admitted';
 
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+        if (
+            $this->request->isPost
+            && $model->load($this->request->post())
+        ) {
+            if ($model->status !== 'admitted') {
+                $model->addError(
+                    'status',
+                    'پذیرش جدید باید با وضعیت بستری ثبت شود.'
+                );
+            } elseif ($model->save()) {
+                return $this->redirect([
+                    'view',
+                    'id' => $model->id,
+                ]);
             }
-        } else {
-            $model->loadDefaultValues();
         }
 
         return $this->render('create', [
@@ -81,19 +82,41 @@ class AdmissionController extends Controller
         ]);
     }
 
-    /**
-     * Updates an existing Admission model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param int $id ID
-     * @return string|\yii\web\Response
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if ($this->request->isPost) {
+            $transaction = Yii::$app->db->beginTransaction();
+
+            try {
+                $this->lockOpenAdmission($model->id);
+                $model = $this->findModel($model->id);
+
+                if ($model->load($this->request->post())) {
+                    if ($model->status !== 'admitted') {
+                        $model->addError(
+                            'status',
+                            'ترخیص فقط از صفحهٔ ثبت ترخیص انجام می‌شود.'
+                        );
+                    } elseif ($model->save()) {
+                        $transaction->commit();
+
+                        return $this->redirect([
+                            'view',
+                            'id' => $model->id,
+                        ]);
+                    }
+                }
+
+                $transaction->rollBack();
+            } catch (\Throwable $error) {
+                if ($transaction->getIsActive()) {
+                    $transaction->rollBack();
+                }
+
+                throw $error;
+            }
         }
 
         return $this->render('update', [
@@ -101,45 +124,90 @@ class AdmissionController extends Controller
         ]);
     }
 
-    /**
-     * Deletes an existing Admission model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param int $id ID
-     * @return \yii\web\Response
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+        $transaction = Yii::$app->db->beginTransaction();
+
+        try {
+            $this->lockOpenAdmission($model->id);
+
+            if ($model->delete() !== 1) {
+                throw new \RuntimeException('پذیرش حذف نشد.');
+            }
+
+            $transaction->commit();
+        } catch (\Throwable $error) {
+            if ($transaction->getIsActive()) {
+                $transaction->rollBack();
+            }
+
+            if (
+                $error instanceof \yii\db\IntegrityException
+                && (int) ($error->errorInfo[1] ?? 0) === 1451
+            ) {
+                Yii::$app->session->setFlash(
+                    'error',
+                    'این پذیرش رکورد وابسته دارد و قابل حذف نیست.'
+                );
+                return $this->redirect(['index']);
+            }
+
+            throw $error;
+        }
 
         return $this->redirect(['index']);
     }
 
-    /**
-     * Finds the Admission model based on its primary key value.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param int $id ID
-     * @return Admission the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     public function actionSummary($id)
     {
-        $model = \app\models\Admission::findOne((int) $id);
-
-        if ($model === null) {
-            throw new \yii\web\NotFoundHttpException('پذیرش پیدا نشد.');
-        }
-
         return $this->render('summary', [
-            'model' => $model,
+            'model' => $this->findModel($id),
         ]);
     }
+
+    private function lockOpenAdmission($id)
+    {
+        $db = Yii::$app->db;
+
+        $row = $db->createCommand(
+            'SELECT id, status
+             FROM admissions
+             WHERE id = :id
+             FOR UPDATE',
+            [':id' => $id]
+        )->queryOne();
+
+        if ($row === false) {
+            throw new NotFoundHttpException('پذیرش پیدا نشد.');
+        }
+
+        $dischargeId = $db->createCommand(
+            'SELECT id
+             FROM discharges
+             WHERE admission_id = :id
+             FOR UPDATE',
+            [':id' => $id]
+        )->queryScalar();
+
+        if (
+            $row['status'] !== 'admitted'
+            || $dischargeId !== false
+        ) {
+            throw new ForbiddenHttpException(
+                'پذیرش ترخیص‌شده قابل ویرایش یا حذف نیست.'
+            );
+        }
+    }
+
     protected function findModel($id)
     {
-        if (($model = Admission::findOne(['id' => $id])) !== null) {
+        $model = Admission::findOne(['id' => $id]);
+
+        if ($model !== null) {
             return $model;
         }
 
-        throw new NotFoundHttpException('The requested page does not exist.');
+        throw new NotFoundHttpException('پذیرش پیدا نشد.');
     }
 }

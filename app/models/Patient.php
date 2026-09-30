@@ -31,7 +31,7 @@ class Patient extends \yii\db\ActiveRecord
         return [
             [['birth_date'], 'default', 'value' => null],
             [['first_name', 'last_name', 'national_code', 'mobile'], 'required'],
-            [['birth_date'], 'safe'],
+            [['birth_date'], 'date', 'format' => 'php:Y-m-d', 'message' => 'تاریخ تولد معتبر از تقویم انتخاب کنید.'],
             [['first_name', 'last_name'], 'string', 'max' => 100],
             [['national_code', 'mobile'], 'string', 'max' => 20],
             [['national_code'], 'unique'],

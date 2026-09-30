@@ -2,58 +2,68 @@
 
 namespace app\models;
 
-use Yii;
-
-/**
- * This is the model class for table "discharges".
- *
- * @property int $id
- * @property int $admission_id
- * @property string $discharge_date
- * @property string|null $description
- * @property int $total_amount
- * @property string $created_at
- *
- * @property Admission $admission
- */
 class Discharge extends \yii\db\ActiveRecord
 {
-
-
-    /**
-     * {@inheritdoc}
-     */
     public static function tableName()
     {
         return 'discharges';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
             [['description'], 'default', 'value' => null],
-            [['admission_id', 'discharge_date', 'total_amount'], 'required'],
-            [['admission_id'], 'integer'],
+
+            [
+                ['admission_id', 'discharge_date', 'total_amount'],
+                'required',
+            ],
+
+            [['admission_id'], 'integer', 'min' => 1],
             [['total_amount'], 'integer', 'min' => 0],
             [['description'], 'string'],
-            [['admission_id'], 'unique'],
-            [['admission_id'], 'exist', 'skipOnError' => true,
+
+            [
+                ['admission_id'],
+                'unique',
+                'message' => 'برای این پذیرش قبلاً ترخیص ثبت شده است.',
+            ],
+
+            [
+                ['admission_id'],
+                'exist',
+                'skipOnError' => true,
                 'targetClass' => Admission::class,
-                'targetAttribute' => ['admission_id' => 'id']],
+                'targetAttribute' => ['admission_id' => 'id'],
+                'message' => 'پذیرش انتخاب‌شده پیدا نشد.',
+            ],
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function scenarios()
+    {
+        $scenarios = parent::scenarios();
+
+        foreach ($scenarios as $scenario => $attributes) {
+            foreach ($attributes as $index => $attribute) {
+                if (in_array(
+                    $attribute,
+                    ['total_amount', 'discharge_date'],
+                    true
+                )) {
+                    $scenarios[$scenario][$index] = '!' . $attribute;
+                }
+            }
+        }
+
+        return $scenarios;
+    }
+
     public function attributeLabels()
     {
         return [
             'id' => 'شناسه',
-            'admission_id' => 'پذیرش',
+            'admission_id' => 'پذیرش بیمار',
             'discharge_date' => 'تاریخ ترخیص',
             'description' => 'توضیحات',
             'total_amount' => 'مبلغ کل',
@@ -61,14 +71,11 @@ class Discharge extends \yii\db\ActiveRecord
         ];
     }
 
-    /**
-     * Gets query for [[Admission]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getAdmission()
     {
-        return $this->hasOne(Admission::class, ['id' => 'admission_id']);
+        return $this->hasOne(
+            Admission::class,
+            ['id' => 'admission_id']
+        );
     }
-
 }

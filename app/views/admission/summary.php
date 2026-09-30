@@ -7,75 +7,155 @@ use yii\helpers\Html;
 
 $this->title = 'خلاصه پرونده پذیرش #' . $model->id;
 
-$items = $model->admissionServices;
+$patient = $model->patient;
+$doctor = $model->doctor;
+$ward = $model->wardModel;
+$discharge = $model->discharge;
+
+$items = $model->getAdmissionServices()
+    ->with('service')
+    ->orderBy(['id' => SORT_ASC])
+    ->all();
+
 $total = 0;
+
+$statusLabels = [
+    'admitted' => 'بستری',
+    'discharged' => 'ترخیص‌شده',
+];
 ?>
 
-<div class="admission-summary">
+<div class="admission-summary" dir="rtl">
+
     <h1><?= Html::encode($this->title) ?></h1>
 
     <h2>بیمار</h2>
-    <p>
-        نام:
-        <?= Html::encode($model->patient->first_name . ' ' . $model->patient->last_name) ?>
-        <br>
-        کد ملی: <?= Html::encode($model->patient->national_code) ?>
-        <br>
-        موبایل: <?= Html::encode($model->patient->mobile) ?>
-    </p>
+
+    <?php if ($patient !== null): ?>
+        <p>
+            نام:
+            <?= Html::encode(
+                $patient->first_name . ' ' . $patient->last_name
+            ) ?>
+            <br>
+            کد ملی:
+            <?= Html::encode($patient->national_code) ?>
+            <br>
+            موبایل:
+            <?= Html::encode($patient->mobile) ?>
+        </p>
+    <?php else: ?>
+        <p>اطلاعات بیمار پیدا نشد.</p>
+    <?php endif; ?>
 
     <h2>پذیرش</h2>
+
     <p>
-        تاریخ پذیرش: <?= Html::encode($model->admission_date) ?>
+        تاریخ پذیرش:
+        <?= Html::encode($model->admission_date) ?>
         <br>
-        بخش: <?= Html::encode($model->ward) ?>
+        بخش:
+        <?= Html::encode($ward?->name ?? '-') ?>
         <br>
-        پزشک: <?= Html::encode($model->doctor_name) ?>
+        پزشک:
+        <?= Html::encode($doctor?->name ?? '-') ?>
         <br>
         وضعیت:
-        <?= $model->status === 'discharged' ? 'ترخیص‌شده' : 'پذیرش‌شده' ?>
+        <?= Html::encode(
+            $statusLabels[$model->status] ?? $model->status
+        ) ?>
     </p>
 
     <h2>خدمات</h2>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>خدمت</th>
-                <th>تعداد</th>
-                <th>قیمت واحد (تومان)</th>
-                <th>مبلغ (تومان)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($items as $item): ?>
-                <?php
-                $amount = (int) $item->quantity * (int) $item->unit_price;
-                $total += $amount;
-                ?>
-                <tr>
-                    <td><?= Html::encode($item->service->title) ?></td>
-                    <td><?= Html::encode($item->quantity) ?></td>
-                    <td><?= number_format((int) $item->unit_price) ?></td>
-                    <td><?= number_format($amount) ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
 
-    <p><strong>جمع خدمات: <?= number_format($total) ?> تومان</strong></p>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>خدمت</th>
+                    <th>تعداد</th>
+                    <th>قیمت واحد (تومان)</th>
+                    <th>مبلغ (تومان)</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <?php if (empty($items)): ?>
+                    <tr>
+                        <td colspan="4">
+                            خدمتی برای این پذیرش ثبت نشده است.
+                        </td>
+                    </tr>
+                <?php endif; ?>
+
+                <?php foreach ($items as $item): ?>
+                    <?php
+                    $amount = (int) $item->quantity
+                        * (int) $item->unit_price;
+
+                    $total += $amount;
+                    ?>
+
+                    <tr>
+                        <td>
+                            <?= Html::encode(
+                                $item->service?->title
+                                ?? 'خدمت نامشخص'
+                            ) ?>
+                        </td>
+                        <td>
+                            <?= Html::encode($item->quantity) ?>
+                        </td>
+                        <td>
+                            <?= number_format(
+                                (int) $item->unit_price
+                            ) ?>
+                        </td>
+                        <td>
+                            <?= number_format($amount) ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <p>
+        <strong>
+            جمع خدمات فعلی:
+            <?= number_format($total) ?> تومان
+        </strong>
+    </p>
 
     <h2>ترخیص</h2>
-    <?php if ($model->discharge !== null): ?>
+
+    <?php if ($discharge !== null): ?>
         <p>
-            تاریخ ترخیص: <?= Html::encode($model->discharge->discharge_date) ?>
+            تاریخ ترخیص:
+            <?= Html::encode($discharge->discharge_date) ?>
             <br>
-            مبلغ ثبت‌شده هنگام ترخیص:
-            <?= number_format((int) $model->discharge->total_amount) ?> تومان
+            مبلغ نهایی ثبت‌شده هنگام ترخیص:
+            <strong>
+                <?= number_format(
+                    (int) $discharge->total_amount
+                ) ?>
+                تومان
+            </strong>
             <br>
             توضیحات:
-            <?= Html::encode($model->discharge->description ?: 'ندارد') ?>
+            <?= Html::encode(
+                $discharge->description ?: 'ندارد'
+            ) ?>
         </p>
+
+        <?php if ($total !== (int) $discharge->total_amount): ?>
+            <div class="alert alert-warning">
+                جمع خدمات فعلی با مبلغ ثبت‌شده هنگام ترخیص
+                متفاوت است؛ خدمات این پذیرش باید بررسی شوند.
+            </div>
+        <?php endif; ?>
     <?php else: ?>
         <p>این پذیرش هنوز ترخیص نشده است.</p>
     <?php endif; ?>
+
 </div>
