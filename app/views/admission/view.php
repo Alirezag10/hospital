@@ -61,7 +61,7 @@ $statusLabels = [
 
     <p>
         تاریخ پذیرش:
-        <?= Html::encode($model->admission_date) ?>
+        <span dir="ltr"><?= Html::encode($model->admission_date) ?></span>
         <br>
         بخش:
         <?= Html::encode($model->ward) ?>
@@ -141,7 +141,7 @@ $statusLabels = [
     <?php if ($discharge !== null): ?>
         <p>
             تاریخ ترخیص:
-            <?= Html::encode($discharge->discharge_date) ?>
+            <span dir="ltr"><?= Html::encode($discharge->discharge_date) ?></span>
             <br>
             مبلغ نهایی ثبت‌شده هنگام ترخیص:
             <strong>

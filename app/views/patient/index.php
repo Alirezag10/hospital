@@ -4,12 +4,15 @@ use yii\helpers\Html;
 $this->title = 'بیماران';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<h1 class="h3 mb-3"><?= Html::encode($this->title) ?></h1>
-<p><?= Html::a('ثبت بیمار جدید', ['create'], ['class' => 'btn btn-primary']) ?></p>
+<div class="page-heading">
+    <div><h1><?= Html::encode($this->title) ?></h1><p>بیمار را پیدا کنید و پذیرش جدید ثبت کنید.</p></div>
+    <?= Html::a('ثبت بیمار جدید', ['create'], ['class' => 'btn btn-primary']) ?>
+</div>
 <?= $this->render('_search', ['model' => $searchModel]) ?>
-<div class="table-responsive">
+<div class="table-panel table-responsive">
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
+    'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
     'summary' => 'نمایش {begin} تا {end} از {totalCount} بیمار',
     'emptyText' => 'بیماری مطابق جست‌وجوی شما پیدا نشد.',
     'columns' => [
