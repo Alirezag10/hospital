@@ -2,6 +2,8 @@
 
 پروژهٔ آموزشی با PHP، Yii 2، MySQL/MariaDB و Nginx، با رابط سادهٔ فارسی. گردش کار برای یک اپراتور است و صفحهٔ ورود یا مدیریت کاربران ندارد.
 
+فونت یکان به‌صورت محلی از `app/web/fonts/Yekan.woff2` بارگذاری می‌شود. منبع آن [مخزن Yekan-Font](https://github.com/DediData/Yekan-Font/tree/d25d796fd4862d5e9a6426669a603807dfa3805f) است و فایل مجوز SIL Open Font License در `app/web/fonts/LICENSE.txt` قرار دارد.
+
 ## گردش کار
 
 1. بیمار را با نام، نام خانوادگی، کد ملی و موبایل ثبت کنید. تاریخ تولد اختیاری و به صورت میلادی `YYYY-MM-DD` است.

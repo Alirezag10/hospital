@@ -1,3 +1,10 @@
+@font-face {
+    font-family: 'Yekan';
+    src: url('../fonts/Yekan.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
 :root {
     --primary: #167d8d;
     --primary-dark: #11616e;
@@ -5,7 +12,7 @@
     --muted: #647884;
     --line: #e1e9ed;
 }
-body { direction: rtl; text-align: right; font-family: Tahoma, Arial, sans-serif; font-size: 15px; line-height: 1.8; color: var(--ink); background: #f4f7f9; }
+body { direction: rtl; text-align: right; font-family: 'Yekan', Tahoma, Arial, sans-serif; font-size: 15px; line-height: 1.8; color: var(--ink); background: #f4f7f9; }
 main > .container { padding-top: 32px; padding-bottom: 48px; }
 h1, h2, h3 { line-height: 1.6; font-weight: 700; }
 main h1 { font-size: 1.6rem; }
