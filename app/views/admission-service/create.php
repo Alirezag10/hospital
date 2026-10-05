@@ -3,7 +3,7 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var app\models\AdmissionService $model */
 $this->title = 'ثبت خدمت برای پذیرش';
-$this->params['breadcrumbs'][] = ['label' => 'خدمات پذیرش', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'پذیرش‌ها', 'url' => ['/admission/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="admission-service-create" dir="rtl">

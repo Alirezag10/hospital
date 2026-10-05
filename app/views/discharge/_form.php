@@ -76,7 +76,7 @@ $total = 0;
                     'class' => 'btn btn-success',
                     'data-confirm' => 'ترخیص این پذیرش با هزینه نمایش‌داده‌شده ثبت شود؟',
                 ]) ?>
-                <?= Html::a('بازگشت به پرونده', ['/admission/summary', 'id' => $selectedAdmission->id], ['class' => 'btn btn-outline-secondary']) ?>
+                <?= Html::a('بازگشت به پرونده', ['/admission/view', 'id' => $selectedAdmission->id], ['class' => 'btn btn-outline-secondary']) ?>
                 <?php ActiveForm::end(); ?>
             </div>
         <?php else: ?>
@@ -85,6 +85,6 @@ $total = 0;
             <?php endif; ?>
             <p class="text-muted mt-3">برای نمایش مبلغ و ثبت ترخیص، ابتدا پذیرش را انتخاب کنید و ریز هزینه را ببینید.</p>
         <?php endif; ?>
-        <p class="mt-3 mb-0"><?= Html::a('بازگشت به ترخیص‌ها', ['index'], ['class' => 'btn btn-outline-secondary']) ?></p>
+        <p class="mt-3 mb-0"><?= Html::a('بازگشت به پذیرش‌ها', ['/admission/index'], ['class' => 'btn btn-outline-secondary']) ?></p>
     </div>
 </div>

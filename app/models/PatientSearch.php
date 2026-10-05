@@ -1,75 +1,37 @@
 <?php
-
 namespace app\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\Patient;
 
-/**
- * PatientSearch represents the model behind the search form of `app\models\Patient`.
- */
-class PatientSearch extends Patient
+class PatientSearch extends Model
 {
-    /**
-     * {@inheritdoc}
-     */
+    public $name;
+    public $national_code;
+
     public function rules()
     {
-        return [
-            [['id'], 'integer'],
-            [['first_name', 'last_name', 'national_code', 'mobile', 'birth_date', 'created_at'], 'safe'],
-        ];
+        return [[['name', 'national_code'], 'string']];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function scenarios()
+    public function attributeLabels()
     {
-        // bypass scenarios() implementation in the parent class
-        return Model::scenarios();
+        return ['name' => 'نام بیمار', 'national_code' => 'کد ملی'];
     }
 
-    /**
-     * Creates data provider instance with search query applied
-     *
-     * @param array $params
-     * @param string|null $formName Form name to be used into `->load()` method.
-     *
-     * @return ActiveDataProvider
-     */
-    public function search($params, $formName = null)
+    public function search($params)
     {
         $query = Patient::find();
-
-        // add conditions that should always apply here
-
-        $dataProvider = new ActiveDataProvider([
-            'query' => $query,
-        ]);
-
-        $this->load($params, $formName);
-
+        $provider = new ActiveDataProvider(['query' => $query, 'sort' => ['defaultOrder' => ['id' => SORT_DESC]]]);
+        $this->load($params);
         if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
-            // $query->where('0=1');
-            return $dataProvider;
+            $query->where('0=1');
+            return $provider;
         }
-
-        // grid filtering conditions
-        $query->andFilterWhere([
-            'id' => $this->id,
-            'birth_date' => $this->birth_date,
-        ]);
-
-        $query->andFilterWhere(['like', 'first_name', $this->first_name])
-            ->andFilterWhere(['like', 'last_name', $this->last_name])
-            ->andFilterWhere(['like', 'national_code', $this->national_code])
-            ->andFilterWhere(['like', 'mobile', $this->mobile]);
-
-        \app\helpers\DateFilter::apply($query, 'created_at', $this->created_at);
-
-        return $dataProvider;
+        foreach (preg_split('/\s+/u', trim((string) $this->name), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $part) {
+            $query->andWhere(['or', ['like', 'first_name', $part], ['like', 'last_name', $part]]);
+        }
+        $query->andFilterWhere(['like', 'national_code', $this->national_code]);
+        return $provider;
     }
 }

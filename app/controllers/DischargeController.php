@@ -4,57 +4,13 @@ namespace app\controllers;
 
 use app\models\Discharge;
 use app\models\Admission;
-use app\models\DischargeSearch;
 use Yii;
-use yii\filters\AccessControl;
-use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
 class DischargeController extends Controller
 {
-    public function behaviors()
-    {
-        return array_merge(parent::behaviors(), [
-            'access' => [
-                'class' => AccessControl::class,
-                'rules' => [
-                    [
-                        'allow' => true,
-                        'roles' => ['@'],
-                    ],
-                ],
-            ],
-            'verbs' => [
-                'class' => VerbFilter::class,
-                'actions' => [
-                    'delete' => ['POST'],
-                ],
-            ],
-        ]);
-    }
-
-    public function actionIndex()
-    {
-        $searchModel = new DischargeSearch();
-        $dataProvider = $searchModel->search(
-            $this->request->queryParams
-        );
-
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
-    }
-
-    public function actionView($id)
-    {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
-    }
-
     public function actionCreate($admission_id = null)
     {
         $model = new Discharge();
@@ -145,7 +101,7 @@ class DischargeController extends Controller
                         $transaction->commit();
 
                         return $this->redirect([
-                            '/admission/summary',
+                            '/admission/view',
                             'id' => $model->admission_id,
                         ]);
                     }
@@ -166,30 +122,4 @@ class DischargeController extends Controller
         ]);
     }
 
-    public function actionUpdate($id)
-    {
-        throw new ForbiddenHttpException(
-            'ترخیص ثبت‌شده قابل ویرایش نیست.'
-        );
-    }
-
-    public function actionDelete($id)
-    {
-        throw new ForbiddenHttpException(
-            'ترخیص ثبت‌شده قابل حذف نیست.'
-        );
-    }
-
-    protected function findModel($id)
-    {
-        $model = Discharge::findOne(['id' => $id]);
-
-        if ($model !== null) {
-            return $model;
-        }
-
-        throw new NotFoundHttpException(
-            'ترخیص موردنظر پیدا نشد.'
-        );
-    }
 }

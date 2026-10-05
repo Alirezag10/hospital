@@ -37,7 +37,6 @@ class Service extends \yii\db\ActiveRecord
             'title' => 'عنوان خدمت',
             'price' => 'قیمت',
             'active' => 'فعال',
-            'created_at' => 'تاریخ ثبت',
         ];
     }
 

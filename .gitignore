@@ -1,25 +1,14 @@
-# Local secrets and database configuration
+# Local secrets
 .env
 .env.*
 !.env.example
-/config/db.php
+/app/config/db.php
 
-# Installed PHP packages
-/vendor/
-
-# Yii generated files
-/runtime/
-/web/assets/
-
-# Editor files
-/.idea/
-/.vscode/
-
-# Yii application inside app/
+# Required packages and generated Yii files
 /app/vendor/
 /app/runtime/
 /app/web/assets/
-/app/config/db.php
 
-# Local backups of misplaced files
-/output/backups/
+# Editor settings
+/.idea/
+/.vscode/

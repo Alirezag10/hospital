@@ -1,115 +1,25 @@
 <?php
-
-declare(strict_types=1);
-
 namespace app\controllers;
 
-use Yii;
-use app\models\LoginForm;
-use yii\filters\AccessControl;
-use yii\filters\VerbFilter;
-use yii\base\Security;
+use app\models\Patient;
+use app\models\Admission;
+use app\models\Discharge;
 use yii\web\Controller;
 use yii\web\ErrorAction;
-use yii\web\Response;
 
 class SiteController extends Controller
 {
-    public function __construct(
-        $id,
-        $module,
-        private readonly Security $security,
-        $config = [],
-    ) {
-        parent::__construct($id, $module, $config);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function behaviors(): array
+    public function actions()
     {
-        return [
-            'access' => [
-                'class' => AccessControl::class,
-                'only' => ['logout'],
-                'rules' => [
-                    [
-                        'actions' => ['logout'],
-                        'allow' => true,
-                        'roles' => ['@'],
-                    ],
-                ],
-            ],
-            'verbs' => [
-                'class' => VerbFilter::class,
-                'actions' => [
-                    'logout' => ['post'],
-                ],
-            ],
-        ];
+        return ['error' => ['class' => ErrorAction::class]];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function actions(): array
-    {
-        return [
-            'error' => [
-                'class' => ErrorAction::class,
-            ],
-        ];
-    }
-
-    /**
-     * Displays homepage.
-     *
-     * @return string
-     */
     public function actionIndex()
     {
-        $patients = \app\models\Patient::find()->count();
-
-        $activeAdmissions = \app\models\Admission::find()
-            ->where(['status' => 'admitted'])
-            ->count();
-
-        $discharges = \app\models\Discharge::find()->count();
-
         return $this->render('index', [
-            'patients' => $patients,
-            'activeAdmissions' => $activeAdmissions,
-            'discharges' => $discharges,
+            'patients' => Patient::find()->count(),
+            'activeAdmissions' => Admission::find()->where(['status' => 'admitted'])->count(),
+            'discharges' => Discharge::find()->count(),
         ]);
     }
-    public function actionLogin(): Response|string
-    {
-        if (!Yii::$app->user->isGuest) {
-            return $this->goHome();
-        }
-
-        $model = new LoginForm($this->security);
-
-        if ($model->load($this->request->post()) && $model->login()) {
-            return $this->goBack();
-        }
-
-        $model->password = '';
-
-        return $this->render('login', ['model' => $model]);
-    }
-
-    /**
-     * Logout action.
-     *
-     * @return Response
-     */
-    public function actionLogout(): Response
-    {
-        Yii::$app->user->logout();
-
-        return $this->goHome();
-    }
-
 }

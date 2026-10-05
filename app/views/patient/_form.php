@@ -44,14 +44,14 @@ use yii\widgets\ActiveForm;
             <div class="col-md-6">
                 <?= $form->field($model, 'birth_date')->input('date', [
                     'dir' => 'ltr',
-                ])->hint('تاریخ شمسی؛ در صورت نامشخص بودن خالی بگذارید.') ?>
+                ])->hint('تاریخ میلادی؛ در صورت نامشخص بودن خالی بگذارید.') ?>
             </div>
         </div>
         <div class="d-flex flex-wrap gap-2 mt-2">
-            <?= Html::submitButton($model->isNewRecord ? 'ثبت بیمار' : 'ذخیره تغییرات', [
+            <?= Html::submitButton('ثبت بیمار', [
                 'class' => 'btn btn-primary',
             ]) ?>
-            <?= Html::a('انصراف', $model->isNewRecord ? ['index'] : ['view', 'id' => $model->id], [
+            <?= Html::a('انصراف', ['index'], [
                 'class' => 'btn btn-outline-secondary',
             ]) ?>
         </div>

@@ -3,7 +3,7 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var app\models\Discharge $model */
 $this->title = 'ثبت ترخیص';
-$this->params['breadcrumbs'][] = ['label' => 'ترخیص‌ها', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'پذیرش‌ها', 'url' => ['/admission/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="discharge-create" dir="rtl">
