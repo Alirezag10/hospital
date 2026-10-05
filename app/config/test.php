@@ -8,6 +8,7 @@ $db = require __DIR__ . '/test_db.php';
  */
 return [
     'id' => 'basic-tests',
+    'name' => 'سیستم مدیریت بیمارستان',
     'basePath' => dirname(__DIR__),
     'bootstrap' => [
         \app\tests\Support\MailerBootstrap::class,
@@ -16,7 +17,7 @@ return [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
     ],
-    'language' => 'en-US',
+    'language' => 'fa-IR',
     'components' => [
         'db' => $db,
         'mailer' => [

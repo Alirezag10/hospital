@@ -7,11 +7,13 @@
 actor: AcceptanceTester
 modules:
   enabled:
+    - Asserts
     - PhpBrowser:
         url: http://localhost
     - Yii2:
         part: orm
         entryScript: index-test.php
+        transaction: false
         cleanup: false
 step_decorators: ~
 

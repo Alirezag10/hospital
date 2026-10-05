@@ -1,25 +1,27 @@
 <?php
-
-declare(strict_types=1);
-
 namespace app\tests\Acceptance;
 
 use app\tests\Support\AcceptanceTester;
-use yii\helpers\Url;
+use app\tests\Support\HospitalFixture;
 
 final class LoginCest
 {
-    public function ensureThatLoginWorks(AcceptanceTester $I)
+    public function _before(AcceptanceTester $I): void
     {
-        $I->amOnPage(Url::toRoute('/site/login'));
-        $I->see('Login', 'h1');
+        HospitalFixture::reset();
+    }
 
-        $I->amGoingTo('try to login with correct credentials');
-        $I->fillField('input[name="LoginForm[username]"]', 'admin');
-        $I->fillField('input[name="LoginForm[password]"]', 'admin');
-        $I->click('login-button');
-
-        $I->expectTo('see user info');
-        $I->see('Logout');
+    public function loginAndReferenceNavigation(AcceptanceTester $I): void
+    {
+        $I->amOnPage('/index-test.php?r=site/login');
+        $I->submitForm('#login-form', ['LoginForm[username]' => 'operator', 'LoginForm[password]' => 'Hospital-test-password']);
+        $I->see('خروج (operator)');
+        $I->seeLink('پزشکان');
+        $I->click('پزشکان');
+        $I->see('پزشکان', 'h1');
+        $I->seeLink('تعریف پزشک');
+        $I->click('بخش‌ها');
+        $I->see('بخش‌ها', 'h1');
+        $I->seeLink('تعریف بخش');
     }
 }

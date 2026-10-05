@@ -1,51 +1,38 @@
 <?php
-
-declare(strict_types=1);
-
 namespace app\tests\Unit\Models;
 
 use app\models\User;
+use app\tests\Support\HospitalFixture;
 
 final class UserTest extends \Codeception\Test\Unit
 {
-    public function testFindUserById()
+    protected function _before(): void
     {
-        /** @var User $user */
-        $user = User::findIdentity(100);
-
-        verify($user)->notEmpty();
-        verify($user->username)->equals('admin');
-        verify(User::findIdentity(999))->empty();
+        HospitalFixture::reset();
     }
 
-    public function testFindUserByAccessToken()
+    public function testIdentityAndUsername(): void
     {
-        /** @var User $user */
-        $user = User::findIdentityByAccessToken('100-token');
-
-        verify($user)->notEmpty();
-        verify($user->username)->equals('admin');
-        verify(User::findIdentityByAccessToken('non-existing'))->empty();
+        self::assertSame('operator', User::findIdentity(100)->username);
+        self::assertNull(User::findIdentity(999));
+        self::assertSame(100, (int) User::findByUsername('operator')->id);
+        self::assertNull(User::findByUsername('missing-user'));
     }
 
-    public function testFindUserByUsername()
+    public function testAccessTokenAndAuthKey(): void
     {
-        /** @var User $user */
-        $user = User::findByUsername('admin');
-
-        verify($user)->notEmpty();
-        verify(User::findByUsername('not-admin'))->empty();
+        $user = User::findIdentityByAccessToken('hospital-test-token');
+        self::assertSame('operator', $user->username);
+        self::assertTrue($user->validateAuthKey('hospital-test-auth-key'));
+        self::assertFalse($user->validateAuthKey('wrong-key'));
+        self::assertNull(User::findIdentityByAccessToken('missing-token'));
     }
 
-    /**
-     * @depends testFindUserByUsername
-     */
-    public function testValidateUser()
+    public function testPasswordHash(): void
     {
-        /** @var User $user */
-        $user = User::findByUsername('admin');
-
-        verify($user->validateAuthKey('test100key'))->notEmpty();
-        verify($user->validateAuthKey('test102key'))->empty();
+        $user = User::findByUsername('operator');
+        self::assertTrue($user->validatePassword('Hospital-test-password'));
+        self::assertFalse($user->validatePassword('wrong-password'));
+        self::assertNotSame('Hospital-test-password', $user->password_hash);
     }
 }

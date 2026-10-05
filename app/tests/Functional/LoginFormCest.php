@@ -1,64 +1,40 @@
 <?php
-
-declare(strict_types=1);
-
 namespace app\tests\Functional;
 
 use app\tests\Support\FunctionalTester;
+use app\tests\Support\HospitalFixture;
 
 final class LoginFormCest
 {
-    public function _before(FunctionalTester $I)
+    public function _before(FunctionalTester $I): void
     {
+        HospitalFixture::reset();
         $I->amOnRoute('site/login');
     }
 
-    public function openLoginPage(FunctionalTester $I)
+    public function loginWithWrongCredentials(FunctionalTester $I): void
     {
-        $I->see('Login', 'h1');
+        $I->see('ورود به سامانه', 'h1');
+        $I->submitForm('#login-form', ['LoginForm[username]' => 'operator', 'LoginForm[password]' => 'wrong']);
+        $I->see('نام کاربری یا رمز عبور اشتباه است.');
+        $I->seeElement('#login-form');
     }
 
-    // demonstrates `amLoggedInAs` method
-    public function internalLoginById(FunctionalTester $I)
+    public function loginAndLogout(FunctionalTester $I): void
     {
-        $I->amLoggedInAs(100);
-        $I->amOnPage('/');
-        $I->see('Logout (admin)');
+        $I->submitForm('#login-form', ['LoginForm[username]' => 'operator', 'LoginForm[password]' => 'Hospital-test-password']);
+        $I->see('خروج (operator)');
+        $I->see('داشبورد بیمارستان', 'h1');
+        $I->sendAjaxPostRequest('/index.php?r=site/logout');
+        $I->amOnRoute('site/index');
+        $I->see('ورود به سامانه');
+        $I->dontSee('خروج (operator)');
     }
 
-    // demonstrates `amLoggedInAs` method
-    public function internalLoginByInstance(FunctionalTester $I)
+    public function operationalPagesRequireLogin(FunctionalTester $I): void
     {
-        $I->amLoggedInAs(\app\models\User::findByUsername('admin'));
-        $I->amOnPage('/');
-        $I->see('Logout (admin)');
-    }
-
-    public function loginWithEmptyCredentials(FunctionalTester $I)
-    {
-        $I->submitForm('#login-form', []);
-        $I->expectTo('see validations errors');
-        $I->see('Username cannot be blank.');
-        $I->see('Password cannot be blank.');
-    }
-
-    public function loginWithWrongCredentials(FunctionalTester $I)
-    {
-        $I->submitForm('#login-form', [
-            'LoginForm[username]' => 'admin',
-            'LoginForm[password]' => 'wrong',
-        ]);
-        $I->expectTo('see validations errors');
-        $I->see('Incorrect username or password.');
-    }
-
-    public function loginSuccessfully(FunctionalTester $I)
-    {
-        $I->submitForm('#login-form', [
-            'LoginForm[username]' => 'admin',
-            'LoginForm[password]' => 'admin',
-        ]);
-        $I->see('Logout (admin)');
-        $I->dontSeeElement('form#login-form');
+        $I->amOnRoute('patient/index');
+        $I->seeElement('#login-form');
+        $I->dontSee('ثبت بیمار جدید');
     }
 }

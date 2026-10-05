@@ -1,63 +1,44 @@
 <?php
-
-declare(strict_types=1);
-
 namespace app\tests\Unit\Models;
 
 use app\models\LoginForm;
+use app\tests\Support\HospitalFixture;
 use Yii;
 use yii\base\Security;
 
 final class LoginFormTest extends \Codeception\Test\Unit
 {
-    private $_model;
-
-    protected function _after()
+    protected function _before(): void
     {
-        Yii::$app->user->logout();
+        HospitalFixture::reset();
+        Yii::$app->user->logout(false);
     }
 
-    public function testLoginNoUser()
+    protected function _after(): void
     {
-        $this->_model = new LoginForm(
-            new Security(),
-            [
-                'username' => 'not_existing_username',
-                'password' => 'not_existing_password',
-            ],
-        );
-
-        verify($this->_model->login())->false();
-        verify(Yii::$app->user->isGuest)->true();
+        Yii::$app->user->logout(false);
     }
 
-    public function testLoginWrongPassword()
+    public function testLoginNoUser(): void
     {
-        $this->_model = new LoginForm(
-            new Security(),
-            [
-                'username' => 'demo',
-                'password' => 'wrong_password',
-            ],
-        );
-
-        verify($this->_model->login())->false();
-        verify(Yii::$app->user->isGuest)->true();
-        verify($this->_model->errors)->arrayHasKey('password');
+        $model = new LoginForm(new Security(), ['username' => 'missing-user', 'password' => 'wrong-password']);
+        self::assertFalse($model->login());
+        self::assertTrue(Yii::$app->user->isGuest);
     }
 
-    public function testLoginCorrect()
+    public function testLoginWrongPassword(): void
     {
-        $this->_model = new LoginForm(
-            new Security(),
-            [
-                'username' => 'demo',
-                'password' => 'demo',
-            ],
-        );
+        $model = new LoginForm(new Security(), ['username' => 'operator', 'password' => 'wrong-password']);
+        self::assertFalse($model->login());
+        self::assertTrue($model->hasErrors('password'));
+        self::assertTrue(Yii::$app->user->isGuest);
+    }
 
-        verify($this->_model->login())->true();
-        verify(Yii::$app->user->isGuest)->false();
-        verify($this->_model->errors)->arrayHasNotKey('password');
+    public function testLoginCorrect(): void
+    {
+        $model = new LoginForm(new Security(), ['username' => 'operator', 'password' => 'Hospital-test-password']);
+        self::assertTrue($model->login());
+        self::assertSame('operator', Yii::$app->user->identity->username);
+        self::assertFalse($model->hasErrors());
     }
 }

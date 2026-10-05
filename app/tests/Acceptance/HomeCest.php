@@ -1,22 +1,21 @@
 <?php
-
-declare(strict_types=1);
-
 namespace app\tests\Acceptance;
 
 use app\tests\Support\AcceptanceTester;
-use yii\helpers\Url;
+use app\tests\Support\HospitalFixture;
 
 final class HomeCest
 {
-    public function ensureThatHomePageWorks(AcceptanceTester $I)
+    public function _before(AcceptanceTester $I): void
     {
-        $I->amOnPage(Url::toRoute('/site/index'));
-        $I->see(\Yii::$app->name);
+        HospitalFixture::reset();
+    }
 
-        $I->seeLink('About');
-        $I->click('About');
-
-        $I->see('This is the About page.');
+    public function guestDashboard(AcceptanceTester $I): void
+    {
+        $I->amOnPage('/index-test.php?r=site/index');
+        $I->see('داشبورد بیمارستان', 'h1');
+        $I->seeLink('ورود');
+        $I->dontSeeLink('ثبت پذیرش');
     }
 }
