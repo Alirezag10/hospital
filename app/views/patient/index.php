@@ -46,9 +46,15 @@ $this->params['breadcrumbs'][] = $this->title;
                     [
                         'class' => ActionColumn::class,
                         'header' => 'عملیات',
-                        'template' => '{view} {update} {delete}',
+                        'template' => '{admit} {view} {update} {delete}',
                         'contentOptions' => ['class' => 'text-nowrap'],
                         'buttons' => [
+                            'admit' => static function ($url, Patient $model) {
+                                return Html::a('ثبت پذیرش', ['/admission/create', 'patient_id' => $model->id], [
+                                    'class' => 'btn btn-sm btn-primary',
+                                    'aria-label' => 'ثبت پذیرش برای ' . $model->first_name . ' ' . $model->last_name,
+                                ]);
+                            },
                             'view' => static function ($url, Patient $model) {
                                 return Html::a('مشاهده', $url, [
                                     'class' => 'btn btn-sm btn-outline-primary',

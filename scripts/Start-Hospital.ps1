@@ -20,7 +20,7 @@ try {
         & $nginxExe -s reload
         if ($LASTEXITCODE -ne 0) { throw 'Nginx reload failed.' }
     } else {
-        Start-Process -FilePath $nginxExe -WorkingDirectory $NginxDirectory
+        Start-Process -FilePath $nginxExe -WorkingDirectory $NginxDirectory -WindowStyle Hidden
     }
 } finally {
     Pop-Location

@@ -34,8 +34,7 @@ class Ward extends \yii\db\ActiveRecord
             [['floor'], 'default', 'value' => null],
             [['capacity'], 'default', 'value' => 0],
             [['name'], 'required'],
-            [['capacity'], 'integer'],
-            [['created_at'], 'safe'],
+            [['capacity'], 'integer', 'min' => 0],
             [['name'], 'string', 'max' => 100],
             [['floor'], 'string', 'max' => 50],
         ];
@@ -47,11 +46,11 @@ class Ward extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => 'ID',
-            'name' => 'Name',
-            'floor' => 'Floor',
-            'capacity' => 'Capacity',
-            'created_at' => 'Created At',
+            'id' => 'شناسه',
+            'name' => 'نام بخش',
+            'floor' => 'طبقه',
+            'capacity' => 'ظرفیت',
+            'created_at' => 'تاریخ ثبت',
         ];
     }
 

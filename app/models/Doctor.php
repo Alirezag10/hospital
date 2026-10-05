@@ -33,7 +33,6 @@ class Doctor extends \yii\db\ActiveRecord
         return [
             [['mobile'], 'default', 'value' => null],
             [['name', 'specialty'], 'required'],
-            [['created_at'], 'safe'],
             [['name', 'specialty'], 'string', 'max' => 100],
             [['mobile'], 'string', 'max' => 20],
         ];
@@ -45,11 +44,11 @@ class Doctor extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => 'ID',
-            'name' => 'Name',
-            'specialty' => 'Specialty',
-            'mobile' => 'Mobile',
-            'created_at' => 'Created At',
+            'id' => 'شناسه',
+            'name' => 'نام پزشک',
+            'specialty' => 'تخصص',
+            'mobile' => 'موبایل',
+            'created_at' => 'تاریخ ثبت',
         ];
     }
 

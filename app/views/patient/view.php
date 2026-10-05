@@ -14,6 +14,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="patient-view" dir="rtl">
     <h1 class="h3 mb-4"><?= Html::encode($this->title) ?></h1>
     <div class="d-flex flex-wrap gap-2 mb-4">
+        <?= Html::a('ثبت پذیرش برای این بیمار', ['/admission/create', 'patient_id' => $model->id], ['class' => 'btn btn-primary']) ?>
         <?= Html::a('ویرایش اطلاعات', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
         <?= Html::a('بازگشت به بیماران', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
         <?= Html::a('حذف بیمار', ['delete', 'id' => $model->id], [

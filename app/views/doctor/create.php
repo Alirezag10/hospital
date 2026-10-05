@@ -5,8 +5,8 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var app\models\Doctor $model */
 
-$this->title = 'Create Doctor';
-$this->params['breadcrumbs'][] = ['label' => 'Doctors', 'url' => ['index']];
+$this->title = 'تعریف پزشک';
+$this->params['breadcrumbs'][] = ['label' => 'پزشکان', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="doctor-create">

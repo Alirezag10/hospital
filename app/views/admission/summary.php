@@ -11,6 +11,9 @@ $patient = $model->patient;
 $doctor = $model->doctor;
 $ward = $model->wardModel;
 $discharge = $model->discharge;
+$isOpen = $model->status === 'admitted' && $discharge === null;
+$this->params['breadcrumbs'][] = ['label' => 'پذیرش‌ها', 'url' => ['index']];
+$this->params['breadcrumbs'][] = $this->title;
 
 $items = $model->getAdmissionServices()
     ->with('service')
@@ -28,6 +31,15 @@ $statusLabels = [
 <div class="admission-summary" dir="rtl">
 
     <h1><?= Html::encode($this->title) ?></h1>
+
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <?= Html::a('مشاهده پذیرش', ['view', 'id' => $model->id], ['class' => 'btn btn-outline-primary']) ?>
+        <?= Html::a('بازگشت به پذیرش‌ها', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+        <?php if ($isOpen): ?>
+            <?= Html::a('افزودن خدمت', ['/admission-service/create', 'admission_id' => $model->id], ['class' => 'btn btn-primary']) ?>
+            <?= Html::a('مشاهده هزینه و ترخیص', ['/discharge/create', 'admission_id' => $model->id], ['class' => 'btn btn-success']) ?>
+        <?php endif; ?>
+    </div>
 
     <h2>بیمار</h2>
 

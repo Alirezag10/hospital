@@ -5,10 +5,10 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var app\models\Ward $model */
 
-$this->title = 'Update Ward: ' . $model->name;
-$this->params['breadcrumbs'][] = ['label' => 'Wards', 'url' => ['index']];
+$this->title = 'ویرایش بخش: ' . $model->name;
+$this->params['breadcrumbs'][] = ['label' => 'بخش‌ها', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->name, 'url' => ['view', 'id' => $model->id]];
-$this->params['breadcrumbs'][] = 'Update';
+$this->params['breadcrumbs'][] = 'ویرایش';
 ?>
 <div class="ward-update">
 

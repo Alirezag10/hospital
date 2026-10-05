@@ -23,6 +23,7 @@ $patients = ArrayHelper::map(
 );
 $doctors = ArrayHelper::map(Doctor::find()->orderBy(['name' => SORT_ASC])->all(), 'id', 'name');
 $wards = ArrayHelper::map(Ward::find()->orderBy(['name' => SORT_ASC])->all(), 'id', 'name');
+$missingReferenceData = empty($doctors) || empty($wards);
 ?>
 <div class="admission-form card" dir="rtl">
     <div class="card-body">
@@ -30,6 +31,14 @@ $wards = ArrayHelper::map(Ward::find()->orderBy(['name' => SORT_ASC])->all(), 'i
             <div class="alert alert-info">این پذیرش قابل ویرایش نیست. اطلاعات آن را در پرونده مشاهده کنید.</div>
             <?= Html::a('مشاهده پذیرش', ['view', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
         <?php else: ?>
+            <?php if ($missingReferenceData): ?>
+                <div class="alert alert-warning">
+                    پیش از ثبت پذیرش، حداقل یک پزشک و یک بخش تعریف کنید.
+                    <?= Html::a('تعریف پزشک', ['/doctor/create'], ['class' => 'alert-link']) ?>
+                    و <?= Html::a('تعریف بخش', ['/ward/create'], ['class' => 'alert-link']) ?>
+                    از منوی اطلاعات پایه در دسترس هستند.
+                </div>
+            <?php endif; ?>
             <p class="text-muted mb-3">بیمار، پزشک و بخش را انتخاب کنید. ترخیص از صفحهٔ مخصوص ترخیص انجام می‌شود.</p>
             <?php $form = ActiveForm::begin(); ?>
             <?= $form->errorSummary($model) ?>
@@ -59,7 +68,7 @@ $wards = ArrayHelper::map(Ward::find()->orderBy(['name' => SORT_ASC])->all(), 'i
                 <p class="text-muted">تاریخ ثبت: <span dir="ltr"><?= Html::encode($model->created_at) ?></span></p>
             <?php endif; ?>
             <div class="d-flex flex-wrap gap-2 mt-2">
-                <?= Html::submitButton($model->isNewRecord ? 'ثبت پذیرش' : 'ذخیره تغییرات', ['class' => 'btn btn-primary']) ?>
+                <?= Html::submitButton($model->isNewRecord ? 'ثبت پذیرش' : 'ذخیره تغییرات', ['class' => 'btn btn-primary', 'disabled' => $missingReferenceData]) ?>
                 <?= Html::a('انصراف', $model->isNewRecord ? ['index'] : ['view', 'id' => $model->id], ['class' => 'btn btn-outline-secondary']) ?>
             </div>
             <?php ActiveForm::end(); ?>

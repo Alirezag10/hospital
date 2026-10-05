@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\models\Discharge;
+use app\models\Admission;
 use app\models\DischargeSearch;
 use Yii;
 use yii\filters\AccessControl;
@@ -54,9 +55,21 @@ class DischargeController extends Controller
         ]);
     }
 
-    public function actionCreate()
+    public function actionCreate($admission_id = null)
     {
         $model = new Discharge();
+
+        if ($admission_id !== null) {
+            $admissionId = filter_var($admission_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            $admission = $admissionId === false ? null : Admission::findOne(['id' => $admissionId]);
+            if ($admission === null) {
+                throw new NotFoundHttpException('پذیرش انتخاب‌شده پیدا نشد.');
+            }
+            if ($this->request->isGet && ($admission->status !== 'admitted' || $admission->discharge !== null)) {
+                throw new ForbiddenHttpException('این پذیرش قبلاً ترخیص شده است.');
+            }
+            $model->admission_id = $admissionId;
+        }
 
         if (
             $this->request->isPost
@@ -132,8 +145,8 @@ class DischargeController extends Controller
                         $transaction->commit();
 
                         return $this->redirect([
-                            'view',
-                            'id' => $model->id,
+                            '/admission/summary',
+                            'id' => $model->admission_id,
                         ]);
                     }
 

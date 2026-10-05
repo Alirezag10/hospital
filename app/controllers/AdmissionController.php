@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use app\models\Admission;
 use app\models\AdmissionSearch;
+use app\models\Patient;
 use Yii;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -54,11 +55,18 @@ class AdmissionController extends Controller
         ]);
     }
 
-    public function actionCreate()
+    public function actionCreate($patient_id = null)
     {
         $model = new Admission();
-        $model->loadDefaultValues();
         $model->status = 'admitted';
+
+        if ($patient_id !== null) {
+            $patientId = filter_var($patient_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if ($patientId === false || Patient::findOne(['id' => $patientId]) === null) {
+                throw new NotFoundHttpException('بیمار انتخاب‌شده پیدا نشد.');
+            }
+            $model->patient_id = $patientId;
+        }
 
         if (
             $this->request->isPost

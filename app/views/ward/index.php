@@ -10,7 +10,7 @@ use yii\grid\GridView;
 /** @var app\models\WardSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Wards';
+$this->title = 'بخش‌ها';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="ward-index">
@@ -18,7 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::a('Create Ward', ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('تعریف بخش', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>

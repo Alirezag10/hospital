@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\models\AdmissionService;
+use app\models\Admission;
 use app\models\AdmissionServiceSearch;
 use app\models\Service;
 use Yii;
@@ -55,10 +56,22 @@ class AdmissionServiceController extends Controller
         ]);
     }
 
-    public function actionCreate()
+    public function actionCreate($admission_id = null)
     {
         $model = new AdmissionService();
         $model->loadDefaultValues();
+
+        if ($admission_id !== null) {
+            $admissionId = filter_var($admission_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            $admission = $admissionId === false ? null : Admission::findOne(['id' => $admissionId]);
+            if ($admission === null) {
+                throw new NotFoundHttpException('پذیرش انتخاب‌شده پیدا نشد.');
+            }
+            if ($admission->status !== 'admitted' || $admission->discharge !== null) {
+                throw new ForbiddenHttpException('برای پذیرش ترخیص‌شده نمی‌توان خدمت ثبت کرد.');
+            }
+            $model->admission_id = $admissionId;
+        }
 
         if (
             $this->request->isPost
@@ -66,8 +79,8 @@ class AdmissionServiceController extends Controller
             && $this->saveService($model, $this->request->post())
         ) {
             return $this->redirect([
-                'view',
-                'id' => $model->id,
+                '/admission/summary',
+                'id' => $model->admission_id,
             ]);
         }
 

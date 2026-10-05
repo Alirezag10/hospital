@@ -33,6 +33,14 @@ $items = [
         'visible' => $isLoggedIn,
     ],
     [
+        'label' => 'اطلاعات پایه',
+        'visible' => $isLoggedIn,
+        'items' => [
+            ['label' => 'پزشکان', 'url' => ['/doctor/index']],
+            ['label' => 'بخش‌ها', 'url' => ['/ward/index']],
+        ],
+    ],
+    [
         'label' => 'خدمات پذیرش',
         'url' => ['/admission-service/index'],
         'visible' => $isLoggedIn,

@@ -78,14 +78,4 @@ class User extends ActiveRecord implements IdentityInterface
             'created_at' => 'تاریخ ثبت',
         ];
     }
-    public function isAdmin(): bool
-{
-    return $this->role === 'admin';
-}
-
-
-    public function hasRole(string $role): bool
-    {
-        return $this->role === $role;
-    }
 }

@@ -5,13 +5,10 @@ declare(strict_types=1);
 namespace app\controllers;
 
 use Yii;
-use app\models\ContactForm;
 use app\models\LoginForm;
-use yii\captcha\CaptchaAction;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\base\Security;
-use yii\mail\MailerInterface;
 use yii\web\Controller;
 use yii\web\ErrorAction;
 use yii\web\Response;
@@ -21,7 +18,6 @@ class SiteController extends Controller
     public function __construct(
         $id,
         $module,
-        private readonly MailerInterface $mailer,
         private readonly Security $security,
         $config = [],
     ) {
@@ -62,11 +58,6 @@ class SiteController extends Controller
         return [
             'error' => [
                 'class' => ErrorAction::class,
-            ],
-            'captcha' => [
-                'class' => CaptchaAction::class,
-                'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
-                'transparent' => true,
             ],
         ];
     }
@@ -120,17 +111,5 @@ class SiteController extends Controller
 
         return $this->goHome();
     }
-
-    /**
-     * Displays contact page.
-     *
-     * @return Response|string
-     */
-
-    /**
-     * Displays about page.
-     *
-     * @return string
-     */
 
 }
