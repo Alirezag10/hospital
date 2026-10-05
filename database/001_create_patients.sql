@@ -1,3 +1,4 @@
+-- LEGACY SCHEMA: for reference only. Fresh installations must use install.sql.
 CREATE TABLE `patients` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
     `first_name` VARCHAR(100) NOT NULL,

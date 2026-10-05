@@ -20,3 +20,6 @@
 /app/runtime/
 /app/web/assets/
 /app/config/db.php
+
+# Local backups of misplaced files
+/output/backups/

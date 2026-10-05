@@ -1,3 +1,4 @@
+-- LEGACY SCHEMA: for reference only. Fresh installations must use install.sql.
 CREATE TABLE admissions (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     patient_id INT UNSIGNED NOT NULL,
