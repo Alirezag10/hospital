@@ -25,25 +25,26 @@ use yii\widgets\ActiveForm;
                 ]) ?>
             </div>
             <div class="col-md-6">
-                <?= $form->field($model, 'national_code')->textInput([
+                <?= $form->field($model, 'national_code', ['enableClientValidation' => false])->textInput([
                     'maxlength' => true,
                     'dir' => 'ltr',
                     'inputmode' => 'numeric',
                     'placeholder' => 'مثلاً 0012345678',
-                ])->hint('با ارقام انگلیسی وارد کنید؛ صفر ابتدای کد حفظ می‌شود.') ?>
+                ])->hint('۱۰ رقم؛ ارقام فارسی و انگلیسی پذیرفته می‌شوند و صفر ابتدای کد حفظ می‌شود.') ?>
             </div>
             <div class="col-md-6">
-                <?= $form->field($model, 'mobile')->textInput([
+                <?= $form->field($model, 'mobile', ['enableClientValidation' => false])->textInput([
                     'maxlength' => true,
                     'dir' => 'ltr',
                     'inputmode' => 'tel',
                     'autocomplete' => 'tel',
                     'placeholder' => 'مثلاً 09123456789',
-                ]) ?>
+                ])->hint('۱۱ رقم با شروع ۰۹؛ ارقام فارسی و انگلیسی پذیرفته می‌شوند.') ?>
             </div>
             <div class="col-md-6">
                 <?= $form->field($model, 'birth_date')->input('date', [
                     'dir' => 'ltr',
+                    'max' => date('Y-m-d'),
                 ])->hint('تاریخ میلادی؛ در صورت نامشخص بودن خالی بگذارید.') ?>
             </div>
         </div>

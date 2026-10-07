@@ -11,7 +11,12 @@ class PatientSearch extends Model
 
     public function rules()
     {
-        return [[['name', 'national_code'], 'string']];
+        return [
+            [['name'], 'trim', 'skipOnArray' => true],
+            [['national_code'], 'filter', 'filter' => [Patient::class, 'normalizeDigits'], 'skipOnArray' => true],
+            [['name'], 'string', 'max' => 200],
+            [['national_code'], 'match', 'pattern' => '/^[0-9]{1,10}$/D', 'message' => 'کد ملی را با حداکثر ۱۰ رقم وارد کنید.'],
+        ];
     }
 
     public function attributeLabels()

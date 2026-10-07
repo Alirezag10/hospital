@@ -2,8 +2,8 @@
 namespace app\controllers;
 
 use app\models\Admission;
+use app\models\AdmissionSearch;
 use app\models\Patient;
-use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 
@@ -11,10 +11,11 @@ class AdmissionController extends Controller
 {
     public function actionIndex()
     {
-        return $this->render('index', ['dataProvider' => new ActiveDataProvider([
-            'query' => Admission::find()->with('patient'),
-            'sort' => ['defaultOrder' => ['id' => SORT_DESC]],
-        ])]);
+        $searchModel = new AdmissionSearch();
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $searchModel->search($this->request->queryParams),
+        ]);
     }
 
     public function actionCreate($patient_id = null)

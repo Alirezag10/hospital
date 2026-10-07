@@ -8,12 +8,13 @@ $this->params['breadcrumbs'][] = $this->title;
     <div><h1><?= Html::encode($this->title) ?></h1><p>وضعیت پذیرش‌ها و خلاصهٔ پرونده‌ها را بررسی کنید.</p></div>
     <?= Html::a('ثبت پذیرش', ['create'], ['class' => 'btn btn-primary']) ?>
 </div>
+<?= $this->render('_search', ['model' => $searchModel]) ?>
 <div class="table-panel table-responsive">
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
     'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
     'summary' => 'نمایش {begin} تا {end} از {totalCount} پذیرش',
-    'emptyText' => 'پذیرشی ثبت نشده است.',
+    'emptyText' => 'پذیرشی مطابق جست‌وجوی شما پیدا نشد.',
     'columns' => [
         'id',
         ['label' => 'بیمار', 'value' => static function ($model) {
