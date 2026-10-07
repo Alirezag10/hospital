@@ -33,10 +33,20 @@ PHP 8.2 یا بالاتر با افزونه‌های لازم Yii از جمله 
 ```powershell
 composer --working-dir=app install --no-dev
 New-Item -ItemType Directory -Force .\app\runtime, .\app\web\assets
-Copy-Item .\app\config\db.example.php .\app\config\db.php
 ```
 
-اگر `db.php` از قبل وجود دارد، آن را بازنویسی نکنید. مشخصات اتصال MySQL را در این فایل تنظیم کنید.
+اگر `app/config/db.php` از قبل وجود دارد، مشخصات اتصال MySQL را در همان فایل تنظیم کنید. برای نصب تازه، این فایل را با ساختار زیر بسازید و نام کاربری و رمز را با اطلاعات محلی خود جایگزین کنید. این فایل در Git ذخیره نمی‌شود.
+
+```php
+<?php
+return [
+    'class' => \yii\db\Connection::class,
+    'dsn' => 'mysql:host=127.0.0.1;port=3306;dbname=hospital',
+    'username' => 'your-local-username',
+    'password' => 'your-local-password',
+    'charset' => 'utf8mb4',
+];
+```
 
 MySQL را روشن کنید، دیتابیس **خالی** مانند `hospital` با collation برابر `utf8mb4_unicode_ci` بسازید و `database/install.sql` را در همان دیتابیس وارد کنید. این فایل پنج جدول و خدمات نمونه را ایجاد می‌کند. فایل نصب برای دیتابیس موجود یا ارتقای آن نیست؛ آن را روی دیتابیس فعلی دوباره اجرا نکنید.
 

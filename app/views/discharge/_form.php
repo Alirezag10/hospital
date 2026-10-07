@@ -67,7 +67,7 @@ $total = 0;
                     </table>
                 </div>
                 <h2 class="h5 mt-4">۲. تأیید و ثبت ترخیص</h2>
-                <?php $form = ActiveForm::begin(['id' => 'discharge-form', 'action' => ['create']]); ?>
+                <?php $form = ActiveForm::begin(['id' => 'discharge-form', 'action' => ['create', 'admission_id' => $selectedId]]); ?>
                 <?= $form->errorSummary($model) ?>
                 <?= Html::activeHiddenInput($model, 'admission_id') ?>
                 <?= $form->field($model, 'description')->textarea(['rows' => 4, 'placeholder' => 'توضیحات ترخیص، در صورت نیاز']) ?>

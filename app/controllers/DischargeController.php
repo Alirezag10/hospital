@@ -14,6 +14,7 @@ class DischargeController extends Controller
     public function actionCreate($admission_id = null)
     {
         $model = new Discharge();
+        $admissionId = null;
 
         if ($admission_id !== null) {
             $admissionId = filter_var($admission_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
@@ -27,11 +28,11 @@ class DischargeController extends Controller
             $model->admission_id = $admissionId;
         }
 
-        if (
-            $this->request->isPost
-            && $model->load($this->request->post())
-            && $model->validate(['admission_id', 'description'])
-        ) {
+        $isSubmitted = $this->request->isPost && $model->load($this->request->post());
+        if ($isSubmitted && $admissionId !== null) {
+            $model->admission_id = $admissionId;
+        }
+        if ($isSubmitted && $model->validate(['admission_id', 'description'])) {
             $db = Yii::$app->db;
             $transaction = $db->beginTransaction();
 

@@ -15,6 +15,7 @@ class AdmissionServiceController extends Controller
     public function actionCreate($admission_id = null)
     {
         $model = new AdmissionService(['quantity' => 1]);
+        $admissionId = null;
         if ($admission_id !== null) {
             $admissionId = filter_var($admission_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
             $admission = $admissionId === false ? null : Admission::findOne(['id' => $admissionId]);
@@ -26,8 +27,13 @@ class AdmissionServiceController extends Controller
             }
             $model->admission_id = $admissionId;
         }
-        if ($this->request->isPost && $model->load($this->request->post()) && $this->saveService($model)) {
-            return $this->redirect(['/admission/view', 'id' => $model->admission_id]);
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            if ($admissionId !== null) {
+                $model->admission_id = $admissionId;
+            }
+            if ($this->saveService($model)) {
+                return $this->redirect(['/admission/view', 'id' => $model->admission_id]);
+            }
         }
         return $this->render('create', ['model' => $model]);
     }
