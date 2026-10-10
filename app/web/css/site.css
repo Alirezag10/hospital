@@ -68,8 +68,8 @@ a:hover { color: var(--primary-dark); }
 .btn-primary { --bs-btn-bg: var(--primary); --bs-btn-border-color: var(--primary); --bs-btn-hover-bg: var(--primary-dark); --bs-btn-hover-border-color: var(--primary-dark); --bs-btn-active-bg: var(--primary-dark); --bs-btn-active-border-color: var(--primary-dark); }
 .btn-outline-primary { --bs-btn-color: var(--primary-dark); --bs-btn-bg: var(--primary-soft); --bs-btn-border-color: #9bbadd; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: var(--primary); --bs-btn-hover-border-color: var(--primary); --bs-btn-active-color: #fff; --bs-btn-active-bg: var(--primary-dark); --bs-btn-active-border-color: var(--primary-dark); --bs-btn-disabled-color: #66829a; --bs-btn-disabled-bg: #edf3f8; --bs-btn-disabled-border-color: #c5d3de; }
 .btn-outline-secondary { --bs-btn-color: #334f63; --bs-btn-bg: #edf3f7; --bs-btn-border-color: #9eb1c0; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: #405e73; --bs-btn-hover-border-color: #405e73; --bs-btn-active-color: #fff; --bs-btn-active-bg: #304b5e; --bs-btn-active-border-color: #304b5e; --bs-btn-disabled-color: #718493; --bs-btn-disabled-bg: #f2f5f7; --bs-btn-disabled-border-color: #ccd7df; }
-.btn.btn-outline-primary { background-color: var(--primary-soft); }
-.btn.btn-outline-secondary { background-color: #edf3f7; }
+.btn.btn-outline-primary:not(:hover):not(:active):not(:disabled) { background-color: var(--primary-soft); }
+.btn.btn-outline-secondary:not(:hover):not(:active):not(:disabled) { background-color: #edf3f7; }
 .btn-success { --bs-btn-bg: var(--accent); --bs-btn-border-color: var(--accent); --bs-btn-hover-bg: var(--accent-dark); --bs-btn-hover-border-color: var(--accent-dark); --bs-btn-active-bg: var(--accent-dark); --bs-btn-active-border-color: var(--accent-dark); }
 .btn:focus-visible, .action-card:focus-visible, .nav-link:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
 .form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
@@ -286,6 +286,20 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .selected-admission-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; padding: 14px 16px; margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); }
 .selected-admission-summary strong { grid-column: 1 / -1; color: var(--primary-dark); }
 .selected-admission-summary span { font-size: .88rem; }
+.discharge-form { overflow: visible; }
+.discharge-section-title { margin: 0 0 16px; }
+.discharge-cost-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 24px 0 10px; }
+.discharge-cost-heading h3 { margin: 0; font-size: 1rem; }
+.discharge-cost-heading > span { color: var(--muted); font-size: .82rem; }
+.discharge-cost-table { border: 1px solid var(--line); border-radius: 10px; }
+.discharge-cost-table .table { margin: 0; }
+.discharge-cost-table tfoot td { color: var(--accent-dark); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.selected-admission-summary small { display: block; color: var(--muted); font-size: .76rem; }
+.discharge-note, .discharge-empty-hint { margin: 12px 0; color: var(--muted); font-size: .88rem; }
+.discharge-empty-hint { padding: 14px 16px; border-radius: 8px; background: var(--surface-soft); }
+@media (max-width: 575px) {
+    .discharge-cost-table .table { min-width: 38rem; }
+}
 .service-cost-preview { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; padding: 12px 14px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-dark); }
 .service-cost-preview small { color: var(--muted); }
 .table-page-size { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin: 0 0 10px; }

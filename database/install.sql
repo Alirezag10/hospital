@@ -53,6 +53,8 @@ CREATE TABLE admissions (
     KEY idx_admissions_patient_id (patient_id),
     KEY idx_admissions_doctor_id (doctor_id),
     KEY idx_admissions_ward_id (ward_id),
+    KEY idx_admissions_status_id (status, id),
+    KEY idx_admissions_admission_date (admission_date),
     CONSTRAINT fk_admissions_patient
         FOREIGN KEY (patient_id) REFERENCES patients(id)
         ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -99,6 +101,7 @@ CREATE TABLE discharges (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_discharges_admission_id (admission_id),
+    KEY idx_discharges_discharge_date (discharge_date),
     CONSTRAINT fk_discharges_admission
         FOREIGN KEY (admission_id) REFERENCES admissions(id)
         ON DELETE RESTRICT ON UPDATE CASCADE

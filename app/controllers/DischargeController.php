@@ -15,10 +15,16 @@ class DischargeController extends Controller
     {
         $model = new Discharge();
         $admissionId = null;
+        $admission = null;
 
         if ($admission_id !== null) {
             $admissionId = filter_var($admission_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-            $admission = $admissionId === false ? null : Admission::findOne(['id' => $admissionId]);
+            $admission = $admissionId === false
+                ? null
+                : Admission::find()
+                    ->with(['patient', 'discharge'])
+                    ->where(['id' => $admissionId])
+                    ->one();
             if ($admission === null) {
                 throw new NotFoundHttpException('پذیرش انتخاب‌شده پیدا نشد.');
             }
@@ -120,8 +126,22 @@ class DischargeController extends Controller
             }
         }
 
+        $isOpen = $admission !== null
+            && $admission->status === 'admitted'
+            && $admission->discharge === null;
+        $hasOpenAdmissions = $isOpen || Admission::find()->alias('a')
+            ->leftJoin(['d' => Discharge::tableName()], 'd.admission_id = a.id')
+            ->where(['a.status' => 'admitted', 'd.id' => null])
+            ->exists();
+        $items = $isOpen
+            ? $admission->getAdmissionServices()->with('service')->orderBy(['id' => SORT_ASC])->all()
+            : [];
+
         return $this->render('create', [
             'model' => $model,
+            'selectedAdmission' => $admission,
+            'hasOpenAdmissions' => $hasOpenAdmissions,
+            'items' => $items,
         ]);
     }
 

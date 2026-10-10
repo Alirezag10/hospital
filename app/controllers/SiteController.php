@@ -17,7 +17,9 @@ class SiteController extends Controller
     public function actionIndex()
     {
         $activeAdmissions = Admission::find()->where(['status' => 'admitted']);
-        $dischargesToday = Discharge::find()->where(new \yii\db\Expression('DATE([[discharge_date]]) = CURDATE()'));
+        $dischargesToday = Discharge::find()
+            ->where(['>=', 'discharge_date', new Expression('CURDATE()')])
+            ->andWhere(['<', 'discharge_date', new Expression('CURDATE() + INTERVAL 1 DAY')]);
         return $this->render('index', [
             'patients' => Patient::find()->count(),
             'activeAdmissions' => (clone $activeAdmissions)->count(),
