@@ -32,10 +32,14 @@ class AdmissionServiceController extends Controller
                 $model->admission_id = $admissionId;
             }
             if ($this->saveService($model)) {
+                Yii::$app->session->setFlash('success', 'خدمت با موفقیت برای این پذیرش ثبت شد.');
                 return $this->redirect(['/admission/view', 'id' => $model->admission_id]);
             }
         }
-        return $this->render('create', ['model' => $model]);
+        return $this->render('create', [
+            'model' => $model,
+            'admissionLocked' => $admissionId !== null,
+        ]);
     }
 
     private function saveService(AdmissionService $model)

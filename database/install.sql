@@ -1,6 +1,32 @@
 -- Fresh installation: import into an empty database only.
 SET NAMES utf8mb4;
 
+CREATE TABLE doctors (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    specialty VARCHAR(100) NOT NULL,
+    mobile VARCHAR(20) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_doctors_name_specialty (name, specialty)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO doctors (name, specialty, mobile) VALUES
+('دکتر علی رضایی', 'قلب و عروق', '09122000001'),
+('دکتر مریم حسینی', 'داخلی', '09122000002'),
+('دکتر امیر محمدی', 'ارتوپدی', '09122000003'),
+('دکتر نرگس کریمی', 'اطفال', '09122000004'),
+('دکتر رضا احمدی', 'جراحی عمومی', '09122000005');
+
+CREATE TABLE wards (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    floor VARCHAR(50) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_wards_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `patients` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
     `first_name` VARCHAR(100) NOT NULL,
@@ -17,14 +43,24 @@ CREATE TABLE admissions (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     patient_id INT UNSIGNED NOT NULL,
     admission_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    doctor_id INT UNSIGNED NOT NULL,
+    ward_id INT UNSIGNED NOT NULL,
     ward VARCHAR(100) NOT NULL,
     doctor_name VARCHAR(100) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'admitted',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_admissions_patient_id (patient_id),
+    KEY idx_admissions_doctor_id (doctor_id),
+    KEY idx_admissions_ward_id (ward_id),
     CONSTRAINT fk_admissions_patient
         FOREIGN KEY (patient_id) REFERENCES patients(id)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_admissions_doctor
+        FOREIGN KEY (doctor_id) REFERENCES doctors(id)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_admissions_ward
+        FOREIGN KEY (ward_id) REFERENCES wards(id)
         ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

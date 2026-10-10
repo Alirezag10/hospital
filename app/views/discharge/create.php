@@ -6,7 +6,7 @@ $this->title = 'ثبت ترخیص';
 $this->params['breadcrumbs'][] = ['label' => 'پذیرش‌ها', 'url' => ['/admission/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="discharge-create" dir="rtl">
-    <h1 class="h3 mb-4"><?= Html::encode($this->title) ?></h1>
+<div class="discharge-create form-page" dir="rtl">
+    <div class="page-heading"><div><h1><?= Html::encode($this->title) ?></h1><p>ریز هزینه را بررسی کنید و سپس ترخیص را ثبت کنید.</p></div></div>
     <?= $this->render('_form', ['model' => $model]) ?>
 </div>

@@ -101,6 +101,8 @@ class DischargeController extends Controller
 
                         $transaction->commit();
 
+                        Yii::$app->session->setFlash('success', 'ترخیص بیمار با موفقیت ثبت شد.');
+
                         return $this->redirect([
                             '/admission/view',
                             'id' => $model->admission_id,

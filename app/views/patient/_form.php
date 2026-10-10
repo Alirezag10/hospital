@@ -9,7 +9,7 @@ use yii\widgets\ActiveForm;
 <div class="patient-form card" dir="rtl">
     <div class="card-body">
         <p class="text-muted mb-3">مشخصات بیمار را وارد کنید. تاریخ تولد اختیاری است.</p>
-        <?php $form = ActiveForm::begin(); ?>
+        <?php $form = ActiveForm::begin(['options' => ['data-loading-form' => '1', 'data-unsaved-warning' => '1']]); ?>
         <?= $form->errorSummary($model) ?>
         <div class="row">
             <div class="col-md-6">
@@ -29,8 +29,8 @@ use yii\widgets\ActiveForm;
                     'maxlength' => true,
                     'dir' => 'ltr',
                     'inputmode' => 'numeric',
-                    'placeholder' => 'مثلاً 0012345678',
-                ])->hint('۱۰ رقم؛ ارقام فارسی و انگلیسی پذیرفته می‌شوند و صفر ابتدای کد حفظ می‌شود.') ?>
+                    'placeholder' => 'کد ملی ۱۰ رقمی',
+                ]) ?>
             </div>
             <div class="col-md-6">
                 <?= $form->field($model, 'mobile', ['enableClientValidation' => false])->textInput([
@@ -39,18 +39,19 @@ use yii\widgets\ActiveForm;
                     'inputmode' => 'tel',
                     'autocomplete' => 'tel',
                     'placeholder' => 'مثلاً 09123456789',
-                ])->hint('۱۱ رقم با شروع ۰۹؛ ارقام فارسی و انگلیسی پذیرفته می‌شوند.') ?>
+                ]) ?>
             </div>
             <div class="col-md-6">
                 <?= $form->field($model, 'birth_date')->input('date', [
                     'dir' => 'ltr',
                     'max' => date('Y-m-d'),
-                ])->hint('تاریخ میلادی؛ در صورت نامشخص بودن خالی بگذارید.') ?>
+                ]) ?>
             </div>
         </div>
-        <div class="d-flex flex-wrap gap-2 mt-2">
+        <div class="form-actions">
             <?= Html::submitButton('ثبت بیمار', [
                 'class' => 'btn btn-primary',
+                'data-loading-label' => 'در حال ثبت…',
             ]) ?>
             <?= Html::a('انصراف', ['index'], [
                 'class' => 'btn btn-outline-secondary',

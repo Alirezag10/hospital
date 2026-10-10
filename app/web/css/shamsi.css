@@ -1,0 +1,25 @@
+.shamsi-field { position: relative; }
+.shamsi-field > input { padding-right: 46px; }
+.shamsi-toggle { position: absolute; inset-inline-start: 3px; top: 3px; bottom: 3px; width: 40px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--ink); }
+.shamsi-toggle:hover { background: var(--surface-soft); }
+.shamsi-toggle svg, .shamsi-arrow svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.shamsi-popup { position: fixed; z-index: 1080; width: min(296px, calc(100vw - 24px)); padding: 12px; background: var(--surface); color: var(--ink); border-radius: 8px; box-shadow: 0 4px 18px #233b4933; font-size: 14px; line-height: 1.5; }
+.shamsi-popup[hidden] { display: none; }
+.shamsi-nav { display: flex; align-items: center; gap: 4px; margin-bottom: 12px; }
+.shamsi-nav select { min-width: 0; padding: 5px 2px; border: 0; border-radius: 4px; color: inherit; background: transparent; font: inherit; font-weight: 700; cursor: pointer; }
+.shamsi-month { flex: 1; }
+.shamsi-arrow { flex: 0 0 32px; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 4px; color: inherit; background: transparent; }
+.shamsi-arrow:hover, .shamsi-nav select:hover { background: var(--surface-soft); }
+.shamsi-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; text-align: center; font-variant-numeric: tabular-nums; }
+.shamsi-weekday { padding: 4px 0 8px; color: var(--muted); }
+.shamsi-day { min-width: 0; height: 34px; padding: 0; border: 1px solid transparent; border-radius: 4px; background: transparent; color: inherit; font: inherit; }
+.shamsi-day:hover:not(:disabled) { background: var(--surface-soft); }
+.shamsi-day.today { border-color: var(--primary); color: var(--primary-dark); font-weight: 700; }
+.shamsi-day.selected { background: var(--primary); border-color: var(--primary); color: #fff; }
+.shamsi-day.selected:hover { background: var(--primary-dark); }
+.shamsi-day:disabled { color: #697982; background: #f4f7f9; cursor: not-allowed; }
+.shamsi-actions { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+.shamsi-action { border: 0; border-radius: 4px; padding: 4px 8px; background: transparent; color: var(--primary-dark); font: inherit; }
+.shamsi-action:hover { background: var(--surface-soft); }
+.shamsi-popup :focus-visible, .shamsi-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+@media (pointer: coarse) { .shamsi-day { height: 40px; } .shamsi-arrow, .shamsi-action { min-height: 40px; } }

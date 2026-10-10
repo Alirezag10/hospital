@@ -3,20 +3,27 @@ use yii\grid\GridView;
 use yii\helpers\Html;
 $this->title = 'پذیرش‌ها';
 $this->params['breadcrumbs'][] = $this->title;
+$hasFilters = (string) $searchModel->name !== '' || (string) $searchModel->national_code !== ''
+    || (string) $searchModel->status !== '';
 ?>
 <div class="page-heading">
     <div><h1><?= Html::encode($this->title) ?></h1><p>وضعیت پذیرش‌ها و خلاصهٔ پرونده‌ها را بررسی کنید.</p></div>
-    <?= Html::a('ثبت پذیرش', ['create'], ['class' => 'btn btn-primary']) ?>
+    <div class="form-actions mt-0"><?= Html::a('تقویم پذیرش‌ها', ['calendar'], ['class' => 'btn btn-outline-primary']) ?><?= Html::a('ثبت پذیرش', ['create'], ['class' => 'btn btn-primary']) ?></div>
 </div>
 <?= $this->render('_search', ['model' => $searchModel]) ?>
+<?= $this->render('../layouts/_page_size', ['dataProvider' => $dataProvider]) ?>
 <div class="table-panel table-responsive">
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
     'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
     'summary' => 'نمایش {begin} تا {end} از {totalCount} پذیرش',
-    'emptyText' => 'پذیرشی مطابق جست‌وجوی شما پیدا نشد.',
+    'emptyText' => Html::tag('div',
+        Html::tag('p', $hasFilters ? 'پذیرشی مطابق جست‌وجوی شما پیدا نشد.' : 'هنوز پذیرشی ثبت نشده است.') .
+        Html::a($hasFilters ? 'پاک کردن فیلترها' : 'ثبت اولین پذیرش',
+            $hasFilters ? ['index'] : ['create'], ['class' => 'btn btn-primary']),
+        ['class' => 'empty-state']
+    ),
     'columns' => [
-        'id',
         ['label' => 'بیمار', 'value' => static function ($model) {
             return $model->patient->first_name . ' ' . $model->patient->last_name;
         }],
