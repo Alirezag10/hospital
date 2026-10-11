@@ -72,7 +72,7 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
         <section>
             <h2>پذیرش</h2>
             <dl class="detail-list">
-                <dt>تاریخ پذیرش</dt><dd><span dir="ltr"><?= Html::encode($model->admission_date) ?></span></dd>
+                <dt>تاریخ پذیرش</dt><dd><span dir="ltr"><?= Html::encode(Yii::$app->formatter->asDatetime($model->admission_date)) ?></span></dd>
                 <dt>بخش</dt><dd><?= Html::encode($model->ward) ?></dd>
                 <dt>پزشک</dt><dd><?= Html::encode($model->doctor_name) ?></dd>
             </dl>
@@ -84,7 +84,7 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
         <ol class="timeline-list">
             <?php foreach ($timeline as $event): ?>
                 <li class="timeline-item"><span class="timeline-marker" aria-hidden="true"></span>
-                    <div><div class="timeline-heading"><strong><?= Html::encode($event['title']) ?></strong><time dir="ltr"><?= Html::encode($event['date']) ?></time></div>
+                    <div><div class="timeline-heading"><strong><?= Html::encode($event['title']) ?></strong><time dir="ltr"><?= Html::encode(Yii::$app->formatter->asDatetime($event['date'])) ?></time></div>
                     <p><?= Html::encode($event['detail']) ?></p></div>
                 </li>
             <?php endforeach; ?>
@@ -156,7 +156,7 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
     <?php if ($discharge !== null): ?>
         <p>
             تاریخ ترخیص:
-            <span dir="ltr"><?= Html::encode($discharge->discharge_date) ?></span>
+            <span dir="ltr"><?= Html::encode(Yii::$app->formatter->asDatetime($discharge->discharge_date)) ?></span>
             <br>
             مبلغ نهایی ثبت‌شده هنگام ترخیص:
             <strong>

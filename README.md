@@ -26,7 +26,9 @@
 
 ## نصب تازه
 
-PHP 8.2 یا بالاتر با افزونه‌های لازم Yii از جمله `pdo_mysql` و `mbstring`، Composer 2، MySQL/MariaDB و Nginx لازم است. مسیرهای پیش‌فرض ویندوز `C:\xampp\php` و `C:\nginx` هستند.
+PHP 8.2 یا بالاتر با افزونه‌های لازم Yii از جمله `pdo_mysql`، `mbstring` و `intl`، Composer 2، MySQL/MariaDB و Nginx لازم است. مسیرهای پیش‌فرض ویندوز `C:\xampp\php` و `C:\nginx` هستند.
+
+برای فعال‌سازی تقویم شمسی، خط `extension=intl` را در `php.ini` فعال و PHP FastCGI را دوباره اجرا کنید. تبدیل و اعتبارسنجی ورودی شمسی در `app/components/JalaliDate.php` با ICU انجام می‌شود؛ نمایش تاریخ‌ها با Formatter خود Yii و منطقهٔ زمانی `Asia/Tehran` است. فرم تاریخ تولد حتی بدون JavaScript ورودی شمسی می‌پذیرد؛ مقدار دیتابیس میلادی باقی می‌ماند.
 
 از ریشهٔ پروژه در PowerShell:
 

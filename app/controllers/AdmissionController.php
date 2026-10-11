@@ -1,6 +1,7 @@
 <?php
 namespace app\controllers;
 
+use app\components\JalaliDate;
 use app\models\Admission;
 use app\models\AdmissionSearch;
 use app\models\Discharge;
@@ -25,13 +26,15 @@ class AdmissionController extends Controller
 
     public function actionCalendar($month = null)
     {
-        $month = is_string($month) && preg_match('/^\d{4}-\d{2}$/D', $month) ? $month : date('Y-m');
-        $firstDay = \DateTimeImmutable::createFromFormat('!Y-m-d', $month . '-01');
-        if ($firstDay === false || $firstDay->format('Y-m') !== $month) {
-            $firstDay = new \DateTimeImmutable(date('Y-m-01'));
-            $month = $firstDay->format('Y-m');
+        [$currentYear, $currentMonth] = JalaliDate::fromGregorian((int) date('Y'), (int) date('n'), (int) date('j'));
+        if (is_string($month) && preg_match('/^(1[2-5]\d{2}|1600)-(0[1-9]|1[0-2])$/D', $month, $matches)) {
+            $currentYear = (int) $matches[1];
+            $currentMonth = (int) $matches[2];
         }
-        $nextMonth = $firstDay->modify('first day of next month');
+        $firstDay = JalaliDate::toGregorian($currentYear, $currentMonth, 1);
+        $nextYear = $currentMonth === 12 ? $currentYear + 1 : $currentYear;
+        $nextMonthNumber = $currentMonth === 12 ? 1 : $currentMonth + 1;
+        $nextMonth = JalaliDate::toGregorian($nextYear, $nextMonthNumber, 1);
         $admissions = Admission::find()->with('patient')
             ->where(['>=', 'admission_date', $firstDay->format('Y-m-d 00:00:00')])
             ->andWhere(['<', 'admission_date', $nextMonth->format('Y-m-d 00:00:00')])
@@ -43,13 +46,13 @@ class AdmissionController extends Controller
         }
 
         return $this->render('calendar', [
-            'month' => $month,
+            'month' => sprintf('%04d-%02d', $currentYear, $currentMonth),
             'firstDay' => $firstDay,
-            'daysInMonth' => (int) $firstDay->format('t'),
+            'daysInMonth' => (int) $firstDay->diff($nextMonth)->days,
             'startOffset' => ((int) $firstDay->format('N') + 1) % 7,
             'admissionsByDay' => $days,
-            'previousMonth' => $firstDay->modify('-1 month')->format('Y-m'),
-            'nextMonth' => $nextMonth->format('Y-m'),
+            'previousMonth' => sprintf('%04d-%02d', $currentMonth === 1 ? $currentYear - 1 : $currentYear, $currentMonth === 1 ? 12 : $currentMonth - 1),
+            'nextMonth' => sprintf('%04d-%02d', $nextYear, $nextMonthNumber),
         ]);
     }
 

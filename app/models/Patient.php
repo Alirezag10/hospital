@@ -15,6 +15,8 @@ namespace app\models;
  */
 class Patient extends \yii\db\ActiveRecord
 {
+    public $birthDateInput;
+
     // Mobile prefixes in Iran's CRA numbering plan (ITU, August 2026).
     public const MOBILE_PATTERN = '/^(?=[0-9]{11}$)09(?:0[0-5]|1[0-9]|2[0-3]|3[0-9]|9(?:[0-4]|5(?:10|50)|6|8(?:1|2|3[0-2]|88)|9(?:0[0-3]|1|21|3[0-4]|5|69|77|8|9)))[0-9]+$/D';
 
@@ -36,6 +38,7 @@ class Patient extends \yii\db\ActiveRecord
             [['national_code', 'birth_date'], 'filter', 'filter' => [self::class, 'normalizeDigits'], 'skipOnArray' => true],
             [['mobile'], 'filter', 'filter' => [self::class, 'normalizeMobile'], 'skipOnArray' => true],
             [['birth_date'], 'default', 'value' => null],
+            [['birthDateInput'], 'validateBirthDateInput', 'skipOnEmpty' => false],
             [['first_name', 'last_name', 'national_code', 'mobile'], 'required'],
             [['birth_date'], 'date', 'format' => 'php:Y-m-d', 'strictDateFormat' => true,
                 'max' => date('Y-m-d'), 'tooBig' => 'تاریخ تولد نمی‌تواند در آینده باشد.',
@@ -47,6 +50,33 @@ class Patient extends \yii\db\ActiveRecord
             [['mobile'], 'match', 'pattern' => self::MOBILE_PATTERN, 'message' => 'شماره موبایل ایران را با پیش‌شماره معتبر وارد کنید.'],
             [['national_code'], 'unique'],
         ];
+    }
+
+    public function validateBirthDateInput($attribute)
+    {
+        $value = self::normalizeDigits($this->$attribute);
+        if ($value === null || $value === '') {
+            $this->birth_date = null;
+            return;
+        }
+        $date = \app\components\JalaliDate::parse($value);
+        if ($date === null) {
+            $this->addError($attribute, 'تاریخ شمسی معتبر وارد کنید؛ مانند ۱۴۰۵/۰۷/۰۸.');
+        } elseif ($date > date('Y-m-d')) {
+            $this->addError($attribute, 'تاریخ تولد نمی‌تواند در آینده باشد.');
+        } else {
+            $this->birth_date = $date;
+        }
+    }
+
+    public function scenarios()
+    {
+        $scenarios = parent::scenarios();
+        $scenarios[self::SCENARIO_DEFAULT] = array_map(
+            static fn($attribute) => $attribute === 'birth_date' ? '!birth_date' : $attribute,
+            $scenarios[self::SCENARIO_DEFAULT]
+        );
+        return $scenarios;
     }
 
     public function validateNationalCode($attribute)
@@ -116,6 +146,7 @@ class Patient extends \yii\db\ActiveRecord
             'national_code' => 'کد ملی',
             'mobile' => 'موبایل',
             'birth_date' => 'تاریخ تولد',
+            'birthDateInput' => 'تاریخ تولد',
             'created_at' => 'تاریخ ثبت',
         ];
     }

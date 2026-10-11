@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
         ['class' => 'yii\grid\SerialColumn', 'header' => 'ردیف'],
         'name',
         'floor',
-        ['attribute' => 'created_at', 'contentOptions' => ['dir' => 'ltr']],
+        ['attribute' => 'created_at', 'format' => 'datetime', 'contentOptions' => ['dir' => 'ltr']],
     ],
 ]) ?>
 </div>

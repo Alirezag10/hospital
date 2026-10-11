@@ -1,4 +1,4 @@
-/* Local Persian calendar. Gregorian values are submitted to Yii/MySQL. */
+/* Persian calendar input. The server validates and converts birthDateInput. */
 (function () {
     'use strict';
     const DAY = 86400000;
@@ -57,7 +57,7 @@
         f.visible.setCustomValidity(showError ? error : '');
         f.visible.setAttribute('aria-invalid', showError && error ? 'true' : 'false');
         f.error.textContent = showError ? error : '';
-        f.original.value = value === null ? '__invalid_date__' : value;
+        f.original.value = f.serverParsed ? f.visible.value : (value === null ? '__invalid_date__' : value);
         if (notify && value !== null) f.original.dispatchEvent(new Event('change', {bubbles: true}));
         return value !== null;
     }
@@ -82,7 +82,9 @@
     function position(f) {
         const rect = f.visible.getBoundingClientRect();
         const pop = f.popup;
-        const left = Math.max(12, Math.min(rect.right - pop.offsetWidth, window.innerWidth - pop.offsetWidth - 12));
+        const viewportWidth = document.documentElement.clientWidth;
+        pop.style.maxWidth = (viewportWidth - 24) + 'px';
+        const left = Math.max(12, Math.min(rect.right - pop.offsetWidth, viewportWidth - pop.offsetWidth - 12));
         const below = rect.bottom + 6;
         const top = below + pop.offsetHeight <= window.innerHeight - 12 ? below : Math.max(12, rect.top - pop.offsetHeight - 6);
         pop.style.left = left + 'px'; pop.style.top = top + 'px';
@@ -99,6 +101,8 @@
             if (m < 1) {m = 12; y--;} if (m > 12) {m = 1; y++;}
             if (y < 1200 || y > 1600) return;
             f.year = y; f.month = m; render(f);
+            if (active === f) position(f);
+            pop.querySelector(delta < 0 ? '[data-month-previous]' : '[data-month-next]')?.focus({preventScroll:true});
         }
         const month = document.createElement('select'); month.className = 'shamsi-month'; month.setAttribute('aria-label', 'ماه');
         months.forEach((name, i) => month.add(new Option(name, String(i + 1)))); month.value = f.month;
@@ -107,13 +111,17 @@
         year.value = f.year;
         month.addEventListener('change', e => {e.stopPropagation();f.month = +month.value; render(f);pop.querySelector('.shamsi-month').focus();});
         year.addEventListener('change', e => {e.stopPropagation();f.year = +year.value; render(f);pop.querySelector('.shamsi-year').focus();});
-        nav.append(month, year, iconButton('ماه قبل', 'M9 6l6 6-6 6', () => move(-1), 'shamsi-arrow'), iconButton('ماه بعد', 'M15 6l-6 6 6 6', () => move(1), 'shamsi-arrow')); pop.append(nav);
+        const selectors = document.createElement('div'); selectors.className = 'shamsi-selectors'; selectors.append(month, year);
+        const previous = iconButton('ماه قبل', 'M9 6l6 6-6 6', event => {event.stopPropagation();move(-1);}, 'shamsi-arrow'); previous.dataset.monthPrevious = '1';
+        const next = iconButton('ماه بعد', 'M15 6l-6 6 6 6', event => {event.stopPropagation();move(1);}, 'shamsi-arrow'); next.dataset.monthNext = '1';
+        nav.append(previous, selectors, next); pop.append(nav);
         const grid = document.createElement('div'); grid.className = 'shamsi-days';
-        ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'].forEach(text => {const e = document.createElement('span');e.className = 'shamsi-weekday';e.textContent = text;grid.append(e);});
+        ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'].forEach((name, index) => {const e = document.createElement('span');e.className = 'shamsi-weekday';e.textContent = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'][index];e.title = name;e.setAttribute('aria-label', name);grid.append(e);});
         const first = gregorian(f.year, f.month, 1);
         const offset = (first.getUTCDay() + 1) % 7;
         for (let i = 0; i < offset; i++) grid.append(document.createElement('span'));
-        const selected = digits(f.visible.value).split(' ')[0];
+        const parsedSelection = parse(f.visible.value, f.time);
+        const selected = parsedSelection ? display(parsedSelection).split(' ')[0] : '';
         const now = new Date();
         const today = parts(new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))).join('/');
         for (let day = 1; day <= 31; day++) {
@@ -144,15 +152,16 @@
     }
     function enhance(original) {
         if (original.dataset.shamsiReady || original.type === 'hidden') return;
-        const match = original.name.match(/\[(birth_date|admission_date|discharge_date|created_at|dateFrom|dateTo)\]$/);
+        const match = original.name.match(/\[(birthDateInput|birth_date|admission_date|discharge_date|created_at|dateFrom|dateTo)\]$/);
         if (!match) return;
         original.dataset.shamsiReady = '1';
-        const time = !/Search\[/.test(original.name) && !['birth_date', 'dateFrom', 'dateTo'].includes(match[1]);
+        const serverParsed = match[1] === 'birthDateInput';
+        const time = !/Search\[/.test(original.name) && !['birthDateInput', 'birth_date', 'dateFrom', 'dateTo'].includes(match[1]);
         const visible = original.cloneNode(false);
         visible.removeAttribute('name'); visible.removeAttribute('data-shamsi-ready'); visible.removeAttribute('min');visible.removeAttribute('max');
         visible.type = 'text'; visible.id = original.id + '-shamsi'; visible.dir = 'ltr';
         visible.autocomplete = 'off'; visible.placeholder = time ? '۱۴۰۵/۰۷/۰۸ ۱۴:۳۰:۰۰' : '۱۴۰۵/۰۷/۰۸';
-        visible.value = display(original.value); visible.removeAttribute('value');
+        visible.value = serverParsed ? original.value : display(original.value); visible.removeAttribute('value');
         const wrapper = document.createElement('div'); wrapper.className = 'shamsi-field';
         original.before(wrapper);wrapper.append(visible);
         original.type = 'hidden';
@@ -175,7 +184,7 @@
         wrapper.append(toggle, popup);
         const error = document.createElement('div');error.className = 'text-danger small';error.id = visible.id + '-error';error.setAttribute('aria-live', 'polite');wrapper.after(error);
         visible.setAttribute('aria-describedby', [visible.getAttribute('aria-describedby'), error.id].filter(Boolean).join(' '));
-        const f = {original, visible, time, popup, toggle, error};fields.add(f);
+        const f = {original, visible, time, popup, toggle, error, serverParsed};fields.add(f);
         visible.addEventListener('input', () => sync(f, false));
         visible.addEventListener('change', e => {e.stopPropagation();sync(f, true);});
         visible.addEventListener('blur', () => sync(f, false));
@@ -185,21 +194,13 @@
             form.addEventListener('submit', e => {if (!validate(form)) {e.preventDefault();e.stopImmediatePropagation();}}, true);
             if (window.jQuery) window.jQuery(form).on('beforeValidate.shamsi beforeSubmit.shamsi', () => validate(form));
             form.addEventListener('reset', () => setTimeout(() => {
-                for (const field of fields) if (field.original.form === form) {field.visible.value = display(field.original.value);sync(field, false);}
+                for (const field of fields) if (field.original.form === form) {field.visible.value = field.serverParsed ? field.original.value : display(field.original.value);sync(field, false);}
             }, 0));
         }
     }
     function init() {
-        document.querySelectorAll('[data-shamsi-year]').forEach(node => {
-            node.textContent = persian(display(node.dataset.shamsiYear).slice(0, 4));
-        });
         const main = document.getElementById('main');if (!main) return;
         main.querySelectorAll('input[name]').forEach(enhance);
-        const walk = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {acceptNode(node) {
-            return node.parentElement.closest('script, style, input, textarea, .shamsi-popup') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
-        }});
-        const nodes = [];while (walk.nextNode()) nodes.push(walk.currentNode);
-        nodes.forEach(node => {node.nodeValue = node.nodeValue.replace(/\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?\b/g, value => persian(display(value)));});
     }
     document.addEventListener('click', e => {if (active && !active.visible.parentElement.contains(e.target)) close();});
     document.addEventListener('keydown', e => {if (e.key === 'Escape' && active) {const f = active;close();f.visible.focus();}});

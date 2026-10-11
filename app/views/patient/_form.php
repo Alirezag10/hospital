@@ -42,8 +42,9 @@ use yii\widgets\ActiveForm;
                 ]) ?>
             </div>
             <div class="col-md-6">
-                <?= $form->field($model, 'birth_date')->input('date', [
+                <?= $form->field($model, 'birthDateInput', ['enableClientValidation' => false])->textInput([
                     'dir' => 'ltr',
+                    'placeholder' => '۱۴۰۵/۰۷/۰۸',
                     'max' => date('Y-m-d'),
                 ]) ?>
             </div>

@@ -27,7 +27,7 @@ $hasFilters = (string) $searchModel->name !== '' || (string) $searchModel->natio
         ['label' => 'بیمار', 'value' => static function ($model) {
             return $model->patient->first_name . ' ' . $model->patient->last_name;
         }],
-        ['attribute' => 'admission_date', 'contentOptions' => ['dir' => 'ltr']],
+        ['attribute' => 'admission_date', 'format' => 'datetime', 'contentOptions' => ['dir' => 'ltr']],
         'doctor_name', 'ward',
         ['attribute' => 'status', 'format' => 'raw', 'value' => static function ($model) {
             $isAdmitted = $model->status === 'admitted';

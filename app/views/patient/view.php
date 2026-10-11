@@ -17,7 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <dt>نام و نام خانوادگی</dt><dd><?= Html::encode($model->first_name . ' ' . $model->last_name) ?></dd>
         <dt>کد ملی</dt><dd dir="ltr"><?= Html::encode($model->national_code) ?></dd>
         <dt>موبایل</dt><dd dir="ltr"><?= Html::encode($model->mobile) ?></dd>
-        <?php if ($model->birth_date): ?><dt>تاریخ تولد</dt><dd dir="ltr"><?= Html::encode($model->birth_date) ?></dd><?php endif; ?>
+        <?php if ($model->birth_date): ?><dt>تاریخ تولد</dt><dd dir="ltr"><?= Html::encode(Yii::$app->formatter->asDate($model->birth_date)) ?></dd><?php endif; ?>
     </dl>
 </section>
 
@@ -31,7 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
     'emptyText' => Html::tag('div', 'برای این بیمار هنوز پذیرشی ثبت نشده است.', ['class' => 'empty-state']),
     'columns' => [
         ['class' => 'yii\\grid\\SerialColumn', 'header' => 'ردیف'],
-        ['attribute' => 'admission_date', 'label' => 'تاریخ پذیرش', 'contentOptions' => ['dir' => 'ltr']],
+        ['attribute' => 'admission_date', 'format' => 'datetime', 'label' => 'تاریخ پذیرش', 'contentOptions' => ['dir' => 'ltr']],
         'doctor_name', 'ward',
         ['label' => 'وضعیت', 'format' => 'raw', 'value' => static function ($admission) {
             $open = $admission->status === 'admitted' && $admission->discharge === null;

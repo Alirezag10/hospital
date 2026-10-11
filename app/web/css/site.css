@@ -88,6 +88,9 @@ select.form-control, .form-select { padding-left: 32px; background-position: lef
 .error-summary { color: #842029; background: #fff0f1; border: 1px solid #f1cbd0; padding: 16px; margin-bottom: 20px; border-radius: 8px; }
 .table-panel { overflow: hidden; }
 .table-panel.table-responsive { overflow-x: auto; overflow-y: hidden; scrollbar-gutter: stable; }
+.table-scroll-hint { margin: 0 0 8px; color: var(--muted); font-size: .85rem; }
+.table-scroll-hint[hidden] { display: none; }
+.table-responsive:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .grid-view .summary { padding: 16px 20px; color: var(--muted); font-size: .85rem; }
 .table { color: var(--ink); --bs-table-hover-bg: var(--surface-soft); --bs-table-striped-bg: #f8fafd; }
 .table > :not(caption) > * > * { padding: 14px 16px; border-color: var(--line); }
@@ -313,7 +316,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 @media print {
     @page { margin: 14mm; }
     body, main, main > .container { color: #000 !important; background: #fff !important; }
-    .navbar, #footer, .breadcrumb, .skip-link, .debug-toolbar-toggle, [data-print-hidden], .btn, .app-flash { display: none !important; }
+    .navbar, #footer, .breadcrumb, .skip-link, .debug-toolbar-toggle, .table-scroll-hint, [data-print-hidden], .btn, .app-flash { display: none !important; }
     main > .container { width: 100%; max-width: none; padding: 0; }
     .admission-summary, .patient-profile, .table-panel { border: 1px solid #777; box-shadow: none; }
     .table-responsive { overflow: visible !important; }
@@ -322,6 +325,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     a { color: #000 !important; text-decoration: none !important; }
 }
 @media (max-width: 767px) {
+    .debug-toolbar-toggle, .debug-toolbar-toggle[aria-pressed="true"] {
+        position: static;
+        align-self: center;
+        min-height: 44px;
+        margin: 8px auto 12px;
+    }
+    .debug-toolbar-toggle[aria-pressed="true"] { margin-bottom: 56px; }
     .section-heading { align-items: flex-start; }
     .section-heading .btn { flex-shrink: 0; }
     .selected-admission-summary, .discharge-form .selected-admission-summary { grid-template-columns: 1fr; }

@@ -4,6 +4,7 @@ $config = [
     'name' => 'سامانه بیمارستان',
     'basePath' => dirname(__DIR__),
     'language' => 'fa-IR',
+    'timeZone' => 'Asia/Tehran',
     'bootstrap' => ['log'],
     'container' => [
         'definitions' => [
@@ -24,7 +25,15 @@ $config = [
             'showScriptName' => false,
             'rules' => [],
         ],
-        'formatter' => ['dateFormat' => 'php:Y-m-d', 'datetimeFormat' => 'php:Y-m-d H:i:s'],
+        'formatter' => [
+            'class' => \app\components\HospitalFormatter::class,
+            'locale' => 'fa_IR@calendar=persian',
+            'calendar' => \IntlDateFormatter::TRADITIONAL,
+            'dateFormat' => 'yyyy/MM/dd',
+            'datetimeFormat' => 'yyyy/MM/dd HH:mm',
+            'defaultTimeZone' => 'Asia/Tehran',
+            'timeZone' => 'Asia/Tehran',
+        ],
         'errorHandler' => ['errorAction' => 'site/error'],
         'log' => ['targets' => [['class' => \yii\log\FileTarget::class, 'levels' => ['error', 'warning']]]],
         'db' => require __DIR__ . '/db.php',

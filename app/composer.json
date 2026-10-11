@@ -5,6 +5,7 @@
     "license": "BSD-3-Clause",
     "require": {
         "php": ">=8.2",
+        "ext-intl": "*",
         "yiisoft/yii2": "2.0.55",
         "yiisoft/yii2-bootstrap5": "2.0.51"
     },

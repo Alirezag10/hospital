@@ -38,7 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'name',
         'specialty',
         ['attribute' => 'mobile', 'contentOptions' => ['dir' => 'ltr']],
-        ['attribute' => 'created_at', 'contentOptions' => ['dir' => 'ltr']],
+        ['attribute' => 'created_at', 'format' => 'datetime', 'contentOptions' => ['dir' => 'ltr']],
     ],
 ]) ?>
 </div>

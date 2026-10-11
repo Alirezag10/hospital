@@ -36,18 +36,22 @@
     updateServiceTotal();
 
     document.querySelectorAll('form[data-loading-form]').forEach(function (form) {
-        form.addEventListener('submit', function (event) {
+        // Yii fires beforeSubmit only after its client validation has passed.
+        window.jQuery(form).on('beforeSubmit', function () {
             if (form.dataset.submitting === '1') {
-                event.preventDefault();
-                return;
+                return false;
             }
             form.dataset.submitting = '1';
-            const button = event.submitter || form.querySelector('button[type="submit"], input[type="submit"]');
-            if (!button) return;
-            button.dataset.originalLabel = button.textContent;
-            button.disabled = true;
-            button.setAttribute('aria-busy', 'true');
-            button.textContent = button.dataset.loadingLabel || 'در حال ثبت…';
+            const button = form.querySelector('button[type="submit"], input[type="submit"]');
+            if (button) {
+                button.disabled = true;
+                button.setAttribute('aria-busy', 'true');
+                if (button.tagName === 'INPUT') {
+                    button.value = button.dataset.loadingLabel || 'در حال ثبت…';
+                } else {
+                    button.textContent = button.dataset.loadingLabel || 'در حال ثبت…';
+                }
+            }
         });
     });
 
@@ -59,7 +63,6 @@
         };
         form.addEventListener('input', markDirty);
         form.addEventListener('change', markDirty);
-        form.addEventListener('submit', () => { form.dataset.submitting = '1'; });
         dirtyForms.add(form);
     });
     function hasUnsavedChanges() {
@@ -88,17 +91,28 @@
         }
     }, true);
 
-    const monthHeading = document.querySelector('[data-calendar-month]');
-    if (monthHeading) {
-        const date = new Date(monthHeading.dataset.calendarMonth + 'T00:00:00Z');
-        monthHeading.textContent = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
-            year: 'numeric', month: 'long', timeZone: 'UTC'
-        }).format(date);
-        const dayFormatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {day: 'numeric', timeZone: 'UTC'});
-        document.querySelectorAll('[data-calendar-date]').forEach(function (day) {
-            const persianDay = dayFormatter.format(new Date(day.dataset.calendarDate + 'T00:00:00Z'));
-            day.textContent = persianDay;
-            day.parentElement.setAttribute('aria-label', 'روز ' + persianDay);
+    const tableWrappers = document.querySelectorAll('.table-responsive');
+    function updateTableHints() {
+        tableWrappers.forEach(function (wrapper, index) {
+            let hint = wrapper.previousElementSibling;
+            if (!hint?.classList.contains('table-scroll-hint')) {
+                hint = document.createElement('p');
+                hint.className = 'table-scroll-hint';
+                hint.textContent = 'برای دیدن ستون‌های دیگر، جدول را افقی بکشید.';
+                hint.id = 'table-scroll-hint-' + (index + 1);
+                wrapper.before(hint);
+            }
+            const overflowing = wrapper.scrollWidth > wrapper.clientWidth + 1;
+            hint.hidden = !overflowing;
+            if (overflowing) {
+                wrapper.tabIndex = 0;
+                wrapper.setAttribute('aria-describedby', hint.id);
+            } else {
+                wrapper.removeAttribute('tabindex');
+                wrapper.removeAttribute('aria-describedby');
+            }
         });
     }
+    updateTableHints();
+    window.addEventListener('resize', updateTableHints);
 })();
