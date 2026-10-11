@@ -288,6 +288,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .selected-admission-summary span { font-size: .88rem; }
 .discharge-form { overflow: visible; }
 .discharge-section-title { margin: 0 0 16px; }
+.discharge-review-section { margin-top: 28px; }
+.discharge-form .selected-admission-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 20px; }
+.discharge-form .selected-admission-summary strong { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.discharge-form .selected-admission-summary .status-badge { font-size: .78rem; }
+.discharge-confirm-section { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
 .discharge-cost-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 24px 0 10px; }
 .discharge-cost-heading h3 { margin: 0; font-size: 1rem; }
 .discharge-cost-heading > span { color: var(--muted); font-size: .82rem; }
@@ -319,7 +324,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 @media (max-width: 767px) {
     .section-heading { align-items: flex-start; }
     .section-heading .btn { flex-shrink: 0; }
-    .selected-admission-summary { grid-template-columns: 1fr; }
+    .selected-admission-summary, .discharge-form .selected-admission-summary { grid-template-columns: 1fr; }
     .calendar-day { min-height: 82px; padding: 4px; }
     .calendar-weekday { padding: 8px 2px; font-size: .78rem; }
     .calendar-event { font-size: .68rem; padding: 2px 4px; }
