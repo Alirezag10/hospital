@@ -1,6 +1,7 @@
 <?php
 namespace app\controllers;
 
+use yii\db\Expression;
 use app\models\Patient;
 use app\models\Admission;
 use app\models\Discharge;

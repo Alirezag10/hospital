@@ -1,49 +1,56 @@
-# Graph Report - hospital  (2026-10-06)
+# Graph Report - hospital  (2026-10-10)
 
 ## Corpus Check
-- 41 files · ~99,841 words
+- 61 files · ~108,859 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 5 file(s) not represented in the graph (top: (none) 2, .css 1, .woff2 1)
+- Unclassified: 6 file(s) not represented in the graph (top: (none) 2, .css 2, .woff2 1)
+- Graph health warning: 2 self-loop edges were found; no missing or dangling endpoints.
 
 ## Summary
-- 205 nodes · 282 edges · 14 communities (7 shown, 7 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.88)
-- Token cost: unavailable for semantic subagents (0 input · 0 output recorded by Graphify).
+- 303 nodes · 452 edges · 22 communities (10 shown, 12 thin omitted)
+- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.86)
+- Token cost: unavailable for semantic extraction by Codex subagents (0 input · 0 output recorded by Graphify).
 
 ## Community Hubs (Navigation)
-- Patient Admission Controllers
-- Admission Views and Forms
-- Services and Discharge Models
-- Validation and Security
-- Persistence and Database
+- Persistence and Shared Models
+- Admission and Patient Views
+- Admission and Discharge Controllers
+- Patient and Admission Actions
+- Ward and Discharge Workflows
+- Project Guides and Care Flows
 - Composer Dependencies
-- Deployment and Care Workflows
+- Jalali Date and UI Scripts
+- Hospital SQL Schema
+- Admission Service Model
 - Frontend Asset Bundle
-- SQL Table Schema
+- Patient Search UI
+- Yii Debug Toolbar Guidance
 - Yii Software License
+- Font License
+- Confirmation Dialog
 
 ## God Nodes (most connected - your core abstractions)
-1. `Admission` - 22 edges
-2. `Discharge` - 15 edges
-3. `Patient` - 13 edges
-4. `AdmissionService` - 11 edges
-5. `Service` - 9 edges
-6. `Project Analysis Report` - 8 edges
-7. `MariaDB Database` - 8 edges
-8. `Discharge Flow` - 8 edges
-9. `PatientSearch` - 7 edges
-10. `Patient ActiveRecord` - 7 edges
+1. `Admission` - 26 edges
+2. `Patient` - 22 edges
+3. `Doctor` - 12 edges
+4. `render()` - 12 edges
+5. `Hospital Admission and Discharge System` - 12 edges
+6. `Ward` - 11 edges
+7. `enhance()` - 11 edges
+8. `AdmissionController` - 10 edges
+9. `Hospital Project Work Report` - 10 edges
+10. `AdmissionService` - 8 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `{closure#1}()` --references--> `Admission`  [EXTRACTED]
-  app/views/discharge/_form.php → app/models/Admission.php
-- `Server-side Discharge Calculation` --semantically_similar_to--> `Server-side Historical Pricing`  [INFERRED] [semantically similar]
+- `Historical Gregorian Date Input Explanation` --conceptually_related_to--> `Jalali Date Picker and Submit Time Validation`  [INFERRED]
+  graphify-out/memory/query_20261009_124939_4709aae5_چرا_قسمت_ثبت_بیمار_تاریخ_تولد_را_میلادی_می_گیرد.md → WORK_REPORT.md
+- `{closure#1}()` --references--> `Ward`  [EXTRACTED]
+  app/views/admission/_form.php → app/models/Ward.php
+- `Hospital Admission and Discharge System` --semantically_similar_to--> `Hospital Project Work Report`  [INFERRED] [semantically similar]
   README.md → WORK_REPORT.md
-- `Five-table Hospital Schema` --semantically_similar_to--> `Five-table Hospital Schema`  [INFERRED] [semantically similar]
+- `Admission Workflow` --semantically_similar_to--> `Admission and Historical Doctor Ward Names`  [INFERRED] [semantically similar]
   README.md → WORK_REPORT.md
-- `Local Yekan Font` --references--> `SIL Open Font License 1.1`  [EXTRACTED]
-  README.md → app/web/fonts/LICENSE.txt
-- `Local Yekan Font` --conceptually_related_to--> `Responsive Persian User Interface`  [EXTRACTED]
+- `Discharge Cost Calculation` --semantically_similar_to--> `Server Calculated Service Pricing and Discharge`  [INFERRED] [semantically similar]
   README.md → WORK_REPORT.md
 
 ## Import Cycles
@@ -53,55 +60,67 @@
 - **Patient to Discharge Care Path** — project_analysis_patient_flow, project_analysis_admission_flow, project_analysis_service_flow, project_analysis_discharge_flow [EXTRACTED 1.00]
 - **Financial Consistency** — project_analysis_service_flow, project_analysis_discharge_flow, project_analysis_historic_price, project_analysis_transaction, project_analysis_row_lock [EXTRACTED 1.00]
 
-## Communities (14 total, 7 thin omitted)
+## Communities (22 total, 12 thin omitted)
 
-### Community 0 - "Patient Admission Controllers"
+### Community 0 - "Persistence and Shared Models"
+Cohesion: 0.06
+Nodes (34): Record Access Control, ActiveForm, Yii ActiveRecord, Admission Registration Flow, Admission ActiveRecord, AdmissionService ActiveRecord, Admission Services Table, Admissions Table (+26 more)
+
+### Community 2 - "Admission and Discharge Controllers"
 Cohesion: 0.08
-Nodes (6): AdmissionController, PatientController, SiteController, Admission, Patient, PatientSearch
+Nodes (5): AdmissionServiceController, DischargeController, DoctorController, SiteController, Admission
 
-### Community 2 - "Services and Discharge Models"
+### Community 3 - "Patient and Admission Actions"
 Cohesion: 0.08
-Nodes (5): AdmissionServiceController, DischargeController, AdmissionService, Discharge, Service
+Nodes (5): AdmissionController, PatientController, AdmissionSearch, Patient, PatientSearch
 
-### Community 3 - "Validation and Security"
+### Community 4 - "Ward and Discharge Workflows"
+Cohesion: 0.08
+Nodes (5): WardController, Discharge, Doctor, Service, Ward
+
+### Community 5 - "Project Guides and Care Flows"
+Cohesion: 0.12
+Nodes (24): Patient Form Native Date Input, Patient Model Gregorian Date Validation, Why Patient Birth Date Used Gregorian Input, Admission Services and Historical Pricing, Admission Workflow, Discharge Cost Calculation, Hospital Admission and Discharge System, MySQL MariaDB Database (+16 more)
+
+### Community 6 - "Composer Dependencies"
 Cohesion: 0.10
-Nodes (16): Record Access Control, ActiveForm, Admission Registration Flow, AppAsset Bundle, Application Configuration, CSRF Validation, GridView, MVC Architecture (+8 more)
+Nodes (20): yiisoft/yii2-composer, autoload, psr-4, config, allow-plugins, fxp-asset, process-timeout, description (+12 more)
 
-### Community 4 - "Persistence and Database"
-Cohesion: 0.14
-Nodes (18): Yii ActiveRecord, Admission ActiveRecord, AdmissionService ActiveRecord, Admission Services Table, Admissions Table, MariaDB Database, Discharge Flow, Discharge ActiveRecord (+10 more)
+### Community 7 - "Jalali Date and UI Scripts"
+Cohesion: 0.34
+Nodes (14): button(), choose(), close(), display(), enhance(), gregorian(), iconButton(), init() (+6 more)
 
-### Community 5 - "Composer Dependencies"
-Cohesion: 0.11
-Nodes (18): yiisoft/yii2-composer, autoload, psr-4, config, allow-plugins, fxp-asset, process-timeout, description (+10 more)
+### Community 8 - "Hospital SQL Schema"
+Cohesion: 0.46
+Nodes (7): admission_services, admissions, discharges, doctors, `patients`, services, wards
 
-### Community 6 - "Deployment and Care Workflows"
-Cohesion: 0.13
-Nodes (16): Font Redistribution Conditions, SIL Open Font License 1.1, Server-side Discharge Calculation, Five-table Hospital Schema, Hospital Admission, Services and Discharge System, Nginx and PHP FastCGI Deployment, Patient Registration and Admission Workflow, Local Yekan Font (+8 more)
+### Community 11 - "Patient Search UI"
+Cohesion: 0.53
+Nodes (5): enhance(), clearResults(), renderResults(), updateClearButton(), init()
 
-### Community 8 - "SQL Table Schema"
-Cohesion: 0.60
-Nodes (5): admission_services, admissions, discharges, `patients`, services
+### Community 12 - "Yii Debug Toolbar Guidance"
+Cohesion: 0.40
+Nodes (4): Debug Toolbar Allowed IPs, Development Environment Flags, How to Enable Yii2 Debug Toolbar on Every Page, Yii2 Debug Toolbar Configuration
 
 ## Knowledge Gaps
-- **22 isolated node(s):** `name`, `description`, `type`, `license`, `php` (+17 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 96 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **28 isolated node(s):** `AppAsset Bundle`, `Eager Loading`, `Database Install SQL`, `Font Redistribution Conditions`, `SIL Open Font License 1.1` (+23 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 125 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **12 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Admission` connect `Patient Admission Controllers` to `Admission Views and Forms`, `Services and Discharge Models`?**
-  _High betweenness centrality (0.074) - this node is a cross-community bridge._
-- **What connects `name`, `description`, `type` to the rest of the system?**
-  _22 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Patient Admission Controllers` be split into smaller, more focused modules?**
-  _Cohesion score 0.08253968253968254 - nodes in this community are weakly interconnected._
-- **Why does `Patient` connect `Patient Admission Controllers` to `Admission Views and Forms`, `Services and Discharge Models`?**
-  _High betweenness centrality (0.053) - this node is a cross-community bridge._
-- **Should `Admission Views and Forms` be split into smaller, more focused modules?**
-  _Cohesion score 0.07386363636363637 - nodes in this community are weakly interconnected._
-- **Why does `Discharge` connect `Services and Discharge Models` to `Patient Admission Controllers`, `Admission Views and Forms`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **Should `Services and Discharge Models` be split into smaller, more focused modules?**
-  _Cohesion score 0.0846774193548387 - nodes in this community are weakly interconnected._
+- **Why does `Admission` connect `Admission and Discharge Controllers` to `Admission and Patient Views`, `Patient and Admission Actions`, `Ward and Discharge Workflows`?**
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+- **Are the 2 inferred relationships involving `Patient` (e.g. with `.search()` and `.search()`) actually correct?**
+  _`Patient` has 2 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `AppAsset Bundle`, `Eager Loading`, `Database Install SQL` to the rest of the system?**
+  _28 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Persistence and Shared Models` be split into smaller, more focused modules?**
+  _Cohesion score 0.06205673758865248 - nodes in this community are weakly interconnected._
+- **Why does `Patient` connect `Patient and Admission Actions` to `Admission and Patient Views`, `Admission and Discharge Controllers`, `Ward and Discharge Workflows`?**
+  _High betweenness centrality (0.067) - this node is a cross-community bridge._
+- **Should `Admission and Patient Views` be split into smaller, more focused modules?**
+  _Cohesion score 0.06201550387596899 - nodes in this community are weakly interconnected._
+- **Why does `Doctor` connect `Ward and Discharge Workflows` to `Admission and Patient Views`, `Admission and Discharge Controllers`, `Patient and Admission Actions`?**
+  _High betweenness centrality (0.031) - this node is a cross-community bridge._

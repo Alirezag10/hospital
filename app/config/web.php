@@ -8,8 +8,8 @@ $config = [
     'container' => [
         'definitions' => [
             \yii\widgets\ActiveForm::class => [
-                'validateOnBlur' => false,
-                'validateOnChange' => false,
+                'validateOnBlur' => true,
+                'validateOnChange' => true,
                 'validateOnType' => false,
                 'validateOnSubmit' => true,
             ],
