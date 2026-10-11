@@ -13,11 +13,11 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card"><div class="card-body">
         <?php $form = ActiveForm::begin(['options' => ['data-loading-form' => '1', 'data-unsaved-warning' => '1']]); ?>
         <?= $form->errorSummary($model) ?>
-        <div class="row">
+        <fieldset class="form-section"><legend>مشخصات پزشک</legend><div class="row g-3">
             <div class="col-md-6"><?= $form->field($model, 'name')->textInput(['maxlength' => true, 'placeholder' => 'مثلاً دکتر علی رضایی']) ?></div>
             <div class="col-md-6"><?= $form->field($model, 'specialty')->textInput(['maxlength' => true, 'placeholder' => 'مثلاً داخلی']) ?></div>
             <div class="col-md-6"><?= $form->field($model, 'mobile', ['enableClientValidation' => false])->textInput(['maxlength' => true, 'dir' => 'ltr', 'inputmode' => 'tel', 'placeholder' => '09123456789']) ?></div>
-        </div>
+        </div></fieldset>
         <div class="form-actions">
             <?= Html::submitButton('ثبت پزشک', ['class' => 'btn btn-primary', 'data-loading-label' => 'در حال ثبت…']) ?>
             <?= Html::a('انصراف', ['index'], ['class' => 'btn btn-outline-secondary']) ?>

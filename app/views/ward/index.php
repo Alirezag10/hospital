@@ -28,11 +28,12 @@ $this->params['breadcrumbs'][] = $this->title;
     'dataProvider' => $dataProvider,
     'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
     'summary' => 'نمایش {begin} تا {end} از {totalCount} بخش',
-    'emptyText' => Html::tag('div',
-        Html::tag('p', $term !== '' ? 'بخشی با این مشخصات پیدا نشد.' : 'هنوز بخشی ثبت نشده است.') .
-        Html::a($term !== '' ? 'پاک کردن جست‌وجو' : 'ثبت اولین بخش', $term !== '' ? ['index'] : ['create'], ['class' => 'btn btn-primary']),
-        ['class' => 'empty-state']
-    ),
+    'emptyText' => $this->render('../layouts/_empty_state', [
+        'icon' => 'ward',
+        'message' => $term !== '' ? 'بخشی با این مشخصات پیدا نشد. عبارت دیگری را امتحان کنید.' : 'هنوز بخشی ثبت نشده است.',
+        'action' => $term !== '' ? 'پاک کردن جست‌وجو' : 'ثبت اولین بخش',
+        'route' => $term !== '' ? ['index'] : ['create'],
+    ]),
     'columns' => [
         ['class' => 'yii\grid\SerialColumn', 'header' => 'ردیف'],
         'name',

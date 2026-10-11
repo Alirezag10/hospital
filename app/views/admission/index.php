@@ -17,12 +17,12 @@ $hasFilters = (string) $searchModel->name !== '' || (string) $searchModel->natio
     'dataProvider' => $dataProvider,
     'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
     'summary' => 'نمایش {begin} تا {end} از {totalCount} پذیرش',
-    'emptyText' => Html::tag('div',
-        Html::tag('p', $hasFilters ? 'پذیرشی مطابق جست‌وجوی شما پیدا نشد.' : 'هنوز پذیرشی ثبت نشده است.') .
-        Html::a($hasFilters ? 'پاک کردن فیلترها' : 'ثبت اولین پذیرش',
-            $hasFilters ? ['index'] : ['create'], ['class' => 'btn btn-primary']),
-        ['class' => 'empty-state']
-    ),
+    'emptyText' => $this->render('../layouts/_empty_state', [
+        'icon' => 'admission',
+        'message' => $hasFilters ? 'پذیرشی مطابق جست‌وجوی شما پیدا نشد. فیلترها را بررسی کنید.' : 'هنوز پذیرشی ثبت نشده است.',
+        'action' => $hasFilters ? 'پاک کردن فیلترها' : 'ثبت اولین پذیرش',
+        'route' => $hasFilters ? ['index'] : ['create'],
+    ]),
     'columns' => [
         ['label' => 'بیمار', 'value' => static function ($model) {
             return $model->patient->first_name . ' ' . $model->patient->last_name;

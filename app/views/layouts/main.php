@@ -30,6 +30,7 @@ $this->render('_head');
         <?php endif ?>
         <?php if ($message = Yii::$app->session->getFlash('success')): ?>
             <div class="alert alert-success app-flash" role="status">
+                <?= $this->render('_icon', ['name' => 'service']) ?>
                 <?= Html::encode($message) ?>
             </div>
         <?php endif; ?>

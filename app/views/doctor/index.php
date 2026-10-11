@@ -28,11 +28,12 @@ $this->params['breadcrumbs'][] = $this->title;
     'dataProvider' => $dataProvider,
     'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
     'summary' => 'نمایش {begin} تا {end} از {totalCount} پزشک',
-    'emptyText' => Html::tag('div',
-        Html::tag('p', $term !== '' ? 'پزشکی با این مشخصات پیدا نشد.' : 'هنوز پزشکی ثبت نشده است.') .
-        Html::a($term !== '' ? 'پاک کردن جست‌وجو' : 'ثبت اولین پزشک', $term !== '' ? ['index'] : ['create'], ['class' => 'btn btn-primary']),
-        ['class' => 'empty-state']
-    ),
+    'emptyText' => $this->render('../layouts/_empty_state', [
+        'icon' => 'doctor',
+        'message' => $term !== '' ? 'پزشکی با این مشخصات پیدا نشد. عبارت دیگری را امتحان کنید.' : 'هنوز پزشکی ثبت نشده است.',
+        'action' => $term !== '' ? 'پاک کردن جست‌وجو' : 'ثبت اولین پزشک',
+        'route' => $term !== '' ? ['index'] : ['create'],
+    ]),
     'columns' => [
         ['class' => 'yii\grid\SerialColumn', 'header' => 'ردیف'],
         'name',

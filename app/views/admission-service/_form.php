@@ -26,6 +26,7 @@ foreach ($serviceModels as $service) {
 <div class="card"><div class="card-body">
     <?php $form = ActiveForm::begin(['options' => ['data-loading-form' => '1', 'data-unsaved-warning' => '1']]); ?>
     <?= $form->errorSummary($model) ?>
+    <fieldset class="form-section"><legend>پذیرش</legend>
     <?= Html::activeHiddenInput($model, 'admission_id', ['id' => 'admission-service-admission-id']) ?>
     <div class="mb-3">
         <?= Html::label('پذیرش بیمار', 'admission-search', ['class' => 'form-label']) ?>
@@ -67,9 +68,14 @@ foreach ($serviceModels as $service) {
             <div id="admission-search-status" class="form-text" aria-live="polite"></div>
         <?php endif; ?>
     </div>
-    <?= $form->field($model, 'service_id')->dropDownList($services, ['prompt' => 'انتخاب خدمت', 'options' => $serviceOptions, 'id' => 'admission-service-select', 'data-service-price-select' => '1']) ?>
-    <?= $form->field($model, 'quantity')->input('number', ['min' => 1, 'step' => 1, 'id' => 'admission-service-quantity', 'data-service-quantity' => '1']) ?>
+    </fieldset>
+    <fieldset class="form-section"><legend>خدمت و تعداد</legend>
+    <div class="row g-3">
+    <div class="col-md-8"><?= $form->field($model, 'service_id')->dropDownList($services, ['prompt' => 'انتخاب خدمت', 'options' => $serviceOptions, 'id' => 'admission-service-select', 'data-service-price-select' => '1']) ?></div>
+    <div class="col-md-4"><?= $form->field($model, 'quantity')->input('number', ['min' => 1, 'step' => 1, 'id' => 'admission-service-quantity', 'data-service-quantity' => '1']) ?></div>
+    </div>
     <p class="service-cost-preview" aria-live="polite">برآورد هزینه این ردیف: <strong data-service-total>۰ تومان</strong><small>مبلغ نهایی در سرور محاسبه می‌شود.</small></p>
+    </fieldset>
     <div class="form-actions">
         <?= Html::submitButton('ثبت خدمت', ['class' => 'btn btn-primary', 'data-loading-label' => 'در حال ثبت…']) ?>
         <?= Html::a('انصراف', $model->admission_id ? ['/admission/view', 'id' => $model->admission_id] : ['/admission/index'], ['class' => 'btn btn-outline-secondary']) ?>

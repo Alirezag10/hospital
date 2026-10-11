@@ -8,10 +8,12 @@ use yii\widgets\ActiveForm;
 ?>
 <div class="patient-form card" dir="rtl">
     <div class="card-body">
-        <p class="text-muted mb-3">مشخصات بیمار را وارد کنید. تاریخ تولد اختیاری است.</p>
         <?php $form = ActiveForm::begin(['options' => ['data-loading-form' => '1', 'data-unsaved-warning' => '1']]); ?>
         <?= $form->errorSummary($model) ?>
-        <div class="row">
+        <fieldset class="form-section">
+        <legend>مشخصات فردی</legend>
+        <p class="form-section-note">نام بیمار و کد ملی او را وارد کنید.</p>
+        <div class="row g-3">
             <div class="col-md-6">
                 <?= $form->field($model, 'first_name')->textInput([
                     'maxlength' => true,
@@ -33,6 +35,18 @@ use yii\widgets\ActiveForm;
                 ]) ?>
             </div>
             <div class="col-md-6">
+                <?= $form->field($model, 'birthDateInput', ['enableClientValidation' => false])->textInput([
+                    'dir' => 'ltr',
+                    'placeholder' => '۱۴۰۵/۰۷/۰۸',
+                    'max' => date('Y-m-d'),
+                ]) ?>
+            </div>
+        </div>
+        </fieldset>
+        <fieldset class="form-section">
+        <legend>اطلاعات تماس</legend>
+        <div class="row g-3">
+            <div class="col-md-6">
                 <?= $form->field($model, 'mobile', ['enableClientValidation' => false])->textInput([
                     'maxlength' => true,
                     'dir' => 'ltr',
@@ -41,14 +55,8 @@ use yii\widgets\ActiveForm;
                     'placeholder' => 'مثلاً 09123456789',
                 ]) ?>
             </div>
-            <div class="col-md-6">
-                <?= $form->field($model, 'birthDateInput', ['enableClientValidation' => false])->textInput([
-                    'dir' => 'ltr',
-                    'placeholder' => '۱۴۰۵/۰۷/۰۸',
-                    'max' => date('Y-m-d'),
-                ]) ?>
-            </div>
         </div>
+        </fieldset>
         <div class="form-actions">
             <?= Html::submitButton('ثبت بیمار', [
                 'class' => 'btn btn-primary',

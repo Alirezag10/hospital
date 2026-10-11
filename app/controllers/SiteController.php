@@ -25,6 +25,8 @@ class SiteController extends Controller
             'patients' => Patient::find()->count(),
             'activeAdmissions' => (clone $activeAdmissions)->count(),
             'dischargesToday' => $dischargesToday->count(),
+            'recentAdmissions' => Admission::find()->with('patient')
+                ->orderBy(['id' => SORT_DESC])->limit(5)->all(),
         ]);
     }
 }

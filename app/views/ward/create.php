@@ -13,10 +13,10 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card"><div class="card-body">
         <?php $form = ActiveForm::begin(['options' => ['data-loading-form' => '1', 'data-unsaved-warning' => '1']]); ?>
         <?= $form->errorSummary($model) ?>
-        <div class="row">
+        <fieldset class="form-section"><legend>مشخصات بخش</legend><div class="row g-3">
             <div class="col-md-6"><?= $form->field($model, 'name')->textInput(['maxlength' => true, 'placeholder' => 'مثلاً داخلی']) ?></div>
             <div class="col-md-6"><?= $form->field($model, 'floor')->textInput(['maxlength' => true, 'placeholder' => 'مثلاً طبقه دوم']) ?></div>
-        </div>
+        </div></fieldset>
         <div class="form-actions">
             <?= Html::submitButton('ثبت بخش', ['class' => 'btn btn-primary', 'data-loading-label' => 'در حال ثبت…']) ?>
             <?= Html::a('انصراف', ['index'], ['class' => 'btn btn-outline-secondary']) ?>

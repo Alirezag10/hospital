@@ -16,12 +16,12 @@ $hasFilters = (string) $searchModel->name !== '' || (string) $searchModel->natio
     'dataProvider' => $dataProvider,
     'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
     'summary' => 'نمایش {begin} تا {end} از {totalCount} بیمار',
-    'emptyText' => Html::tag('div',
-        Html::tag('p', $hasFilters ? 'بیماری مطابق جست‌وجوی شما پیدا نشد.' : 'هنوز بیماری ثبت نشده است.') .
-        Html::a($hasFilters ? 'پاک کردن جست‌وجو' : 'ثبت اولین بیمار',
-            $hasFilters ? ['index'] : ['create'], ['class' => 'btn btn-primary']),
-        ['class' => 'empty-state']
-    ),
+    'emptyText' => $this->render('../layouts/_empty_state', [
+        'icon' => 'patient',
+        'message' => $hasFilters ? 'بیماری مطابق جست‌وجوی شما پیدا نشد. عبارت دیگری را امتحان کنید.' : 'هنوز بیماری ثبت نشده است.',
+        'action' => $hasFilters ? 'پاک کردن جست‌وجو' : 'ثبت اولین بیمار',
+        'route' => $hasFilters ? ['index'] : ['create'],
+    ]),
     'columns' => [
         ['class' => 'yii\grid\SerialColumn', 'header' => 'ردیف'],
         'first_name', 'last_name', 'national_code', 'mobile',

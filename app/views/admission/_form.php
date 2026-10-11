@@ -26,6 +26,8 @@ $wards = ArrayHelper::map(
 <div class="card"><div class="card-body">
     <?php $form = ActiveForm::begin(['options' => ['data-loading-form' => '1', 'data-unsaved-warning' => '1']]); ?>
     <?= $form->errorSummary($model) ?>
+    <fieldset class="form-section">
+    <legend>بیمار</legend>
     <?= Html::activeHiddenInput($model, 'patient_id', ['id' => 'admission-patient-id']) ?>
     <div class="mb-3">
         <?= Html::label('بیمار', 'patient-search', ['class' => 'form-label']) ?>
@@ -55,7 +57,10 @@ $wards = ArrayHelper::map(
             <div id="patient-search-status" class="form-text" aria-live="polite"></div>
         <?php endif; ?>
     </div>
-    <div class="row">
+    </fieldset>
+    <fieldset class="form-section">
+    <legend>جزئیات بستری</legend>
+    <div class="row g-3">
         <div class="col-md-6 mb-3">
             <?= Html::activeHiddenInput($model, 'doctor_id', ['id' => 'admission-doctor-id']) ?>
             <?= Html::label('پزشک', 'doctor-search', ['class' => 'form-label']) ?>
@@ -84,6 +89,7 @@ $wards = ArrayHelper::map(
         </div>
     </div>
     <p class="text-muted">تاریخ پذیرش خودکار ثبت می‌شود و وضعیت اولیه بستری است.</p>
+    </fieldset>
     <div class="form-actions">
         <?= Html::submitButton('ثبت پذیرش', ['class' => 'btn btn-primary', 'data-loading-label' => 'در حال ثبت…']) ?>
         <?= Html::a('انصراف', ['index'], ['class' => 'btn btn-outline-secondary']) ?>

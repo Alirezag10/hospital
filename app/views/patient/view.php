@@ -7,7 +7,7 @@ $this->params['breadcrumbs'][] = ['label' => 'بیماران', 'url' => ['index'
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="page-heading">
-    <div><h1><?= Html::encode($this->title) ?></h1><p>مشخصات و سابقه پذیرش‌های بیمار.</p></div>
+    <div><h1><?= Html::encode($model->first_name . ' ' . $model->last_name) ?></h1><p>کد ملی: <bdi><?= Html::encode($model->national_code) ?></bdi> · مشخصات و سابقه پذیرش‌های بیمار</p></div>
     <div class="form-actions mt-0"><?= Html::button('چاپ پرونده بیمار', ['class' => 'btn btn-outline-secondary', 'data-print-trigger' => '1']) ?><?= Html::a('ثبت پذیرش جدید', ['/admission/create', 'patient_id' => $model->id], ['class' => 'btn btn-primary']) ?></div>
 </div>
 
@@ -28,7 +28,10 @@ $this->params['breadcrumbs'][] = $this->title;
     'dataProvider' => $admissions,
     'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
     'summary' => 'نمایش {begin} تا {end} از {totalCount} پذیرش',
-    'emptyText' => Html::tag('div', 'برای این بیمار هنوز پذیرشی ثبت نشده است.', ['class' => 'empty-state']),
+    'emptyText' => $this->render('../layouts/_empty_state', [
+        'icon' => 'admission', 'message' => 'برای این بیمار هنوز پذیرشی ثبت نشده است.',
+        'action' => 'ثبت اولین پذیرش', 'route' => ['/admission/create', 'patient_id' => $model->id],
+    ]),
     'columns' => [
         ['class' => 'yii\\grid\\SerialColumn', 'header' => 'ردیف'],
         ['attribute' => 'admission_date', 'format' => 'datetime', 'label' => 'تاریخ پذیرش', 'contentOptions' => ['dir' => 'ltr']],
