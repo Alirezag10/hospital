@@ -61,8 +61,6 @@ a:hover { color: var(--primary-dark); }
 .dashboard-stat { color: var(--ink); text-decoration: none; }
 .dashboard-stat:hover, .dashboard-stat:focus-visible { color: var(--primary-dark); background: var(--primary-soft); }
 .dashboard-stat:focus-visible { outline: 3px solid var(--primary); outline-offset: -3px; }
-.dashboard-recent { margin-top: 28px; }
-.dashboard-recent .section-heading { margin-top: 0; }
 .quick-title { font-size: 1.05rem; margin: 28px 0 14px; }
 .action-card { display: block; height: 100%; padding: 20px; color: var(--ink); box-shadow: none; }
 .action-card:hover { border-color: #9bbadd; background: #f8fbff; color: var(--primary-dark); }
