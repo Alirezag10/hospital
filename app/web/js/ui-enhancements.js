@@ -2,6 +2,9 @@
     'use strict';
 
     const persianDigits = new Intl.NumberFormat('fa-IR');
+    document.querySelectorAll('.pagination a, .pagination span').forEach(function (label) {
+        label.textContent = label.textContent.replace(/[0-9]/g, digit => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]);
+    });
 
     document.addEventListener('click', function (event) {
         const printButton = event.target.closest('[data-print-trigger]');

@@ -25,10 +25,10 @@ $statusLabels = [
 ];
 $timeline = [['date' => $model->admission_date, 'title' => 'ثبت پذیرش', 'detail' => 'پذیرش بیمار در ' . $model->ward . ' توسط ' . $model->doctor_name]];
 foreach ($items as $item) {
-    $timeline[] = ['date' => $item->created_at, 'title' => 'ثبت خدمت', 'detail' => ($item->service?->title ?? 'خدمت') . ' — تعداد ' . $item->quantity];
+    $timeline[] = ['date' => $item->created_at, 'title' => 'ثبت خدمت', 'detail' => ($item->service?->title ?? 'خدمت') . ' — تعداد ' . Yii::$app->formatter->asInteger($item->quantity)];
 }
 if ($discharge !== null) {
-    $timeline[] = ['date' => $discharge->discharge_date, 'title' => 'ثبت ترخیص', 'detail' => 'مبلغ نهایی ' . number_format((int) $discharge->total_amount) . ' تومان'];
+    $timeline[] = ['date' => $discharge->discharge_date, 'title' => 'ثبت ترخیص', 'detail' => 'مبلغ نهایی ' . Yii::$app->formatter->asInteger((int) $discharge->total_amount) . ' تومان'];
 }
 usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['date']));
 ?>
@@ -132,21 +132,21 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
                             ) ?>
                         </td>
                         <td>
-                            <?= Html::encode($item->quantity) ?>
+                            <?= Yii::$app->formatter->asInteger($item->quantity) ?>
                         </td>
                         <td>
-                            <?= number_format(
+                            <?= Yii::$app->formatter->asInteger(
                                 (int) $item->unit_price
                             ) ?>
                         </td>
                         <td>
-                            <?= number_format($amount) ?>
+                            <?= Yii::$app->formatter->asInteger($amount) ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
             <tfoot>
-                <tr><th colspan="3">جمع خدمات فعلی</th><td><?= number_format($total) ?> تومان</td></tr>
+                <tr><th colspan="3">جمع خدمات فعلی</th><td><?= Yii::$app->formatter->asInteger($total) ?> تومان</td></tr>
             </tfoot>
         </table>
     </div>
@@ -160,7 +160,7 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
             <br>
             مبلغ نهایی ثبت‌شده هنگام ترخیص:
             <strong>
-                <?= number_format(
+                <?= Yii::$app->formatter->asInteger(
                     (int) $discharge->total_amount
                 ) ?>
                 تومان

@@ -18,7 +18,7 @@ $this->title = 'داشبورد بیمارستان';
         ] as [$label, $count, $icon, $route]): ?>
             <?= Html::beginTag('a', ['href' => \yii\helpers\Url::to([$route]), 'class' => 'dashboard-stat', 'aria-label' => $label . ': ' . $count . '، مشاهده']) ?>
                 <span class="stat-label"><?= $this->render('/layouts/_icon', ['name' => $icon]) ?><?= Html::encode($label) ?></span>
-                <strong><?= number_format((int) $count) ?></strong>
+                <strong><?= Yii::$app->formatter->asInteger((int) $count) ?></strong>
             <?= Html::endTag('a') ?>
         <?php endforeach; ?>
     </section>
@@ -51,7 +51,7 @@ $this->title = 'داشبورد بیمارستان';
                     <tbody>
                     <?php foreach ($recentAdmissions as $admission): ?>
                         <tr>
-                            <td><?= Html::encode($admission->patient ? $admission->patient->first_name . ' ' . $admission->patient->last_name : 'بیمار نامشخص') ?></td>
+                            <td><?= $this->render('/layouts/_patient_label', ['patient' => $admission->patient]) ?></td>
                             <td><?= Html::encode($admission->ward) ?></td>
                             <td dir="ltr"><?= Html::encode(Yii::$app->formatter->asDatetime($admission->admission_date)) ?></td>
                             <td><span class="status-badge <?= $admission->status === 'admitted' ? 'status-admitted' : 'status-discharged' ?>"><?= $admission->status === 'admitted' ? 'بستری' : 'ترخیص‌شده' ?></span></td>

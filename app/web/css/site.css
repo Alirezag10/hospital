@@ -89,6 +89,35 @@ a:hover { color: var(--primary-dark); }
 .form-section { min-width: 0; margin: 0 0 22px; padding: 0 0 22px; border: 0; border-bottom: 1px solid var(--line); }
 .form-section legend { float: none; width: auto; margin: 0 0 10px; padding: 0; color: var(--ink); font-size: 1.1rem; font-weight: 700; }
 .form-section-note { margin: 0 0 14px; color: var(--muted); font-size: .9rem; }
+.patient-label { display: flex; flex-direction: column; gap: 2px; }
+.patient-label strong { font-weight: 700; }
+.patient-label small { color: var(--muted); font-size: .8rem; }
+.applied-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.applied-filters:has(.filter-chip) { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.filter-chip { display: inline-flex; align-items: center; gap: 12px; padding: 4px 12px; border: 1px solid #9bbadd; border-radius: 6px; color: var(--primary-dark); background: var(--primary-soft); font-size: .85rem; }
+.filter-chip:hover { background: #d5e6f8; color: var(--primary-dark); }
+.filter-chip span { font-size: 1.2rem; }
+.entity-selection { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); }
+.entity-selection[hidden] { display: none; }
+.entity-search-wrapper[hidden], .selected-admission-summary[hidden] { display: none; }
+.entity-selection strong { font-size: .95rem; overflow-wrap: anywhere; }
+.entity-selection .btn { flex-shrink: 0; }
+.service-cost-preview { margin-top: 16px; }
+.discharge-final-total { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; padding: 20px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-dark); }
+.discharge-final-total > div:first-child { display: flex; flex-direction: column; gap: 4px; }
+.discharge-final-total strong { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.discharge-final-total small { font-size: .85rem; font-weight: 400; }
+.discharge-final-total .form-actions { margin: 0; }
+.discharge-cost-table td:not(:first-child), .admission-summary .table td:not(:first-child) { text-align: left; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.discharge-cost-table thead th:not(:first-child), .admission-summary .table thead th:not(:first-child) { text-align: left; }
+@media (min-width: 992px) {
+    .search-panel form { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; align-items: start; }
+    .search-panel form > .row { grid-column: 1; grid-row: 1; }
+    .search-panel .search-actions { grid-column: 2; grid-row: 1; margin-top: 34px; }
+    .search-panel .form-group { margin-bottom: 0; }
+    .search-panel .error-summary { grid-column: 1 / -1; margin-top: 16px; }
+    .search-panel .card-body { padding-block: 18px; }
+}
 .form-section .form-group { margin-bottom: 0; }
 .form-section .row > [class*="col-"] { min-width: 0; }
 .form-section .mb-3 { margin-bottom: 0 !important; }

@@ -16,7 +16,7 @@ $selectedAdmission = $selectedAdmissionId === false
 $selectedAdmissionLabel = $selectedAdmission ? $selectedAdmission->getSelectionLabel() : '';
 $serviceModels = Service::find()->where(['active' => 1])->orderBy(['title' => SORT_ASC])->all();
 $services = ArrayHelper::map($serviceModels, 'id', static function ($service) {
-    return $service->title . ' (' . number_format($service->price) . ' تومان)';
+    return $service->title . ' (' . Yii::$app->formatter->asInteger($service->price) . ' تومان)';
 });
 $serviceOptions = [];
 foreach ($serviceModels as $service) {

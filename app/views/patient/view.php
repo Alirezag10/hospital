@@ -27,13 +27,13 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= GridView::widget([
     'dataProvider' => $admissions,
     'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
-    'summary' => 'نمایش {begin} تا {end} از {totalCount} پذیرش',
+    'summary' => 'نمایش {begin, number, integer} تا {end, number, integer} از {totalCount, number, integer} پذیرش',
     'emptyText' => $this->render('../layouts/_empty_state', [
         'icon' => 'admission', 'message' => 'برای این بیمار هنوز پذیرشی ثبت نشده است.',
         'action' => 'ثبت اولین پذیرش', 'route' => ['/admission/create', 'patient_id' => $model->id],
     ]),
     'columns' => [
-        ['class' => 'yii\\grid\\SerialColumn', 'header' => 'ردیف'],
+        ['class' => 'app\components\PersianSerialColumn', 'header' => 'ردیف'],
         ['attribute' => 'admission_date', 'format' => 'datetime', 'label' => 'تاریخ پذیرش', 'contentOptions' => ['dir' => 'ltr']],
         'doctor_name', 'ward',
         ['label' => 'وضعیت', 'format' => 'raw', 'value' => static function ($admission) {

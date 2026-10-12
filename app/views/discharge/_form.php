@@ -79,13 +79,13 @@ $total = 0;
                             <?php $amount = (int) $item->quantity * (int) $item->unit_price; $total += $amount; ?>
                             <tr>
                                 <td><?= Html::encode($item->service?->title ?? 'خدمت نامشخص') ?></td>
-                                <td><?= Html::encode($item->quantity) ?></td>
-                                <td><?= number_format((int) $item->unit_price) ?></td>
-                                <td><?= number_format($amount) ?></td>
+                                <td><?= Yii::$app->formatter->asInteger($item->quantity) ?></td>
+                                <td><?= Yii::$app->formatter->asInteger((int) $item->unit_price) ?></td>
+                                <td><?= Yii::$app->formatter->asInteger($amount) ?></td>
                             </tr>
                         <?php endforeach; ?>
                         </tbody>
-                        <tfoot><tr><th scope="row" colspan="3">جمع هزینه خدمات</th><td id="discharge-preview-total"><?= number_format($total) ?> تومان</td></tr></tfoot>
+                        <tfoot><tr><th scope="row" colspan="3">جمع هزینه خدمات</th><td id="discharge-preview-total"><?= Yii::$app->formatter->asInteger($total) ?> تومان</td></tr></tfoot>
                     </table>
                 </div>
             </section>
@@ -96,13 +96,16 @@ $total = 0;
                 <?= Html::activeHiddenInput($model, 'admission_id') ?>
                 <?= $form->field($model, 'description')->textarea(['rows' => 3, 'placeholder' => 'در صورت نیاز توضیحی برای پرونده بنویسید'])->label('توضیحات ترخیص (اختیاری)') ?>
                 <p class="discharge-note">تاریخ و مبلغ نهایی هنگام ثبت محاسبه می‌شوند. ترخیص ثبت‌شده قابل ویرایش یا حذف نیست.</p>
-                <div class="form-actions">
+                <div class="discharge-final-total">
+                    <div><span>مبلغ نهایی قابل ثبت</span><strong><?= Yii::$app->formatter->asInteger($total) ?> <small>تومان</small></strong></div>
+                    <div class="form-actions">
                     <?= Html::submitButton('ثبت ترخیص', [
                         'class' => 'btn btn-primary',
                         'data-loading-label' => 'در حال ثبت ترخیص…',
                         'data-confirm' => 'ترخیص این پذیرش ثبت شود؟ مبلغ نهایی هنگام ثبت دوباره محاسبه می‌شود.',
                     ]) ?>
                     <?= Html::a('بازگشت به پرونده', ['/admission/view', 'id' => $selectedAdmission->id], ['class' => 'btn btn-outline-secondary']) ?>
+                    </div>
                 </div>
                 <?php ActiveForm::end(); ?>
             </section>

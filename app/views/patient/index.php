@@ -15,7 +15,7 @@ $hasFilters = (string) $searchModel->name !== '' || (string) $searchModel->natio
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
     'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
-    'summary' => 'نمایش {begin} تا {end} از {totalCount} بیمار',
+    'summary' => 'نمایش {begin, number, integer} تا {end, number, integer} از {totalCount, number, integer} بیمار',
     'emptyText' => $this->render('../layouts/_empty_state', [
         'icon' => 'patient',
         'message' => $hasFilters ? 'بیماری مطابق جست‌وجوی شما پیدا نشد. عبارت دیگری را امتحان کنید.' : 'هنوز بیماری ثبت نشده است.',
@@ -23,8 +23,11 @@ $hasFilters = (string) $searchModel->name !== '' || (string) $searchModel->natio
         'route' => $hasFilters ? ['index'] : ['create'],
     ]),
     'columns' => [
-        ['class' => 'yii\grid\SerialColumn', 'header' => 'ردیف'],
-        'first_name', 'last_name', 'national_code', 'mobile',
+        ['class' => 'app\components\PersianSerialColumn', 'header' => 'ردیف'],
+        ['label' => 'بیمار', 'format' => 'raw', 'value' => function ($model) {
+            return $this->render('/layouts/_patient_label', ['patient' => $model]);
+        }],
+        ['attribute' => 'mobile', 'contentOptions' => ['dir' => 'ltr']],
         ['label' => 'عملیات', 'format' => 'raw', 'value' => static function ($model) {
             return Html::a('پرونده', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary']) . ' '
                 . Html::a('ثبت پذیرش', ['/admission/create', 'patient_id' => $model->id], ['class' => 'btn btn-sm btn-primary']);

@@ -18,7 +18,12 @@ foreach ([
     ['پذیرش‌ها', 'admission', '/admission/index'],
     ['ترخیص', 'discharge', '/discharge/create'],
 ] as [$label, $icon, $route]) {
-    $items[] = ['label' => $this->render('_icon', ['name' => $icon]) . Html::tag('span', Html::encode($label)), 'url' => [$route]];
+    $active = Yii::$app->controller->id === $icon
+        || ($icon === 'dashboard' && Yii::$app->controller->id === 'site')
+        || ($icon === 'admission' && Yii::$app->controller->id === 'admission-service');
+    $items[] = ['label' => $this->render('_icon', ['name' => $icon]) . Html::tag('span', Html::encode($label)),
+        'url' => [$route], 'active' => $active,
+        'linkOptions' => $active ? ['aria-current' => 'page'] : []];
 }
 
 echo Nav::widget(['encodeLabels' => false, 'options' => ['class' => 'navbar-nav'], 'items' => $items]);

@@ -16,7 +16,7 @@ $hasFilters = (string) $searchModel->name !== '' || (string) $searchModel->natio
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
     'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
-    'summary' => 'نمایش {begin} تا {end} از {totalCount} پذیرش',
+    'summary' => 'نمایش {begin, number, integer} تا {end, number, integer} از {totalCount, number, integer} پذیرش',
     'emptyText' => $this->render('../layouts/_empty_state', [
         'icon' => 'admission',
         'message' => $hasFilters ? 'پذیرشی مطابق جست‌وجوی شما پیدا نشد. فیلترها را بررسی کنید.' : 'هنوز پذیرشی ثبت نشده است.',
@@ -24,8 +24,8 @@ $hasFilters = (string) $searchModel->name !== '' || (string) $searchModel->natio
         'route' => $hasFilters ? ['index'] : ['create'],
     ]),
     'columns' => [
-        ['label' => 'بیمار', 'value' => static function ($model) {
-            return $model->patient->first_name . ' ' . $model->patient->last_name;
+        ['label' => 'بیمار', 'format' => 'raw', 'value' => function ($model) {
+            return $this->render('/layouts/_patient_label', ['patient' => $model->patient]);
         }],
         ['attribute' => 'admission_date', 'format' => 'datetime', 'contentOptions' => ['dir' => 'ltr']],
         'doctor_name', 'ward',

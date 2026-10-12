@@ -21,13 +21,14 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::a('پاک کردن', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
     </div>
     <?= Html::endForm() ?>
+    <?= $this->render('/layouts/_filters', ['formName' => '', 'filters' => ['q' => ['جست‌وجو', $term]]]) ?>
 </div></div>
 <?= $this->render('../layouts/_page_size', ['dataProvider' => $dataProvider]) ?>
 <div class="table-panel table-responsive">
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
     'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
-    'summary' => 'نمایش {begin} تا {end} از {totalCount} پزشک',
+    'summary' => 'نمایش {begin, number, integer} تا {end, number, integer} از {totalCount, number, integer} پزشک',
     'emptyText' => $this->render('../layouts/_empty_state', [
         'icon' => 'doctor',
         'message' => $term !== '' ? 'پزشکی با این مشخصات پیدا نشد. عبارت دیگری را امتحان کنید.' : 'هنوز پزشکی ثبت نشده است.',
@@ -35,7 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'route' => $term !== '' ? ['index'] : ['create'],
     ]),
     'columns' => [
-        ['class' => 'yii\grid\SerialColumn', 'header' => 'ردیف'],
+        ['class' => 'app\components\PersianSerialColumn', 'header' => 'ردیف'],
         'name',
         'specialty',
         ['attribute' => 'mobile', 'contentOptions' => ['dir' => 'ltr']],

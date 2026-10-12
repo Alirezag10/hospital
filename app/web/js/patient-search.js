@@ -15,6 +15,17 @@
         if (!selected || !results || !status || !wrapper || !input.dataset.searchUrl) return;
 
         const entity = input.labels[0].textContent.trim();
+        const selection = document.createElement('div');
+        selection.className = 'entity-selection';
+        selection.hidden = true;
+        const selectionLabel = document.createElement('strong');
+        const changeButton = document.createElement('button');
+        changeButton.type = 'button';
+        changeButton.className = 'btn btn-sm btn-outline-secondary';
+        changeButton.textContent = 'تغییر انتخاب';
+        changeButton.setAttribute('aria-label', 'تغییر انتخاب ' + entity);
+        selection.append(selectionLabel, changeButton);
+        wrapper.after(selection);
         const selectionMessage = 'یک ' + entity + ' را از فهرست نتایج انتخاب کنید.';
         const clearButton = document.createElement('button');
         clearButton.type = 'button';
@@ -29,6 +40,10 @@
         function updateClearButton() {
             clearButton.hidden = !input.value;
             input.classList.toggle('has-clear-button', !!input.value);
+            selection.hidden = !selected.value;
+            selectionLabel.textContent = input.value;
+            input.readOnly = !!selected.value;
+            wrapper.hidden = !!selected.value;
         }
 
         function clearResults() {
@@ -74,7 +89,7 @@
                         input.removeAttribute('name');
                         input.closest('form').requestSubmit();
                     } else {
-                        input.focus();
+                        changeButton.focus();
                     }
                 });
 
@@ -85,7 +100,7 @@
             input.setAttribute('aria-expanded', 'true');
             status.textContent = items.length === 10
                 ? '۱۰ نتیجهٔ نخست نمایش داده شده؛ جست‌وجو را دقیق‌تر کنید.'
-                : items.length + ' نتیجه پیدا شد.';
+                : new Intl.NumberFormat('fa-IR').format(items.length) + ' نتیجه پیدا شد.';
         }
 
         input.addEventListener('input', function () {
@@ -171,6 +186,8 @@
             window.clearTimeout(timer);
             if (request) request.abort();
             selected.value = '';
+            const form = input.closest('form');
+            if (form.hasAttribute('data-unsaved-warning')) form.dataset.dirty = '1';
             const summary = input.closest('form').querySelector('[data-selected-admission-summary]');
             if (summary) summary.hidden = true;
             input.value = '';
@@ -184,6 +201,7 @@
                 input.focus();
             }
         });
+        changeButton.addEventListener('click', function () { clearButton.click(); });
 
         document.addEventListener('click', function (event) {
             if (!wrapper.contains(event.target)) {
