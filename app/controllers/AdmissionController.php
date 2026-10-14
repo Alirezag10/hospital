@@ -2,6 +2,7 @@
 namespace app\controllers;
 
 use app\components\JalaliDate;
+use app\components\FormInput;
 use app\models\Admission;
 use app\models\AdmissionSearch;
 use app\models\Discharge;
@@ -67,7 +68,7 @@ class AdmissionController extends Controller
             }
             $model->patient_id = $patientId;
         }
-        if ($this->request->isPost && $model->load($this->request->post())) {
+        if ($this->request->isPost && FormInput::load($model, $this->request->post())) {
             if ($patientId !== null) {
                 $model->patient_id = $patientId;
             }

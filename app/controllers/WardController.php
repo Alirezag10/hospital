@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\components\FormInput;
 use app\models\Ward;
 use Yii;
 use yii\data\ActiveDataProvider;
@@ -30,7 +31,7 @@ class WardController extends Controller
     public function actionCreate()
     {
         $model = new Ward();
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        if ($this->request->isPost && FormInput::load($model, $this->request->post()) && $model->save()) {
             Yii::$app->session->setFlash('success', 'بخش با موفقیت ثبت شد.');
             return $this->redirect(['index']);
         }

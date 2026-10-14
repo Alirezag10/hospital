@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>راهنمای آموزشی Viewهای پذیرش در Yii 2</title>
+<style>
+:root{--ink:#172b3a;--muted:#526779;--blue:#126b80;--pale:#eef7f8;--line:#d6e1e7;--warn:#fff6df;--red:#8c4810;--paper:#fff;--bg:#f3f7f9}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.95 Tahoma,"Yekan",sans-serif}header{background:linear-gradient(125deg,#0b526d,#168b91);color:#fff;padding:42px max(24px,calc((100% - 1100px)/2))}header h1{font-size:clamp(25px,4vw,38px);line-height:1.5;margin:0 0 10px}header p{margin:0;color:#e8f6f7}.wrap{max-width:1100px;margin:28px auto;padding:0 18px}.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:24px;margin:18px 0;box-shadow:0 7px 22px #19384a0a}.card h2{color:var(--blue);margin-top:0}.card h3{margin:24px 0 6px;font-size:19px}.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;background:var(--pale);padding:14px;border-radius:10px}.meta b{color:#0d5368}.flow{direction:ltr;text-align:center;background:#102f42;color:white;border-radius:12px;padding:16px;margin:18px 0;font:600 14px/2.2 Tahoma,sans-serif;overflow-wrap:anywhere}.flow span{color:#9ee8d9}.note,.warning,.tip{padding:13px 16px;border-radius:10px;margin:14px 0}.note{background:var(--pale);border-right:4px solid var(--blue)}.warning{background:var(--warn);border-right:4px solid #dc9b2b;color:var(--red)}.tip{background:#eef7ed;border-right:4px solid #568b4d}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;margin:12px 0}table{border-collapse:collapse;width:100%;min-width:680px}th,td{text-align:right;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}th{background:#edf4f6;color:#17485a}tbody tr:last-child td{border-bottom:0}.ln{white-space:nowrap;color:#64798a;font:13px/1.9 Consolas,monospace;direction:ltr;text-align:left}.code{direction:ltr;text-align:left;white-space:pre;display:block;overflow:auto;background:#10222e;color:#e4edf2;padding:16px;border-radius:10px;font:13px/1.7 Consolas,monospace}.tag{display:inline-block;border-radius:20px;background:#e8f0f5;padding:1px 10px;font-size:13px;color:#38556a}a{color:#08718a}footer{text-align:center;color:var(--muted);padding:22px}ol,ul{padding-right:24px}li{margin:5px 0}.small{font-size:14px;color:var(--muted)}@media(max-width:640px){.card{padding:16px}.flow{font-size:12px}}
+</style>
+</head>
+<body>
+<header><h1>راهنمای خط‌به‌خط Viewهای پذیرش</h1><p>تحلیل شش فایل پذیرش در Yii 2، همراه با ارتباطشان با Controller، Model، پایگاه داده و JavaScript</p></header>
+<main class="wrap">
+<section class="card" id="map">
+<h2>نقشهٔ کلی و مسیر اجرای پذیرش</h2>
+<p>Yii از الگوی MVC استفاده می‌کند. Viewها HTML را می‌سازند، اما تصمیم‌های اصلی مانند اعتبارسنجی، جست‌وجو و ذخیره‌سازی در Controller و Model قرار دارند. فایل‌های این گزارش در <code>app/views/admission/</code> هستند.</p>
+<div class="meta"><div><b>View:</b> فرم، جدول، تقویم و جزئیات قابل مشاهده</div><div><b>Controller:</b> <code>AdmissionController</code>؛ آماده‌سازی داده و پاسخ به درخواست</div><div><b>Model:</b> <code>Admission</code> و <code>AdmissionSearch</code>؛ قوانین، روابط و Query</div><div><b>رابط مرورگر:</b> <code>app/web/js/patient-search.js</code> و CSSهای پروژه</div></div>
+<div class="flow">Browser <span>→</span> URL Rule / Route <span>→</span> AdmissionController Action <span>→</span> Model / Query <span>→</span> Database <span>→</span> render(View) <span>→</span> HTML Response</div>
+<p>در جست‌وجوی زنده، مسیر جداگانه‌ای داریم: مرورگر با <code>fetch()</code> به Action جست‌وجو درخواست می‌فرستد؛ Controller پاسخ JSON می‌دهد؛ JavaScript گزینه‌ها را در فهرست کشویی می‌سازد. انتخاب نهایی با ارسال فرم به سرور می‌رسد و Model دوباره شناسه‌ها را اعتبارسنجی می‌کند.</p>
+<div class="note"><b>ترتیب خواندن پیشنهادی:</b> <code>create.php</code> برای ورود، <code>_form.php</code> برای ثبت، <code>index.php</code> و <code>_search.php</code> برای فهرست، سپس <code>calendar.php</code> و <code>view.php</code>.</div>
+</section>
+
+<section class="card" id="form">
+<h2><code>app/views/admission/_form.php</code> <span class="tag">Partial View / فرم مشترک</span></h2>
+<div class="meta"><div><b>وظیفه:</b> ورودی بیمار، پزشک و بخش و دکمه‌های ثبت/انصراف</div><div><b>فراخوان:</b> <code>create.php</code> با <code>$this-&gt;render('_form', ...)</code></div><div><b>وابستگی:</b> <code>Admission</code>، <code>Patient</code>، <code>Doctor</code>، <code>Ward</code>، ActiveForm و patient-search.js</div><div><b>جریان داده:</b> فرم POST → <code>AdmissionController::actionCreate()</code> → <code>Admission::save()</code></div></div>
+<h3>تحلیل بخش‌به‌بخش خطوط</h3>
+<div class="table-wrap"><table><thead><tr><th>خط</th><th>کد/بخش</th><th>توضیح و دلیل</th></tr></thead><tbody>
+<tr><td class="ln">1–8</td><td>useها و DocBlock</td><td><code>Patient</code>، <code>Doctor</code> و <code>Ward</code> برای خواندن سوابق انتخاب‌شده؛ <code>ArrayHelper</code> برای ساخت گزینه‌های بخش؛ <code>Html</code> برای تولید HTML امن؛ <code>Url</code> برای ساخت URL مطابق تنظیمات Yii؛ <code>ActiveForm</code> برای ساخت فرم متصل به Model. DocBlock فقط به IDE می‌گوید نوع <code>$model</code> و <code>$patientLocked</code> چیست و در زمان اجرا قانون امنیتی ایجاد نمی‌کند.</td></tr>
+<tr><td class="ln">9–18</td><td>شناسه‌ها، خواندن رکوردهای انتخاب‌شده و فهرست بخش‌ها</td><td><code>filter_var(...FILTER_VALIDATE_INT...)</code> شناسه را عدد صحیح مثبت می‌کند؛ اگر معتبر نباشد <code>false</code> برمی‌گرداند و Query اجرا نمی‌شود. <code>findOne()</code> بیمار/پزشک را از DB می‌خواند تا متن اولیهٔ ورودی قابل نمایش باشد. <code>ArrayHelper::map()</code> داده‌های بخش را به آرایهٔ <code>id =&gt; label</code> برای منوی انتخاب تبدیل می‌کند. تابع <code>static fn</code> برای افزودن طبقه به برچسب هر بخش است.</td></tr>
+<tr><td class="ln">19–22</td><td>باز کردن کارت و ActiveForm</td><td><code>ActiveForm::begin()</code> تگ form و اتصال آن به مدل را آغاز می‌کند. ویژگی‌های <code>data-loading-form</code> و <code>data-unsaved-warning</code> برای JavaScript رابط استفاده می‌شوند؛ خودشان به‌تنهایی اعتبارسنجی امنیتی نیستند. <code>errorSummary()</code> خطاهای مدل را در یک محل نشان می‌دهد.</td></tr>
+<tr><td class="ln">23–47</td><td>انتخاب بیمار</td><td><code>fieldset/legend</code> گروه معنایی و قابل‌دسترس می‌سازند. Hidden input مقدار واقعی <code>patient_id</code> را می‌فرستد. اگر <code>$patientLocked</code> و بیمار موجود باشد، ورودی فقط‌خواندنی است؛ وگرنه ورودی جست‌وجوی زنده ساخته می‌شود. <code>data-search-url</code> مقصد AJAX را از Route می‌گیرد؛ <code>data-target-input</code> مشخص می‌کند شناسهٔ منتخب در کدام hidden input نوشته شود. <code>aria-controls</code> و <code>aria-expanded</code> وضعیت فهرست نتایج را برای فناوری‌های کمکی بیان می‌کنند. خروجی جست‌وجو ابتدا <code>hidden</code> است و JS هنگام دریافت نتایج آن را باز می‌کند.</td></tr>
+<tr><td class="ln">48–79</td><td>پزشک و بخش</td><td>شناسهٔ پزشک نیز hidden است و ورودی قابل مشاهده تنها عبارت جست‌وجو را می‌گیرد. JS از <code>search-doctors</code> نتیجه می‌گیرد و شناسهٔ انتخاب‌شده را در hidden input قرار می‌دهد. بخش برخلاف پزشک با <code>dropDownList()</code> ساخته می‌شود؛ گزینه‌ها از Query بالا آمده‌اند. متن «تاریخ پذیرش خودکار...» توضیح رابط است؛ مقدار واقعی تاریخ و وضعیت را Model در <code>beforeSave()</code> تنظیم می‌کند، نه این متن.</td></tr>
+<tr><td class="ln">80–98</td><td>دکمه‌ها و پایان فرم</td><td>دکمهٔ submit فرم را ارسال می‌کند. <code>data-loading-label</code> برچسب زمان ارسال برای اسکریپت UI است. لینک انصراف GET به فهرست می‌رود. <code>ActiveForm::end()</code> تگ فرم و اسکریپت‌های لازم Yii را می‌بندد.</td></tr>
+</tbody></table></div>
+<h3>نکات مهم و بهبودپذیر</h3><ul><li>قفل‌کردن بیمار در مرورگر به‌تنهایی کافی نیست؛ Controller هنگام وجود <code>patient_id</code> در URL آن را پس از <code>load()</code> دوباره روی مدل می‌گذارد. این کار مانع دست‌کاری hidden input برای جایگزین کردن بیمار می‌شود.</li><li>در هر نمایش فرم چند Query برای بیمار، پزشک و همهٔ بخش‌ها اجرا می‌شود. در حال حاضر قابل‌قبول است؛ اگر داده زیاد شد، برای بخش هم جست‌وجوی AJAX یا صفحه‌بندی لازم می‌شود.</li><li><code>required</code> روی input مرورگر فقط تجربهٔ کاربر را بهتر می‌کند. الزام واقعی شناسه و وجود بیمار/پزشک/بخش در قانون‌های Model و کلید خارجی DB است.</li></ul>
+
+<details><summary>سورس کامل فایل با شمارهٔ خطوط (98 خط)</summary><pre class="code">  1: &lt;?php
+  2: use app\models\Patient;
+  3: use app\models\Doctor;
+  4: use app\models\Ward;
+  5: use yii\helpers\ArrayHelper;
+  6: use yii\helpers\Html;
+  7: use yii\helpers\Url;
+  8: use yii\widgets\ActiveForm;
+  9: 
+ 10: /** @var app\models\Admission $model */
+ 11: /** @var bool $patientLocked */
+ 12: $selectedPatientId = filter_var($model-&gt;patient_id, FILTER_VALIDATE_INT, [&#39;options&#39; =&gt; [&#39;min_range&#39; =&gt; 1]]);
+ 13: $selectedPatient = $selectedPatientId === false ? null : Patient::findOne([&#39;id&#39; =&gt; $selectedPatientId]);
+ 14: $selectedPatientLabel = $selectedPatient === null
+ 15:     ? &#39;&#39;
+ 16:     : $selectedPatient-&gt;first_name . &#39; &#39; . $selectedPatient-&gt;last_name . &#39; (کد ملی: &#39; . $selectedPatient-&gt;national_code . &#39;)&#39;;
+ 17: $selectedDoctorId = filter_var($model-&gt;doctor_id, FILTER_VALIDATE_INT, [&#39;options&#39; =&gt; [&#39;min_range&#39; =&gt; 1]]);
+ 18: $selectedDoctor = $selectedDoctorId === false ? null : Doctor::findOne([&#39;id&#39; =&gt; $selectedDoctorId]);
+ 19: $selectedDoctorLabel = $selectedDoctor ? $selectedDoctor-&gt;name . &#39; (&#39; . $selectedDoctor-&gt;specialty . &#39;)&#39; : &#39;&#39;;
+ 20: $wards = ArrayHelper::map(
+ 21:     Ward::find()-&gt;orderBy([&#39;name&#39; =&gt; SORT_ASC])-&gt;all(),
+ 22:     &#39;id&#39;,
+ 23:     static fn(Ward $ward): string =&gt; $ward-&gt;name . ($ward-&gt;floor ? &#39; (&#39; . $ward-&gt;floor . &#39;)&#39; : &#39;&#39;)
+ 24: );
+ 25: ?&gt;
+ 26: &lt;div class=&quot;card&quot;&gt;&lt;div class=&quot;card-body&quot;&gt;
+ 27:     &lt;?php $form = ActiveForm::begin([&#39;options&#39; =&gt; [&#39;data-loading-form&#39; =&gt; &#39;1&#39;, &#39;data-unsaved-warning&#39; =&gt; &#39;1&#39;]]); ?&gt;
+ 28:     &lt;?= $form-&gt;errorSummary($model) ?&gt;
+ 29:     &lt;fieldset class=&quot;form-section&quot;&gt;
+ 30:     &lt;legend&gt;بیمار&lt;/legend&gt;
+ 31:     &lt;?= Html::activeHiddenInput($model, &#39;patient_id&#39;, [&#39;id&#39; =&gt; &#39;admission-patient-id&#39;]) ?&gt;
+ 32:     &lt;div class=&quot;mb-3&quot;&gt;
+ 33:         &lt;?= Html::label(&#39;بیمار&#39;, &#39;patient-search&#39;, [&#39;class&#39; =&gt; &#39;form-label&#39;]) ?&gt;
+ 34:         &lt;?php if ($patientLocked &amp;&amp; $selectedPatient !== null): ?&gt;
+ 35:             &lt;?= Html::textInput(&#39;patient_display&#39;, $selectedPatientLabel, [
+ 36:                 &#39;id&#39; =&gt; &#39;patient-search&#39;,
+ 37:                 &#39;class&#39; =&gt; &#39;form-control&#39;,
+ 38:                 &#39;readonly&#39; =&gt; true,
+ 39:             ]) ?&gt;
+ 40:         &lt;?php else: ?&gt;
+ 41:             &lt;div class=&quot;position-relative entity-search-wrapper&quot;&gt;
+ 42:                 &lt;?= Html::textInput(&#39;patient_search&#39;, $selectedPatientLabel, [
+ 43:                     &#39;id&#39; =&gt; &#39;patient-search&#39;,
+ 44:                     &#39;class&#39; =&gt; &#39;form-control&#39;,
+ 45:                     &#39;placeholder&#39; =&gt; &#39;نام یا کد ملی بیمار را وارد کنید&#39;,
+ 46:                     &#39;autocomplete&#39; =&gt; &#39;off&#39;,
+ 47:                     &#39;required&#39; =&gt; true,
+ 48:                     &#39;aria-autocomplete&#39; =&gt; &#39;list&#39;,
+ 49:                     &#39;aria-controls&#39; =&gt; &#39;patient-search-results&#39;,
+ 50:                     &#39;aria-expanded&#39; =&gt; &#39;false&#39;,
+ 51:                     &#39;data-live-search&#39; =&gt; &#39;true&#39;,
+ 52:                     &#39;data-target-input&#39; =&gt; &#39;admission-patient-id&#39;,
+ 53:                     &#39;data-search-url&#39; =&gt; Url::to([&#39;search-patients&#39;]),
+ 54:                 ]) ?&gt;
+ 55:                 &lt;div id=&quot;patient-search-results&quot; class=&quot;dropdown-menu w-100 entity-search-dropdown&quot; role=&quot;listbox&quot; hidden&gt;&lt;/div&gt;
+ 56:             &lt;/div&gt;
+ 57:             &lt;div id=&quot;patient-search-status&quot; class=&quot;form-text&quot; aria-live=&quot;polite&quot;&gt;&lt;/div&gt;
+ 58:         &lt;?php endif; ?&gt;
+ 59:     &lt;/div&gt;
+ 60:     &lt;/fieldset&gt;
+ 61:     &lt;fieldset class=&quot;form-section&quot;&gt;
+ 62:     &lt;legend&gt;جزئیات بستری&lt;/legend&gt;
+ 63:     &lt;div class=&quot;row g-3&quot;&gt;
+ 64:         &lt;div class=&quot;col-md-6 mb-3&quot;&gt;
+ 65:             &lt;?= Html::activeHiddenInput($model, &#39;doctor_id&#39;, [&#39;id&#39; =&gt; &#39;admission-doctor-id&#39;]) ?&gt;
+ 66:             &lt;?= Html::label(&#39;پزشک&#39;, &#39;doctor-search&#39;, [&#39;class&#39; =&gt; &#39;form-label&#39;]) ?&gt;
+ 67:             &lt;div class=&quot;position-relative entity-search-wrapper&quot;&gt;
+ 68:                 &lt;?= Html::textInput(&#39;doctor_search&#39;, $selectedDoctorLabel, [
+ 69:                     &#39;id&#39; =&gt; &#39;doctor-search&#39;,
+ 70:                     &#39;class&#39; =&gt; &#39;form-control&#39;,
+ 71:                     &#39;placeholder&#39; =&gt; &#39;نام یا تخصص پزشک را وارد کنید&#39;,
+ 72:                     &#39;autocomplete&#39; =&gt; &#39;off&#39;,
+ 73:                     &#39;required&#39; =&gt; true,
+ 74:                     &#39;aria-autocomplete&#39; =&gt; &#39;list&#39;,
+ 75:                     &#39;aria-controls&#39; =&gt; &#39;doctor-search-results&#39;,
+ 76:                     &#39;aria-expanded&#39; =&gt; &#39;false&#39;,
+ 77:                     &#39;data-live-search&#39; =&gt; &#39;true&#39;,
+ 78:                     &#39;data-target-input&#39; =&gt; &#39;admission-doctor-id&#39;,
+ 79:                     &#39;data-search-url&#39; =&gt; Url::to([&#39;search-doctors&#39;]),
+ 80:                 ]) ?&gt;
+ 81:                 &lt;div id=&quot;doctor-search-results&quot; class=&quot;dropdown-menu w-100 entity-search-dropdown&quot; role=&quot;listbox&quot; hidden&gt;&lt;/div&gt;
+ 82:             &lt;/div&gt;
+ 83:             &lt;div id=&quot;doctor-search-status&quot; class=&quot;form-text&quot; aria-live=&quot;polite&quot;&gt;&lt;/div&gt;
+ 84:         &lt;/div&gt;
+ 85:         &lt;div class=&quot;col-md-6 mb-3&quot;&gt;
+ 86:             &lt;?= $form-&gt;field($model, &#39;ward_id&#39;)-&gt;dropDownList($wards, [
+ 87:                 &#39;prompt&#39; =&gt; &#39;بخش را انتخاب کنید&#39;,
+ 88:             ]) ?&gt;
+ 89:         &lt;/div&gt;
+ 90:     &lt;/div&gt;
+ 91:     &lt;p class=&quot;text-muted&quot;&gt;تاریخ پذیرش خودکار ثبت می‌شود و وضعیت اولیه بستری است.&lt;/p&gt;
+ 92:     &lt;/fieldset&gt;
+ 93:     &lt;div class=&quot;form-actions&quot;&gt;
+ 94:         &lt;?= Html::submitButton(&#39;ثبت پذیرش&#39;, [&#39;class&#39; =&gt; &#39;btn btn-primary&#39;, &#39;data-loading-label&#39; =&gt; &#39;در حال ثبت…&#39;]) ?&gt;
+ 95:         &lt;?= Html::a(&#39;انصراف&#39;, [&#39;index&#39;], [&#39;class&#39; =&gt; &#39;btn btn-outline-secondary&#39;]) ?&gt;
+ 96:     &lt;/div&gt;
+ 97:     &lt;?php ActiveForm::end(); ?&gt;
+ 98: &lt;/div&gt;&lt;/div&gt;</pre></details>
+</section>
+
+<section class="card" id="search">
+<h2><code>app/views/admission/_search.php</code> <span class="tag">Partial View / فیلتر GET</span></h2>
+<div class="meta"><div><b>وظیفه:</b> ساخت فرم جست‌وجوی پذیرش‌ها</div><div><b>فراخوان:</b> <code>index.php</code></div><div><b>مدل:</b> <code>AdmissionSearch</code>؛ مدل جست‌وجوست و ActiveRecord نیست</div><div><b>خروجی:</b> query string مثل <code>?AdmissionSearch[name]=...</code></div></div>
+<div class="table-wrap"><table><thead><tr><th>خط</th><th>کد/بخش</th><th>توضیح</th></tr></thead><tbody>
+<tr><td class="ln">1–5</td><td>وابستگی‌ها و قرارداد ورودی</td><td><code>Html</code> برای دکمه‌ها و لینک‌ها و <code>ActiveForm</code> برای فیلدهای متصل به مدل. DocBlock نوع <code>AdmissionSearch</code> را برای IDE مشخص می‌کند.</td></tr>
+<tr><td class="ln">6–9</td><td>فرم جست‌وجو</td><td>کلاس‌های Bootstrap چیدمان ستون‌ها را می‌سازند. <code>method =&gt; get</code> فیلترها را در URL قرار می‌دهد؛ در نتیجه لینک جست‌وجو قابل ذخیره و بازتولید است. <code>action =&gt; index</code> درخواست را به Action فهرست می‌فرستد. اعتبارسنجی سمت کاربر خاموش شده تا قواعد جست‌وجو روی سرور مرجع باشند.</td></tr>
+<tr><td class="ln">10–14</td><td>نام، کد ملی، موبایل، وضعیت</td><td><code>field()</code> از <code>attributeLabels()</code> و قواعد مدل برای برچسب/خطا استفاده می‌کند. وضعیت فقط دو گزینهٔ مجاز «بستری» و «ترخیص‌شده» دارد؛ prompt یعنی هیچ فیلتر وضعیتی انتخاب نشده. <code>dir=ltr</code> و <code>inputmode</code> ورود شناسهٔ عددی را راحت‌تر می‌کند.</td></tr>
+<tr><td class="ln">15–19</td><td>خطاها و دکمه‌ها</td><td><code>errorSummary()</code> خطاهای ورودی را نشان می‌دهد. submit پارامترهای GET را می‌فرستد؛ لینک پاک‌کردن به index خالی می‌رود. هیچ Query مستقیمی در View انجام نمی‌شود.</td></tr>
+<tr><td class="ln">20–28</td><td>نمایش فیلترهای فعال</td><td>partial مشترک <code>layouts/_filters</code> نام و مقادیر فیلترها را برای حذف سریع نمایش می‌دهد. برای status، مقدار داخلی انگلیسی به برچسب فارسی تبدیل می‌شود. <code>is_string</code> قبل از map کردن، از دسترسی نامعتبر به آرایه جلوگیری می‌کند.</td></tr>
+</tbody></table></div>
+<div class="tip"><b>مشکل پیدا و اصلاح‌شده در تست پروژه:</b> فیلتر موبایل ابتدا در محاسبهٔ <code>$hasFilters</code> لحاظ نمی‌شد و پیام حالت خالی اشتباه بود. اکنون شرط <code>$searchModel-&gt;mobile</code> را هم بررسی می‌کند؛ تست فیلتر موبایل بدون نتیجه موفق گذشت.</div>
+
+<details><summary>سورس کامل فایل با شمارهٔ خطوط (28 خط)</summary><pre class="code">  1: &lt;?php
+  2: use yii\helpers\Html;
+  3: use yii\widgets\ActiveForm;
+  4: 
+  5: /** @var app\models\AdmissionSearch $model */
+  6: ?&gt;
+  7: &lt;div class=&quot;card mb-3 search-panel&quot;&gt;&lt;div class=&quot;card-body&quot;&gt;
+  8:     &lt;?php $form = ActiveForm::begin([&#39;method&#39; =&gt; &#39;get&#39;, &#39;action&#39; =&gt; [&#39;index&#39;], &#39;enableClientValidation&#39; =&gt; false]); ?&gt;
+  9:     &lt;div class=&quot;row&quot;&gt;
+ 10:         &lt;div class=&quot;col-md-3&quot;&gt;&lt;?= $form-&gt;field($model, &#39;name&#39;)-&gt;textInput([&#39;maxlength&#39; =&gt; 200, &#39;placeholder&#39; =&gt; &#39;نام یا نام خانوادگی&#39;]) ?&gt;&lt;/div&gt;
+ 11:         &lt;div class=&quot;col-md-3&quot;&gt;&lt;?= $form-&gt;field($model, &#39;national_code&#39;)-&gt;textInput([&#39;dir&#39; =&gt; &#39;ltr&#39;, &#39;inputmode&#39; =&gt; &#39;numeric&#39;, &#39;maxlength&#39; =&gt; 20, &#39;placeholder&#39; =&gt; &#39;تمام یا بخشی از کد ملی&#39;]) ?&gt;&lt;/div&gt;
+ 12:         &lt;div class=&quot;col-md-3&quot;&gt;&lt;?= $form-&gt;field($model, &#39;mobile&#39;)-&gt;textInput([&#39;dir&#39; =&gt; &#39;ltr&#39;, &#39;inputmode&#39; =&gt; &#39;tel&#39;, &#39;placeholder&#39; =&gt; &#39;شماره موبایل بیمار&#39;]) ?&gt;&lt;/div&gt;
+ 13:         &lt;div class=&quot;col-md-3&quot;&gt;&lt;?= $form-&gt;field($model, &#39;status&#39;)-&gt;dropDownList([
+ 14:             &#39;admitted&#39; =&gt; &#39;بستری&#39;, &#39;discharged&#39; =&gt; &#39;ترخیص‌شده&#39;,
+ 15:         ], [&#39;prompt&#39; =&gt; &#39;همهٔ وضعیت‌ها&#39;, &#39;class&#39; =&gt; &#39;form-select&#39;]) ?&gt;&lt;/div&gt;
+ 16:     &lt;/div&gt;
+ 17:     &lt;?= $form-&gt;errorSummary($model) ?&gt;
+ 18:     &lt;div class=&quot;form-actions search-actions&quot;&gt;
+ 19:         &lt;?= Html::submitButton(&#39;جست‌وجو&#39;, [&#39;class&#39; =&gt; &#39;btn btn-primary&#39;]) ?&gt;
+ 20:         &lt;?= Html::a(&#39;پاک کردن فیلترها&#39;, [&#39;index&#39;], [&#39;class&#39; =&gt; &#39;btn btn-outline-secondary&#39;]) ?&gt;
+ 21:     &lt;/div&gt;
+ 22:     &lt;?php ActiveForm::end(); ?&gt;
+ 23:     &lt;?= $this-&gt;render(&#39;/layouts/_filters&#39;, [&#39;formName&#39; =&gt; $model-&gt;formName(), &#39;filters&#39; =&gt; [
+ 24:         &#39;name&#39; =&gt; [&#39;نام&#39;, $model-&gt;name], &#39;national_code&#39; =&gt; [&#39;کد ملی&#39;, $model-&gt;national_code],
+ 25:         &#39;mobile&#39; =&gt; [&#39;موبایل&#39;, $model-&gt;mobile],
+ 26:         &#39;status&#39; =&gt; [&#39;وضعیت&#39;, is_string($model-&gt;status) ? ([&#39;admitted&#39; =&gt; &#39;بستری&#39;, &#39;discharged&#39; =&gt; &#39;ترخیص‌شده&#39;][$model-&gt;status] ?? $model-&gt;status) : &#39;&#39;],
+ 27:     ]]) ?&gt;
+ 28: &lt;/div&gt;&lt;/div&gt;</pre></details>
+</section>
+
+<section class="card" id="calendar">
+<h2><code>app/views/admission/calendar.php</code> <span class="tag">View / تقویم شمسی</span></h2>
+<div class="meta"><div><b>وظیفه:</b> نمایش پذیرش‌ها در روزهای ماه شمسی</div><div><b>داده از:</b> <code>AdmissionController::actionCalendar()</code></div><div><b>مدل مرتبط:</b> <code>Admission</code> با رابطهٔ <code>patient</code></div><div><b>تعامل:</b> لینک ماه قبل/بعد و لینک هر پذیرش</div></div>
+<div class="table-wrap"><table><thead><tr><th>خط</th><th>کد/بخش</th><th>توضیح</th></tr></thead><tbody>
+<tr><td class="ln">1–8</td><td>عنوان و محاسبات اولیه</td><td><code>Html</code> برای خروجی امن است. title و breadcrumb عنوان صفحه را می‌سازند. <code>$cellCount</code> تعداد خانه‌ها را به مضرب هفت می‌رساند تا هفتهٔ آخر کامل شود. نام ماه‌ها آرایهٔ فارسی است. پارامتر <code>$month</code> از Controller به صورت <code>سال-ماه</code> می‌آید و با <code>explode</code> به دو بخش عددی تبدیل می‌شود.</td></tr>
+<tr><td class="ln">9–14</td><td>ارقام و عنوان ماه</td><td>تابع کوتاه <code>$persianDigits</code> رقم‌های انگلیسی را برای نمایش به فارسی تبدیل می‌کند؛ مقدار اصلی تاریخ دست‌کاری نمی‌شود. عنوان ماه از آرایهٔ ماه‌ها و سال فارسی‌شده ساخته می‌شود.</td></tr>
+<tr><td class="ln">15–26</td><td>سربرگ و پیمایش ماه</td><td><code>Html::encode()</code> عنوان را قبل از درج در HTML escape می‌کند. لینک‌ها Route تقویم را با پارامترهای <code>previousMonth</code> و <code>nextMonth</code> باز می‌کنند. این محاسبات در Controller انجام شده؛ View فقط مقدار آماده را نمایش می‌دهد.</td></tr>
+<tr><td class="ln">27–29</td><td>سرستون روزهای هفته</td><td>حلقهٔ <code>foreach</code> هفت نام روز را به ترتیب می‌سازد. <code>role=grid</code> و <code>columnheader</code> نقش اجزا را برای فناوری‌های کمکی مشخص می‌کنند.</td></tr>
+<tr><td class="ln">30–49</td><td>خانه‌های روز و رویدادها</td><td>حلقهٔ سلول‌ها با <code>$startOffset</code> و <code>$daysInMonth</code> شماره روز را حساب می‌کند؛ خانه‌های بیرون ماه مخفی/غیرفعال‌اند. برای روز معتبر، کلید میلادی <code>Y-m-d</code> از <code>$firstDay-&gt;modify()</code> محاسبه می‌شود تا با کلیدهای گروه‌بندی Controller تطبیق کند. حداکثر سه پذیرش در هر روز نمایش داده می‌شود؛ رویدادهای بیشتر با شمارنده خلاصه می‌شوند. هر رویداد به <code>view</code> همان پذیرش می‌رود. نام بیمار encode می‌شود و نام پزشک/بخش در title لینک قرار می‌گیرد.</td></tr>
+</tbody></table></div>
+<div class="note"><b>مفهوم تقویم:</b> دیتابیس تاریخ میلادی نگه می‌دارد؛ Controller بازهٔ شروع و پایان ماه شمسی را با <code>JalaliDate</code> به میلادی تبدیل می‌کند و Query بازه‌ای می‌زند. View فقط تقویم شمسی می‌سازد. شرط بازهٔ <code>&gt;= شروع</code> و <code>&lt; پایان ماه بعد</code> برای استفادهٔ مناسب از ایندکس تاریخ بهتر از تبدیل تک‌تک تاریخ‌های ستون در WHERE است.</div>
+
+<details><summary>سورس کامل فایل با شمارهٔ خطوط (49 خط)</summary><pre class="code">  1: &lt;?php
+  2: use yii\helpers\Html;
+  3: 
+  4: $this-&gt;title = &#39;تقویم پذیرش‌ها&#39;;
+  5: $this-&gt;params[&#39;breadcrumbs&#39;][] = [&#39;label&#39; =&gt; &#39;پذیرش‌ها&#39;, &#39;url&#39; =&gt; [&#39;index&#39;]];
+  6: $this-&gt;params[&#39;breadcrumbs&#39;][] = $this-&gt;title;
+  7: $cellCount = (int) (ceil(($startOffset + $daysInMonth) / 7) * 7);
+  8: $monthNames = [&#39;فروردین&#39;, &#39;اردیبهشت&#39;, &#39;خرداد&#39;, &#39;تیر&#39;, &#39;مرداد&#39;, &#39;شهریور&#39;, &#39;مهر&#39;, &#39;آبان&#39;, &#39;آذر&#39;, &#39;دی&#39;, &#39;بهمن&#39;, &#39;اسفند&#39;];
+  9: [$jalaliYear, $jalaliMonth] = array_map(&#39;intval&#39;, explode(&#39;-&#39;, $month));
+ 10: $persianDigits = static fn(int $number): string =&gt; strtr((string) $number, [
+ 11:     &#39;0&#39; =&gt; &#39;۰&#39;, &#39;1&#39; =&gt; &#39;۱&#39;, &#39;2&#39; =&gt; &#39;۲&#39;, &#39;3&#39; =&gt; &#39;۳&#39;, &#39;4&#39; =&gt; &#39;۴&#39;,
+ 12:     &#39;5&#39; =&gt; &#39;۵&#39;, &#39;6&#39; =&gt; &#39;۶&#39;, &#39;7&#39; =&gt; &#39;۷&#39;, &#39;8&#39; =&gt; &#39;۸&#39;, &#39;9&#39; =&gt; &#39;۹&#39;,
+ 13: ]);
+ 14: $monthTitle = $monthNames[$jalaliMonth - 1] . &#39; &#39; . $persianDigits($jalaliYear);
+ 15: ?&gt;
+ 16: &lt;div class=&quot;page-heading&quot;&gt;
+ 17:     &lt;div&gt;&lt;h1&gt;&lt;?= Html::encode($this-&gt;title) ?&gt;&lt;/h1&gt;&lt;p&gt;پذیرش‌های ثبت‌شده در هر روز را ببینید.&lt;/p&gt;&lt;/div&gt;
+ 18:     &lt;?= Html::a(&#39;فهرست پذیرش‌ها&#39;, [&#39;index&#39;], [&#39;class&#39; =&gt; &#39;btn btn-outline-primary&#39;]) ?&gt;
+ 19: &lt;/div&gt;
+ 20: &lt;section class=&quot;calendar-panel&quot; aria-label=&quot;تقویم پذیرش‌ها&quot;&gt;
+ 21:     &lt;div class=&quot;calendar-toolbar&quot;&gt;
+ 22:         &lt;?= Html::a(&#39;ماه قبل&#39;, [&#39;calendar&#39;, &#39;month&#39; =&gt; $previousMonth], [&#39;class&#39; =&gt; &#39;btn btn-outline-secondary&#39;]) ?&gt;
+ 23:         &lt;h2&gt;&lt;?= Html::encode($monthTitle) ?&gt;&lt;/h2&gt;
+ 24:         &lt;?= Html::a(&#39;ماه بعد&#39;, [&#39;calendar&#39;, &#39;month&#39; =&gt; $nextMonth], [&#39;class&#39; =&gt; &#39;btn btn-outline-secondary&#39;]) ?&gt;
+ 25:     &lt;/div&gt;
+ 26:     &lt;div class=&quot;calendar-grid&quot; role=&quot;grid&quot; aria-label=&quot;روزهای ماه&quot;&gt;
+ 27:         &lt;?php foreach ([&#39;شنبه&#39;, &#39;یکشنبه&#39;, &#39;دوشنبه&#39;, &#39;سه‌شنبه&#39;, &#39;چهارشنبه&#39;, &#39;پنجشنبه&#39;, &#39;جمعه&#39;] as $weekday): ?&gt;
+ 28:             &lt;div class=&quot;calendar-weekday&quot; role=&quot;columnheader&quot;&gt;&lt;?= Html::encode($weekday) ?&gt;&lt;/div&gt;
+ 29:         &lt;?php endforeach; ?&gt;
+ 30:         &lt;?php for ($cell = 0; $cell &lt; $cellCount; $cell++): ?&gt;
+ 31:             &lt;?php $day = $cell - $startOffset + 1; $validDay = $day &gt;= 1 &amp;&amp; $day &lt;= $daysInMonth; ?&gt;
+ 32:             &lt;div class=&quot;calendar-day&lt;?= $validDay ? &#39;&#39; : &#39; is-outside&#39; ?&gt;&quot; role=&quot;gridcell&quot;&lt;?= $validDay ? &#39; aria-label=&quot;روز &#39; . $persianDigits($day) . &#39; &#39; . $monthNames[$jalaliMonth - 1] . &#39;&quot;&#39; : &#39; aria-hidden=&quot;true&quot;&#39; ?&gt;&gt;
+ 33:                 &lt;?php if ($validDay): ?&gt;
+ 34:                     &lt;?php $key = $firstDay-&gt;modify(&#39;+&#39; . ($day - 1) . &#39; days&#39;)-&gt;format(&#39;Y-m-d&#39;); ?&gt;
+ 35:                     &lt;span class=&quot;calendar-day-number&quot;&gt;&lt;?= $persianDigits($day) ?&gt;&lt;/span&gt;
+ 36:                     &lt;?php foreach (array_slice($admissionsByDay[$key] ?? [], 0, 3) as $admission): ?&gt;
+ 37:                         &lt;?= Html::a(
+ 38:                             Html::encode(($admission-&gt;patient-&gt;first_name ?? &#39;&#39;) . &#39; &#39; . ($admission-&gt;patient-&gt;last_name ?? &#39;&#39;)),
+ 39:                             [&#39;view&#39;, &#39;id&#39; =&gt; $admission-&gt;id],
+ 40:                             [&#39;class&#39; =&gt; &#39;calendar-event&#39;, &#39;title&#39; =&gt; $admission-&gt;doctor_name . &#39; — &#39; . $admission-&gt;ward]
+ 41:                         ) ?&gt;
+ 42:                     &lt;?php endforeach; ?&gt;
+ 43:                     &lt;?php $more = count($admissionsByDay[$key] ?? []) - 3; ?&gt;
+ 44:                     &lt;?php if ($more &gt; 0): ?&gt;&lt;span class=&quot;calendar-more&quot;&gt;و &lt;?= $more ?&gt; مورد دیگر&lt;/span&gt;&lt;?php endif; ?&gt;
+ 45:                 &lt;?php endif; ?&gt;
+ 46:             &lt;/div&gt;
+ 47:         &lt;?php endfor; ?&gt;
+ 48:     &lt;/div&gt;
+ 49: &lt;/section&gt;</pre></details>
+</section>
+
+<section class="card" id="create">
+<h2><code>app/views/admission/create.php</code> <span class="tag">View / صفحهٔ ثبت</span></h2>
+<div class="meta"><div><b>وظیفه:</b> قاب صفحهٔ ایجاد پذیرش</div><div><b>Controller:</b> <code>AdmissionController::actionCreate()</code></div><div><b>partial:</b> <code>_form.php</code></div></div>
+<div class="table-wrap"><table><thead><tr><th>خط</th><th>کد/بخش</th><th>توضیح</th></tr></thead><tbody>
+<tr><td class="ln">1–7</td><td>HTML helper و نوع متغیرها</td><td><code>Html</code> برای encode عنوان. DocBlock به IDE می‌گوید View با مدل پذیرش و فلگ قفل بیمار کار می‌کند. این توضیحات نوعی هستند و ورودی را کنترل نمی‌کنند.</td></tr>
+<tr><td class="ln">8–11</td><td>عنوان و مسیر راهنما</td><td><code>$this-&gt;title</code> عنوان صفحه است؛ breadcrumb والد را به فهرست پذیرش‌ها و سپس صفحهٔ جاری اضافه می‌کند.</td></tr>
+<tr><td class="ln">12–19</td><td>چیدمان و render فرم</td><td>کلاس‌ها برای استایل‌اند و <code>dir=rtl</code> جهت فارسی را مشخص می‌کند. <code>Html::encode()</code> عنوان را امن در h1 قرار می‌دهد. <code>render('_form', ...)</code> فایل partial را اجرا می‌کند و مدل/وضعیت قفل را به آن می‌دهد. پاسخ نهایی همان صفحه به مرورگر است؛ در ارسال موفق، Controller به صفحهٔ جزئیات redirect می‌کند.</td></tr>
+</tbody></table></div>
+
+<details><summary>سورس کامل فایل با شمارهٔ خطوط (19 خط)</summary><pre class="code">  1: &lt;?php
+  2: 
+  3: use yii\helpers\Html;
+  4: 
+  5: /** @var yii\web\View $this */
+  6: /** @var app\models\Admission $model */
+  7: /** @var bool $patientLocked */
+  8: 
+  9: $this-&gt;title = &#39;ثبت پذیرش جدید&#39;;
+ 10: $this-&gt;params[&#39;breadcrumbs&#39;][] = [&#39;label&#39; =&gt; &#39;پذیرش‌ها&#39;, &#39;url&#39; =&gt; [&#39;index&#39;]];
+ 11: $this-&gt;params[&#39;breadcrumbs&#39;][] = $this-&gt;title;
+ 12: ?&gt;
+ 13: &lt;div class=&quot;admission-create form-page&quot; dir=&quot;rtl&quot;&gt;
+ 14:     &lt;div class=&quot;page-heading&quot;&gt;&lt;div&gt;&lt;h1&gt;&lt;?= Html::encode($this-&gt;title) ?&gt;&lt;/h1&gt;&lt;p&gt;بیمار، پزشک و بخش را انتخاب کنید تا پروندهٔ بستری باز شود.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;
+ 15:     &lt;?= $this-&gt;render(&#39;_form&#39;, [
+ 16:         &#39;model&#39; =&gt; $model,
+ 17:         &#39;patientLocked&#39; =&gt; $patientLocked,
+ 18:     ]) ?&gt;
+ 19: &lt;/div&gt;</pre></details>
+</section>
+
+<section class="card" id="index">
+<h2><code>app/views/admission/index.php</code> <span class="tag">View / فهرست و GridView</span></h2>
+<div class="meta"><div><b>وظیفه:</b> نمایش جست‌وجو و جدول پذیرش‌ها</div><div><b>ورودی:</b> <code>$searchModel</code> و <code>$dataProvider</code></div><div><b>ساخت داده:</b> <code>AdmissionController::actionIndex()</code> → <code>AdmissionSearch::search()</code></div></div>
+<div class="table-wrap"><table><thead><tr><th>خط</th><th>کد/بخش</th><th>توضیح</th></tr></thead><tbody>
+<tr><td class="ln">1–7</td><td>GridView، عنوان و تشخیص فیلتر</td><td><code>GridView</code> جدول دادهٔ صفحه‌بندی‌شدهٔ Yii است. عنوان و breadcrumb تنظیم می‌شوند. <code>$hasFilters</code> وجود فیلتر نام، کد ملی، موبایل یا وضعیت را برای انتخاب پیام و اقدام حالت خالی بررسی می‌کند.</td></tr>
+<tr><td class="ln">6–13</td><td>سرصفحه و اجزای مشترک</td><td>لینک تقویم و ثبت پذیرش از URL helperِ Html ساخته می‌شوند. سپس _search و _page_size با داده‌های لازم رندر می‌شوند؛ partialها امکان استفادهٔ مجدد را می‌دهند.</td></tr>
+<tr><td class="ln">14–23</td><td>پیکربندی GridView</td><td><code>GridView::widget()</code> داده را از <code>ActiveDataProvider</code> می‌گیرد؛ بنابراین صفحه‌بندی/مرتب‌سازی را Yii انجام می‌دهد. <code>tableOptions</code> کلاس‌های Bootstrap را می‌گذارد. <code>summary</code> متن تعداد نتایج را تعیین می‌کند. <code>emptyText</code> هنگام صفر نتیجه partial وضعیت خالی را با توجه به فیلترها و مسیر اقدام render می‌کند.</td></tr>
+<tr><td class="ln">24–31</td><td>ستون بیمار و تاریخ</td><td>برای بیمار، callback مقدار سفارشی می‌سازد و partial <code>_patient_label</code> را render می‌کند؛ چون خروجی HTML است <code>format=raw</code> تنظیم شده، پس باید خود partial خروجی را امن کند. تاریخ با Formatter پروژه نمایش داده می‌شود و <code>dir=ltr</code> ترتیب ارقام/زمان را خواناتر می‌کند. <code>doctor_name</code> و <code>ward</code> ستون‌های ساده‌اند.</td></tr>
+<tr><td class="ln">32–43</td><td>وضعیت و عملیات</td><td>callback وضعیت را به برچسب فارسی و کلاس رنگی تبدیل می‌کند. <code>Html::tag()</code> عنصر span را می‌سازد؛ چون خروجی raw است مقدارها باید ثابت/encode باشند. عملیات لینک خلاصهٔ پرونده را با شناسهٔ پذیرش می‌سازد.</td></tr>
+</tbody></table></div>
+<div class="tip"><b>کار بهینه‌سازی Query:</b> در <code>AdmissionSearch::search()</code> پذیرش‌ها با <code>with('patient')</code> خوانده می‌شوند. این eager loading باعث می‌شود برای هر سطر یک Query جداگانهٔ بیمار اجرا نشود (کاهش خطر N+1). جست‌وجو از subquery شناسه‌های بیمار نیز استفاده می‌کند و همهٔ داده‌ها را به PHP نمی‌کشد.</div>
+
+<details><summary>سورس کامل فایل با شمارهٔ خطوط (43 خط)</summary><pre class="code">  1: &lt;?php
+  2: use yii\grid\GridView;
+  3: use yii\helpers\Html;
+  4: $this-&gt;title = &#39;پذیرش‌ها&#39;;
+  5: $this-&gt;params[&#39;breadcrumbs&#39;][] = $this-&gt;title;
+  6: $hasFilters = (string) $searchModel-&gt;name !== &#39;&#39; || (string) $searchModel-&gt;national_code !== &#39;&#39;
+  7:     || (string) $searchModel-&gt;mobile !== &#39;&#39; || (string) $searchModel-&gt;status !== &#39;&#39;;
+  8: ?&gt;
+  9: &lt;div class=&quot;page-heading&quot;&gt;
+ 10:     &lt;div&gt;&lt;h1&gt;&lt;?= Html::encode($this-&gt;title) ?&gt;&lt;/h1&gt;&lt;p&gt;وضعیت پذیرش‌ها و خلاصهٔ پرونده‌ها را بررسی کنید.&lt;/p&gt;&lt;/div&gt;
+ 11:     &lt;div class=&quot;form-actions mt-0&quot;&gt;&lt;?= Html::a(&#39;تقویم پذیرش‌ها&#39;, [&#39;calendar&#39;], [&#39;class&#39; =&gt; &#39;btn btn-outline-primary&#39;]) ?&gt;&lt;?= Html::a(&#39;ثبت پذیرش&#39;, [&#39;create&#39;], [&#39;class&#39; =&gt; &#39;btn btn-primary&#39;]) ?&gt;&lt;/div&gt;
+ 12: &lt;/div&gt;
+ 13: &lt;?= $this-&gt;render(&#39;_search&#39;, [&#39;model&#39; =&gt; $searchModel]) ?&gt;
+ 14: &lt;?= $this-&gt;render(&#39;../layouts/_page_size&#39;, [&#39;dataProvider&#39; =&gt; $dataProvider]) ?&gt;
+ 15: &lt;div class=&quot;table-panel table-responsive&quot;&gt;
+ 16: &lt;?= GridView::widget([
+ 17:     &#39;dataProvider&#39; =&gt; $dataProvider,
+ 18:     &#39;tableOptions&#39; =&gt; [&#39;class&#39; =&gt; &#39;table table-hover align-middle mb-0&#39;],
+ 19:     &#39;summary&#39; =&gt; &#39;نمایش {begin, number, integer} تا {end, number, integer} از {totalCount, number, integer} پذیرش&#39;,
+ 20:     &#39;emptyText&#39; =&gt; $this-&gt;render(&#39;../layouts/_empty_state&#39;, [
+ 21:         &#39;icon&#39; =&gt; &#39;admission&#39;,
+ 22:         &#39;message&#39; =&gt; $hasFilters ? &#39;پذیرشی مطابق جست‌وجوی شما پیدا نشد. فیلترها را بررسی کنید.&#39; : &#39;هنوز پذیرشی ثبت نشده است.&#39;,
+ 23:         &#39;action&#39; =&gt; $hasFilters ? &#39;پاک کردن فیلترها&#39; : &#39;ثبت اولین پذیرش&#39;,
+ 24:         &#39;route&#39; =&gt; $hasFilters ? [&#39;index&#39;] : [&#39;create&#39;],
+ 25:     ]),
+ 26:     &#39;columns&#39; =&gt; [
+ 27:         [&#39;label&#39; =&gt; &#39;بیمار&#39;, &#39;format&#39; =&gt; &#39;raw&#39;, &#39;value&#39; =&gt; function ($model) {
+ 28:             return $this-&gt;render(&#39;/layouts/_patient_label&#39;, [&#39;patient&#39; =&gt; $model-&gt;patient]);
+ 29:         }],
+ 30:         [&#39;attribute&#39; =&gt; &#39;admission_date&#39;, &#39;format&#39; =&gt; &#39;datetime&#39;, &#39;contentOptions&#39; =&gt; [&#39;dir&#39; =&gt; &#39;ltr&#39;]],
+ 31:         &#39;doctor_name&#39;, &#39;ward&#39;,
+ 32:         [&#39;attribute&#39; =&gt; &#39;status&#39;, &#39;format&#39; =&gt; &#39;raw&#39;, &#39;value&#39; =&gt; static function ($model) {
+ 33:             $isAdmitted = $model-&gt;status === &#39;admitted&#39;;
+ 34:             return Html::tag(&#39;span&#39;, $isAdmitted ? &#39;بستری&#39; : &#39;ترخیص‌شده&#39;, [
+ 35:                 &#39;class&#39; =&gt; &#39;status-badge &#39; . ($isAdmitted ? &#39;status-admitted&#39; : &#39;status-discharged&#39;),
+ 36:             ]);
+ 37:         }],
+ 38:         [&#39;label&#39; =&gt; &#39;عملیات&#39;, &#39;format&#39; =&gt; &#39;raw&#39;, &#39;value&#39; =&gt; static function ($model) {
+ 39:             return Html::a(&#39;خلاصه پرونده&#39;, [&#39;view&#39;, &#39;id&#39; =&gt; $model-&gt;id], [&#39;class&#39; =&gt; &#39;btn btn-sm btn-outline-primary&#39;]);
+ 40:         }],
+ 41:     ],
+ 42: ]) ?&gt;
+ 43: &lt;/div&gt;</pre></details>
+</section>
+
+<section class="card" id="view">
+<h2><code>app/views/admission/view.php</code> <span class="tag">View / خلاصهٔ پرونده</span></h2>
+<div class="meta"><div><b>وظیفه:</b> جزئیات بیمار، پذیرش، خدمات، هزینه و ترخیص</div><div><b>Controller:</b> <code>AdmissionController::actionView($id)</code></div><div><b>Model:</b> روابط Admission با patient، discharge و admissionServices</div><div><b>خروجی:</b> HTML صفحه و چاپ مرورگر</div></div>
+<div class="table-wrap"><table><thead><tr><th>خط</th><th>کد/بخش</th><th>توضیح</th></tr></thead><tbody>
+<tr><td class="ln">1–14</td><td>دریافت روابط و وضعیت صفحه</td><td>ابتدا بیمار و عنوان صفحه تعیین می‌شود. رابطهٔ discharge بررسی می‌شود؛ <code>$isOpen</code> فقط وقتی true است که status بستری و رکورد ترخیص موجود نباشد. breadcrumb مسیر صفحه را می‌سازد.</td></tr>
+<tr><td class="ln">15–33</td><td>Query خدمات، برچسب‌ها و timeline</td><td>خدمات با رابطهٔ <code>getAdmissionServices()</code> و <code>with('service')</code> یک‌جا خوانده می‌شوند و بر اساس شناسه مرتب‌اند. آرایهٔ <code>$statusLabels</code> وضعیت‌های داخلی را برای نمایش ترجمه می‌کند. timeline رویداد پذیرش، هر خدمت و در صورت وجود ترخیص را می‌سازد. <code>?-&gt;</code> در PHP 8 دسترسی null-safe است. <code>usort()</code> رویدادها را بر اساس تاریخ مرتب می‌کند.</td></tr>
+<tr><td class="ln">36–57</td><td>سرصفحه و دکمه‌ها</td><td>عنوان با Html encode شده و وضعیت از کلاس‌های CSS برای نمایش نشان بستری/ترخیص استفاده می‌کند. دکمهٔ چاپ با data attribute به JS/CSS چاپ متصل است. افزودن خدمت و ترخیص فقط برای پروندهٔ باز نشان داده می‌شود. لینک بازگشت مسیر index است.</td></tr>
+<tr><td class="ln">59–80</td><td>بخش بیمار و اطلاعات پذیرش</td><td>هر بخش HTML مستقل دارد. اگر بیمار موجود نباشد پیام جایگزین نشان داده می‌شود. اطلاعات شخصی با <code>Html::encode()</code> escape می‌شوند تا متن ورودی به‌عنوان HTML اجرا نشود (مقابله با XSS). کد و موبایل با جهت LTR نمایش داده می‌شوند. زمان‌ها از Formatter مرکزی می‌آیند تا تقویم/منطقهٔ زمانی پروژه اعمال شود.</td></tr>
+<tr><td class="ln">82–92</td><td>روند پرونده</td><td>عنوان دسترس‌پذیر با <code>aria-labelledby</code> به h2 پیوند دارد. حلقهٔ timeline هر رویداد را در فهرست معنایی می‌سازد. عنوان، جزئیات و تاریخ پیش از خروجی encode می‌شوند؛ عنصر <code>&lt;time&gt;</code> معنای زمانی را روشن می‌کند.</td></tr>
+<tr><td class="ln">94–152</td><td>جدول خدمات و جمع</td><td>جدول چهار ستون خدمت، تعداد، قیمت واحد و مبلغ دارد. در نبود خدمت، متن خالی و در پذیرش باز لینک افزودن نمایش داده می‌شود. مبلغ هر ردیف <code>quantity × unit_price</code> است و به total اضافه می‌شود. عنوان خدمت encode شده و عددها با Formatter نمایش داده می‌شوند. footer جمع فعلی را می‌سازد.</td></tr>
+<tr><td class="ln">154–185</td><td>بخش ترخیص و اختلاف مبلغ</td><td>اگر discharge وجود دارد، تاریخ و مبلغ نهایی ذخیره‌شده و توضیح نمایش داده می‌شوند. توضیح encode شده است. اگر جمع خدمات فعلی با مبلغ زمان ترخیص تفاوت داشته باشد هشدار می‌آید؛ این اختلاف می‌تواند ناشی از تغییرات بعدی خدمات یا دادهٔ ناسازگار باشد و باید بررسی شود. اگر ترخیص وجود ندارد، وضعیت باز اعلام می‌شود.</td></tr>
+</tbody></table></div>
+<div class="warning"><b>نکتهٔ معماری:</b> این View خودش Query خدمات را اجرا می‌کند. در Yii این کار ممکن است، اما برای جداسازی MVC بهتر است Controller داده‌های لازم را آماده کند و به View بدهد؛ به‌خصوص اگر منطق Query، مجوزها یا eager loading پیچیده‌تر شود. همچنین برای جدول خدمات و timeline از همان <code>$items</code> استفاده شده، بنابراین Query تکراریِ خدمات نداریم.</div>
+<div class="note"><b>نکتهٔ هزینه:</b> جمع نمایش‌داده‌شده از قیمت‌های ذخیره‌شده در <code>admission_services.unit_price</code> محاسبه می‌شود؛ این رفتار از تغییر قیمت فعلی جدول services مستقل است و برای حفظ سابقهٔ مالی مناسب است. مبلغ نهایی ترخیص از رکورد <code>discharges</code> خوانده می‌شود.</div>
+
+<details><summary>سورس کامل فایل با شمارهٔ خطوط (185 خط)</summary><pre class="code">  1: &lt;?php
+  2: 
+  3: use yii\helpers\Html;
+  4: 
+  5: /** @var yii\web\View $this */
+  6: /** @var app\models\Admission $model */
+  7: 
+  8: $patient = $model-&gt;patient;
+  9: $this-&gt;title = &#39;پرونده پذیرش &#39; . ($patient ? $patient-&gt;first_name . &#39; &#39; . $patient-&gt;last_name : &#39;بیمار&#39;);
+ 10: $discharge = $model-&gt;discharge;
+ 11: $isOpen = $model-&gt;status === &#39;admitted&#39; &amp;&amp; $discharge === null;
+ 12: $this-&gt;params[&#39;breadcrumbs&#39;][] = [&#39;label&#39; =&gt; &#39;پذیرش‌ها&#39;, &#39;url&#39; =&gt; [&#39;index&#39;]];
+ 13: $this-&gt;params[&#39;breadcrumbs&#39;][] = $this-&gt;title;
+ 14: 
+ 15: $items = $model-&gt;getAdmissionServices()
+ 16:     -&gt;with(&#39;service&#39;)
+ 17:     -&gt;orderBy([&#39;id&#39; =&gt; SORT_ASC])
+ 18:     -&gt;all();
+ 19: 
+ 20: $total = 0;
+ 21: 
+ 22: $statusLabels = [
+ 23:     &#39;admitted&#39; =&gt; &#39;بستری&#39;,
+ 24:     &#39;discharged&#39; =&gt; &#39;ترخیص‌شده&#39;,
+ 25: ];
+ 26: $timeline = [[&#39;date&#39; =&gt; $model-&gt;admission_date, &#39;title&#39; =&gt; &#39;ثبت پذیرش&#39;, &#39;detail&#39; =&gt; &#39;پذیرش بیمار در &#39; . $model-&gt;ward . &#39; توسط &#39; . $model-&gt;doctor_name]];
+ 27: foreach ($items as $item) {
+ 28:     $timeline[] = [&#39;date&#39; =&gt; $item-&gt;created_at, &#39;title&#39; =&gt; &#39;ثبت خدمت&#39;, &#39;detail&#39; =&gt; ($item-&gt;service?-&gt;title ?? &#39;خدمت&#39;) . &#39; — تعداد &#39; . Yii::$app-&gt;formatter-&gt;asInteger($item-&gt;quantity)];
+ 29: }
+ 30: if ($discharge !== null) {
+ 31:     $timeline[] = [&#39;date&#39; =&gt; $discharge-&gt;discharge_date, &#39;title&#39; =&gt; &#39;ثبت ترخیص&#39;, &#39;detail&#39; =&gt; &#39;مبلغ نهایی &#39; . Yii::$app-&gt;formatter-&gt;asInteger((int) $discharge-&gt;total_amount) . &#39; تومان&#39;];
+ 32: }
+ 33: usort($timeline, static fn($a, $b) =&gt; strcmp((string) $a[&#39;date&#39;], (string) $b[&#39;date&#39;]));
+ 34: ?&gt;
+ 35: 
+ 36: &lt;div class=&quot;admission-summary&quot; dir=&quot;rtl&quot;&gt;
+ 37: 
+ 38:     &lt;div class=&quot;page-heading&quot;&gt;
+ 39:         &lt;div&gt;
+ 40:             &lt;h1&gt;&lt;?= Html::encode($this-&gt;title) ?&gt;&lt;/h1&gt;
+ 41:             &lt;p&gt;اطلاعات بیمار، وضعیت بستری و ریز هزینه‌های پرونده.&lt;/p&gt;
+ 42:         &lt;/div&gt;
+ 43:         &lt;span class=&quot;status-badge &lt;?= $isOpen ? &#39;status-admitted&#39; : &#39;status-discharged&#39; ?&gt;&quot;&gt;
+ 44:             &lt;?= Html::encode($statusLabels[$model-&gt;status] ?? $model-&gt;status) ?&gt;
+ 45:         &lt;/span&gt;
+ 46:     &lt;/div&gt;
+ 47: 
+ 48:     &lt;div class=&quot;form-actions admission-actions&quot;&gt;
+ 49:         &lt;?= Html::button($discharge !== null ? &#39;چاپ رسید ترخیص&#39; : &#39;چاپ پرونده&#39;, [&#39;class&#39; =&gt; &#39;btn btn-outline-secondary&#39;, &#39;data-print-trigger&#39; =&gt; &#39;1&#39;]) ?&gt;
+ 50:         &lt;?php if ($isOpen): ?&gt;
+ 51:             &lt;?= Html::a($this-&gt;render(&#39;../layouts/_icon&#39;, [&#39;name&#39; =&gt; &#39;service&#39;]) . &#39;افزودن خدمت&#39;,
+ 52:                 [&#39;/admission-service/create&#39;, &#39;admission_id&#39; =&gt; $model-&gt;id], [&#39;class&#39; =&gt; &#39;btn btn-primary&#39;]) ?&gt;
+ 53:             &lt;?= Html::a($this-&gt;render(&#39;../layouts/_icon&#39;, [&#39;name&#39; =&gt; &#39;discharge&#39;]) . &#39;مشاهده هزینه و ترخیص&#39;,
+ 54:                 [&#39;/discharge/create&#39;, &#39;admission_id&#39; =&gt; $model-&gt;id], [&#39;class&#39; =&gt; &#39;btn btn-success&#39;]) ?&gt;
+ 55:         &lt;?php endif; ?&gt;
+ 56:         &lt;?= Html::a(&#39;بازگشت به پذیرش‌ها&#39;, [&#39;index&#39;], [&#39;class&#39; =&gt; &#39;btn btn-outline-secondary&#39;]) ?&gt;
+ 57:     &lt;/div&gt;
+ 58: 
+ 59:     &lt;div class=&quot;admission-details&quot;&gt;
+ 60:         &lt;section&gt;
+ 61:             &lt;h2&gt;بیمار&lt;/h2&gt;
+ 62:             &lt;?php if ($patient !== null): ?&gt;
+ 63:                 &lt;dl class=&quot;detail-list&quot;&gt;
+ 64:                     &lt;dt&gt;نام&lt;/dt&gt;&lt;dd&gt;&lt;?= Html::encode($patient-&gt;first_name . &#39; &#39; . $patient-&gt;last_name) ?&gt;&lt;/dd&gt;
+ 65:                     &lt;dt&gt;کد ملی&lt;/dt&gt;&lt;dd dir=&quot;ltr&quot;&gt;&lt;?= Html::encode($patient-&gt;national_code) ?&gt;&lt;/dd&gt;
+ 66:                     &lt;dt&gt;موبایل&lt;/dt&gt;&lt;dd dir=&quot;ltr&quot;&gt;&lt;?= Html::encode($patient-&gt;mobile) ?&gt;&lt;/dd&gt;
+ 67:                 &lt;/dl&gt;
+ 68:             &lt;?php else: ?&gt;
+ 69:                 &lt;p&gt;اطلاعات بیمار پیدا نشد.&lt;/p&gt;
+ 70:             &lt;?php endif; ?&gt;
+ 71:         &lt;/section&gt;
+ 72:         &lt;section&gt;
+ 73:             &lt;h2&gt;پذیرش&lt;/h2&gt;
+ 74:             &lt;dl class=&quot;detail-list&quot;&gt;
+ 75:                 &lt;dt&gt;تاریخ پذیرش&lt;/dt&gt;&lt;dd&gt;&lt;span dir=&quot;ltr&quot;&gt;&lt;?= Html::encode(Yii::$app-&gt;formatter-&gt;asDatetime($model-&gt;admission_date)) ?&gt;&lt;/span&gt;&lt;/dd&gt;
+ 76:                 &lt;dt&gt;بخش&lt;/dt&gt;&lt;dd&gt;&lt;?= Html::encode($model-&gt;ward) ?&gt;&lt;/dd&gt;
+ 77:                 &lt;dt&gt;پزشک&lt;/dt&gt;&lt;dd&gt;&lt;?= Html::encode($model-&gt;doctor_name) ?&gt;&lt;/dd&gt;
+ 78:             &lt;/dl&gt;
+ 79:         &lt;/section&gt;
+ 80:     &lt;/div&gt;
+ 81: 
+ 82:     &lt;section class=&quot;admission-timeline&quot; aria-labelledby=&quot;timeline-title&quot;&gt;
+ 83:         &lt;h2 id=&quot;timeline-title&quot;&gt;روند پرونده&lt;/h2&gt;
+ 84:         &lt;ol class=&quot;timeline-list&quot;&gt;
+ 85:             &lt;?php foreach ($timeline as $event): ?&gt;
+ 86:                 &lt;li class=&quot;timeline-item&quot;&gt;&lt;span class=&quot;timeline-marker&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;
+ 87:                     &lt;div&gt;&lt;div class=&quot;timeline-heading&quot;&gt;&lt;strong&gt;&lt;?= Html::encode($event[&#39;title&#39;]) ?&gt;&lt;/strong&gt;&lt;time dir=&quot;ltr&quot;&gt;&lt;?= Html::encode(Yii::$app-&gt;formatter-&gt;asDatetime($event[&#39;date&#39;])) ?&gt;&lt;/time&gt;&lt;/div&gt;
+ 88:                     &lt;p&gt;&lt;?= Html::encode($event[&#39;detail&#39;]) ?&gt;&lt;/p&gt;&lt;/div&gt;
+ 89:                 &lt;/li&gt;
+ 90:             &lt;?php endforeach; ?&gt;
+ 91:         &lt;/ol&gt;
+ 92:     &lt;/section&gt;
+ 93: 
+ 94:     &lt;h2&gt;خدمات&lt;/h2&gt;
+ 95: 
+ 96:     &lt;div class=&quot;table-responsive&quot;&gt;
+ 97:         &lt;table class=&quot;table table-striped&quot;&gt;
+ 98:             &lt;thead&gt;
+ 99:                 &lt;tr&gt;
+100:                     &lt;th&gt;خدمت&lt;/th&gt;
+101:                     &lt;th&gt;تعداد&lt;/th&gt;
+102:                     &lt;th&gt;قیمت واحد (تومان)&lt;/th&gt;
+103:                     &lt;th&gt;مبلغ (تومان)&lt;/th&gt;
+104:                 &lt;/tr&gt;
+105:             &lt;/thead&gt;
+106: 
+107:             &lt;tbody&gt;
+108:                 &lt;?php if (empty($items)): ?&gt;
+109:                     &lt;tr&gt;
+110:                         &lt;td colspan=&quot;4&quot;&gt;
+111:                             خدمتی برای این پذیرش ثبت نشده است.
+112:                             &lt;?php if ($isOpen): ?&gt;
+113:                                 &lt;?= Html::a(&#39;افزودن خدمت&#39;, [&#39;/admission-service/create&#39;, &#39;admission_id&#39; =&gt; $model-&gt;id]) ?&gt;
+114:                             &lt;?php endif; ?&gt;
+115:                         &lt;/td&gt;
+116:                     &lt;/tr&gt;
+117:                 &lt;?php endif; ?&gt;
+118: 
+119:                 &lt;?php foreach ($items as $item): ?&gt;
+120:                     &lt;?php
+121:                     $amount = (int) $item-&gt;quantity
+122:                         * (int) $item-&gt;unit_price;
+123: 
+124:                     $total += $amount;
+125:                     ?&gt;
+126: 
+127:                     &lt;tr&gt;
+128:                         &lt;td&gt;
+129:                             &lt;?= Html::encode(
+130:                                 $item-&gt;service?-&gt;title
+131:                                 ?? &#39;خدمت نامشخص&#39;
+132:                             ) ?&gt;
+133:                         &lt;/td&gt;
+134:                         &lt;td&gt;
+135:                             &lt;?= Yii::$app-&gt;formatter-&gt;asInteger($item-&gt;quantity) ?&gt;
+136:                         &lt;/td&gt;
+137:                         &lt;td&gt;
+138:                             &lt;?= Yii::$app-&gt;formatter-&gt;asInteger(
+139:                                 (int) $item-&gt;unit_price
+140:                             ) ?&gt;
+141:                         &lt;/td&gt;
+142:                         &lt;td&gt;
+143:                             &lt;?= Yii::$app-&gt;formatter-&gt;asInteger($amount) ?&gt;
+144:                         &lt;/td&gt;
+145:                     &lt;/tr&gt;
+146:                 &lt;?php endforeach; ?&gt;
+147:             &lt;/tbody&gt;
+148:             &lt;tfoot&gt;
+149:                 &lt;tr&gt;&lt;th colspan=&quot;3&quot;&gt;جمع خدمات فعلی&lt;/th&gt;&lt;td&gt;&lt;?= Yii::$app-&gt;formatter-&gt;asInteger($total) ?&gt; تومان&lt;/td&gt;&lt;/tr&gt;
+150:             &lt;/tfoot&gt;
+151:         &lt;/table&gt;
+152:     &lt;/div&gt;
+153: 
+154:     &lt;h2&gt;ترخیص&lt;/h2&gt;
+155: 
+156:     &lt;?php if ($discharge !== null): ?&gt;
+157:         &lt;p&gt;
+158:             تاریخ ترخیص:
+159:             &lt;span dir=&quot;ltr&quot;&gt;&lt;?= Html::encode(Yii::$app-&gt;formatter-&gt;asDatetime($discharge-&gt;discharge_date)) ?&gt;&lt;/span&gt;
+160:             &lt;br&gt;
+161:             مبلغ نهایی ثبت‌شده هنگام ترخیص:
+162:             &lt;strong&gt;
+163:                 &lt;?= Yii::$app-&gt;formatter-&gt;asInteger(
+164:                     (int) $discharge-&gt;total_amount
+165:                 ) ?&gt;
+166:                 تومان
+167:             &lt;/strong&gt;
+168:             &lt;br&gt;
+169:             توضیحات:
+170:             &lt;?= Html::encode(
+171:                 $discharge-&gt;description ?: &#39;ندارد&#39;
+172:             ) ?&gt;
+173:         &lt;/p&gt;
+174: 
+175:         &lt;?php if ($total !== (int) $discharge-&gt;total_amount): ?&gt;
+176:             &lt;div class=&quot;alert alert-warning&quot;&gt;
+177:                 جمع خدمات فعلی با مبلغ ثبت‌شده هنگام ترخیص
+178:                 متفاوت است؛ خدمات این پذیرش باید بررسی شوند.
+179:             &lt;/div&gt;
+180:         &lt;?php endif; ?&gt;
+181:     &lt;?php else: ?&gt;
+182:         &lt;p&gt;این پذیرش هنوز ترخیص نشده است.&lt;/p&gt;
+183:     &lt;?php endif; ?&gt;
+184: 
+185: &lt;/div&gt;</pre></details>
+</section>
+
+<section class="card" id="dependencies">
+<h2>وابستگی‌های Yii و بک‌اند که برای فهم این Viewها لازم است</h2>
+<ul>
+<li><code>AdmissionController::actionIndex()</code> مدل <code>AdmissionSearch</code> را می‌سازد و نتیجهٔ <code>search()</code> را به index می‌دهد.</li>
+<li><code>AdmissionController::actionCreate()</code> فرم را رندر می‌کند؛ در POST، <code>load()</code> فقط ویژگی‌های safe را پر می‌کند و <code>save()</code> قوانین مدل را اجرا می‌کند. اگر بیمار از URL انتخاب شده باشد، شناسه پس از load دوباره روی مدل قرار می‌گیرد.</li>
+<li><code>Admission::rules()</code> الزامی بودن شناسه‌های بیمار/پزشک/بخش و وجود رکوردهای مرجع را بررسی می‌کند. در <code>beforeSave()</code> نام پزشک و بخش و زمان/وضعیت اولیه برای ثبت تاریخی snapshot می‌شوند.</li>
+<li>جست‌وجوی زندهٔ بیمار و پزشک به <code>actionSearchPatients()</code> و <code>actionSearchDoctors()</code> می‌رسد؛ این Actionها JSON می‌دهند. <code>patient-search.js</code> با debounce ۲۵۰ میلی‌ثانیه‌ای از درخواست‌های زیاد جلوگیری می‌کند، درخواست قبلی را abort می‌کند و انتخاب را در hidden input ثبت می‌کند.</li>
+<li><code>HospitalFormatter</code> نمایش عدد و تاریخ را هماهنگ می‌کند؛ <code>JalaliDate</code> تبدیل تاریخ تقویم فارسی سمت سرور را انجام می‌دهد. تنظیم locale و timezone در <code>app/config/web.php</code> است.</li>
+<li>Viewها خروجی‌اند، نه مرجع امنیت. Queryها parameterize می‌شوند چون Yii Query Builder از آرایه‌های شرطی استفاده می‌کند؛ با این حال هر متن پویا در HTML باید encode شود. استفادهٔ درست از <code>Html::encode()</code> در خروجی‌های حساس XSS را کاهش می‌دهد.</li>
+</ul>
+<h3>جریان نمونه: ثبت پذیرش از صفحهٔ بیمار</h3>
+<div class="flow">1) Patient page <span>→</span> /admission/create?patient_id=… <span>→</span> 2) actionCreate validates patient id <span>→</span> 3) create.php renders _form.php <span>→</span> 4) JS finds doctor / form submits IDs <span>→</span> 5) controller restores locked patient ID <span>→</span> 6) Admission rules + beforeSave <span>→</span> 7) INSERT database <span>→</span> redirect to view</div>
+<h3>چکیدهٔ اصلاح‌های پیشنهادی</h3>
+<ol><li>اصلاح انجام‌شده: شرط <code>$hasFilters</code> اکنون موبایل را هم لحاظ می‌کند.</li><li>در صورت رشد تعداد بخش‌ها، dropdown بارگذاری همهٔ بخش‌ها را به جست‌وجوی AJAX یا محدودسازی تبدیل کنید.</li><li>Query خدمات را در صورت نیاز از View به Controller منتقل کنید تا View فقط نمایش‌دهنده بماند.</li><li>در محیط Production مطمئن شوید Debug Toolbar و پیام خطاهای فنی عمومی در دسترس کاربران عادی نیستند؛ پیکربندی پروژه IP محلی را برای debug محدود کرده است.</li></ol>
+<p class="small">این گزارش مطابق فایل‌های موجود پروژه در زمان بررسی تهیه شده است. فایل‌های View نسخهٔ HTML را تولید می‌کنند؛ قواعد پایگاه داده، کنترل دسترسی و اعتبارسنجی نهایی در مسیرهای سرور قرار دارند.</p>
+</section>
+</main>
+<footer>راهنمای آموزشی Viewهای پذیرش · Yii 2 · پروژهٔ سامانهٔ بیمارستان</footer>
+</body>
+</html>
+

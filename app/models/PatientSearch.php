@@ -37,6 +37,12 @@ class PatientSearch extends Model
         ]);
         $this->load($params);
         if (!$this->validate()) {
+            // Keep validation errors, but do not pass arrays/objects to HTML inputs.
+            foreach ($this->attributes as $attribute => $value) {
+                if ($value !== null && !is_scalar($value)) {
+                    $this->$attribute = null;
+                }
+            }
             $query->where('0=1');
             return $provider;
         }

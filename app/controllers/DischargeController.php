@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\components\FormInput;
 use app\models\Discharge;
 use app\models\Admission;
 use Yii;
@@ -34,7 +35,7 @@ class DischargeController extends Controller
             $model->admission_id = $admissionId;
         }
 
-        $isSubmitted = $this->request->isPost && $model->load($this->request->post());
+        $isSubmitted = $this->request->isPost && FormInput::load($model, $this->request->post());
         if ($isSubmitted && $admissionId !== null) {
             $model->admission_id = $admissionId;
         }

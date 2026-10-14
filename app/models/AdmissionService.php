@@ -25,8 +25,8 @@ class AdmissionService extends \yii\db\ActiveRecord
                 'min' => 1,
             ],
 
-            [['quantity'], 'integer', 'min' => 1],
-            [['unit_price'], 'integer', 'min' => 0],
+            [['quantity'], 'integer', 'min' => 1, 'max' => 4294967295],
+            [['unit_price'], 'integer', 'min' => 0, 'max' => 4294967295],
 
             [
                 ['admission_id'],

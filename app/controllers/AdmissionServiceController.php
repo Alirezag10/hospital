@@ -1,6 +1,7 @@
 <?php
 namespace app\controllers;
 
+use app\components\FormInput;
 use app\models\Admission;
 use app\models\AdmissionService;
 use app\models\Discharge;
@@ -27,7 +28,7 @@ class AdmissionServiceController extends Controller
             }
             $model->admission_id = $admissionId;
         }
-        if ($this->request->isPost && $model->load($this->request->post())) {
+        if ($this->request->isPost && FormInput::load($model, $this->request->post())) {
             if ($admissionId !== null) {
                 $model->admission_id = $admissionId;
             }

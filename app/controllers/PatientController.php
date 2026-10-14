@@ -1,6 +1,7 @@
 <?php
 namespace app\controllers;
 
+use app\components\FormInput;
 use app\models\Patient;
 use app\models\PatientSearch;
 use Yii;
@@ -22,7 +23,7 @@ class PatientController extends Controller
     public function actionCreate()
     {
         $model = new Patient();
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        if ($this->request->isPost && FormInput::load($model, $this->request->post()) && $model->save()) {
             Yii::$app->session->setFlash('success', 'بیمار با موفقیت ثبت شد. اکنون می‌توانید پذیرش او را ثبت کنید.');
             return $this->redirect(['/admission/create', 'patient_id' => $model->id]);
         }

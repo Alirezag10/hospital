@@ -4,7 +4,7 @@ use yii\helpers\Html;
 $this->title = 'پذیرش‌ها';
 $this->params['breadcrumbs'][] = $this->title;
 $hasFilters = (string) $searchModel->name !== '' || (string) $searchModel->national_code !== ''
-    || (string) $searchModel->status !== '';
+    || (string) $searchModel->mobile !== '' || (string) $searchModel->status !== '';
 ?>
 <div class="page-heading">
     <div><h1><?= Html::encode($this->title) ?></h1><p>وضعیت پذیرش‌ها و خلاصهٔ پرونده‌ها را بررسی کنید.</p></div>
