@@ -71,7 +71,8 @@ CREATE TABLE services (
     title VARCHAR(150) NOT NULL,
     price INT UNSIGNED NOT NULL,
     active TINYINT(1) NOT NULL DEFAULT 1,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_services_title (title)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE admission_services (

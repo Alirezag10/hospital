@@ -2,19 +2,6 @@
 
 namespace app\models;
 
-/**
- * Model for the "admission_services" table.
- *
- * @property int $id
- * @property int $admission_id
- * @property int $service_id
- * @property int $quantity
- * @property int $unit_price
- * @property string $created_at
- *
- * @property Admission $admission
- * @property Service $service
- */
 class AdmissionService extends \yii\db\ActiveRecord
 {
     public static function tableName()

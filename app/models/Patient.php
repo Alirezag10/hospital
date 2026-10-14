@@ -2,17 +2,6 @@
 
 namespace app\models;
 
-/**
- * This is the model class for table "patients".
- *
- * @property int $id
- * @property string $first_name
- * @property string $last_name
- * @property string $national_code
- * @property string $mobile
- * @property string|null $birth_date
- * @property string $created_at
- */
 class Patient extends \yii\db\ActiveRecord
 {
     public $birthDateInput;

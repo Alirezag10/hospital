@@ -2,16 +2,6 @@
 
 namespace app\models;
 
-/**
- * Model for the "services" table.
- *
- * @property int $id
- * @property string $title
- * @property int $price
- * @property int $active
- *
- * @property AdmissionService[] $admissionServices
- */
 class Service extends \yii\db\ActiveRecord
 {
     public static function tableName()
@@ -22,11 +12,13 @@ class Service extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['title'], 'trim', 'skipOnArray' => true],
             [['active'], 'default', 'value' => 1],
             [['title', 'price'], 'required'],
             [['price'], 'integer', 'min' => 0],
             [['active'], 'in', 'range' => [0, 1]],
             [['title'], 'string', 'max' => 150],
+            [['title'], 'unique', 'message' => 'خدمتی با این عنوان قبلاً ثبت شده است.'],
         ];
     }
 
