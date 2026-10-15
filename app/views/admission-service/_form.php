@@ -29,7 +29,7 @@ foreach ($serviceModels as $service) {
     <fieldset class="form-section"><legend>پذیرش</legend>
     <?= Html::activeHiddenInput($model, 'admission_id', ['id' => 'admission-service-admission-id']) ?>
     <div class="mb-3">
-        <?= Html::label('پذیرش بیمار', 'admission-search', ['class' => 'form-label']) ?>
+        <?= Html::label('پذیرش بیمار', 'admission-search', ['class' => 'form-label' . ($admissionLocked ? '' : ' required-label')]) ?>
         <?php if ($admissionLocked && $selectedAdmission !== null): ?>
             <?= Html::textInput('admission_display', $selectedAdmissionLabel, [
                 'id' => 'admission-search',
@@ -51,6 +51,8 @@ foreach ($serviceModels as $service) {
                     'autocomplete' => 'off',
                     'required' => true,
                     'aria-autocomplete' => 'list',
+                    'role' => 'combobox',
+                    'aria-haspopup' => 'listbox',
                     'aria-controls' => 'admission-search-results',
                     'aria-expanded' => 'false',
                     'data-live-search' => 'true',

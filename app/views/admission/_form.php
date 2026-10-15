@@ -30,7 +30,7 @@ $wards = ArrayHelper::map(
     <legend>بیمار</legend>
     <?= Html::activeHiddenInput($model, 'patient_id', ['id' => 'admission-patient-id']) ?>
     <div class="mb-3">
-        <?= Html::label('بیمار', 'patient-search', ['class' => 'form-label']) ?>
+        <?= Html::label('بیمار', 'patient-search', ['class' => 'form-label' . ($patientLocked ? '' : ' required-label')]) ?>
         <?php if ($patientLocked && $selectedPatient !== null): ?>
             <?= Html::textInput('patient_display', $selectedPatientLabel, [
                 'id' => 'patient-search',
@@ -46,6 +46,8 @@ $wards = ArrayHelper::map(
                     'autocomplete' => 'off',
                     'required' => true,
                     'aria-autocomplete' => 'list',
+                    'role' => 'combobox',
+                    'aria-haspopup' => 'listbox',
                     'aria-controls' => 'patient-search-results',
                     'aria-expanded' => 'false',
                     'data-live-search' => 'true',
@@ -63,7 +65,7 @@ $wards = ArrayHelper::map(
     <div class="row g-3">
         <div class="col-md-6 mb-3">
             <?= Html::activeHiddenInput($model, 'doctor_id', ['id' => 'admission-doctor-id']) ?>
-            <?= Html::label('پزشک', 'doctor-search', ['class' => 'form-label']) ?>
+            <?= Html::label('پزشک', 'doctor-search', ['class' => 'form-label required-label']) ?>
             <div class="position-relative entity-search-wrapper">
                 <?= Html::textInput('doctor_search', $selectedDoctorLabel, [
                     'id' => 'doctor-search',
@@ -72,6 +74,8 @@ $wards = ArrayHelper::map(
                     'autocomplete' => 'off',
                     'required' => true,
                     'aria-autocomplete' => 'list',
+                    'role' => 'combobox',
+                    'aria-haspopup' => 'listbox',
                     'aria-controls' => 'doctor-search-results',
                     'aria-expanded' => 'false',
                     'data-live-search' => 'true',

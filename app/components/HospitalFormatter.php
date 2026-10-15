@@ -23,6 +23,6 @@ class HospitalFormatter extends \yii\i18n\Formatter
 
     private function isZeroDate($value): bool
     {
-        return is_string($value) && str_starts_with($value, '0000-00-00');
+        return $value === null || $value === '' || (is_string($value) && str_starts_with($value, '0000-00-00'));
     }
 }

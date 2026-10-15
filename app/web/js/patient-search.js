@@ -66,10 +66,16 @@
                 option.className = 'dropdown-item text-wrap text-end';
                 option.setAttribute('role', 'option');
                 option.textContent = item.label;
+                if (item.detail) {
+                    const detail = document.createElement('small');
+                    detail.className = 'd-block text-muted';
+                    detail.textContent = item.detail;
+                    option.append(detail);
+                }
 
                 option.addEventListener('click', function () {
                     selected.value = item.id;
-                    input.value = option.textContent;
+                    input.value = item.label;
                     if (input.closest('form').hasAttribute('data-unsaved-warning')) {
                         input.closest('form').dataset.dirty = '1';
                     }

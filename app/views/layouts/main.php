@@ -51,7 +51,7 @@ $this->render('_head');
     </div>
 </dialog>
 
-<?php if (in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true)): ?>
+<?php if (in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true) && class_exists(\yii\debug\Module::class)): ?>
     <?php $debugToolbarEnabled = defined('YII_DEBUG') && YII_DEBUG && YII_ENV_DEV; ?>
     <?= Html::button(
         $debugToolbarEnabled ? 'دیباگ: روشن' : 'دیباگ: خاموش',

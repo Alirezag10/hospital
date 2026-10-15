@@ -1,7 +1,6 @@
 <?php
 namespace app\controllers;
 
-use yii\db\Expression;
 use app\models\Patient;
 use app\models\Admission;
 use app\models\Discharge;
@@ -17,14 +16,17 @@ class SiteController extends Controller
 
     public function actionIndex()
     {
+        $today = date('Y-m-d');
+        $tomorrow = (new \DateTimeImmutable($today))->modify('+1 day')->format('Y-m-d');
         $activeAdmissions = Admission::find()->where(['status' => 'admitted']);
         $dischargesToday = Discharge::find()
-            ->where(['>=', 'discharge_date', new Expression('CURDATE()')])
-            ->andWhere(['<', 'discharge_date', new Expression('CURDATE() + INTERVAL 1 DAY')]);
+            ->where(['>=', 'discharge_date', $today . ' 00:00:00'])
+            ->andWhere(['<', 'discharge_date', $tomorrow . ' 00:00:00']);
         return $this->render('index', [
             'patients' => Patient::find()->count(),
             'activeAdmissions' => (clone $activeAdmissions)->count(),
             'dischargesToday' => $dischargesToday->count(),
+            'today' => $today,
         ]);
     }
 }

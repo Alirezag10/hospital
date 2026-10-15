@@ -6,7 +6,7 @@ use yii\widgets\ActiveForm;
     <?php $form = ActiveForm::begin(['method' => 'get', 'action' => ['index'], 'enableClientValidation' => false]); ?>
     <div class="row">
         <div class="col-md-4"><?= $form->field($model, 'name')->textInput(['placeholder' => 'نام یا نام خانوادگی']) ?></div>
-        <div class="col-md-4"><?= $form->field($model, 'national_code')->textInput(['dir' => 'ltr', 'inputmode' => 'numeric', 'placeholder' => 'کد ملی']) ?></div>
+        <div class="col-md-4"><?= $form->field($model, 'national_code')->textInput(['dir' => 'ltr', 'inputmode' => 'numeric', 'maxlength' => 10, 'placeholder' => 'کد ملی کامل یا رقم‌های ابتدایی']) ?></div>
         <div class="col-md-4"><?= $form->field($model, 'mobile')->textInput(['dir' => 'ltr', 'inputmode' => 'tel', 'placeholder' => 'شماره موبایل']) ?></div>
     </div>
     <?= $form->errorSummary($model) ?>

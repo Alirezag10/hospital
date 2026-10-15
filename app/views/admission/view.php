@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use app\components\ServiceAmount;
 
 /** @var yii\web\View $this */
 /** @var app\models\Admission $model */
@@ -28,7 +29,8 @@ foreach ($items as $item) {
     $timeline[] = ['date' => $item->created_at, 'title' => 'ثبت خدمت', 'detail' => ($item->service?->title ?? 'خدمت') . ' — تعداد ' . Yii::$app->formatter->asInteger($item->quantity)];
 }
 if ($discharge !== null) {
-    $timeline[] = ['date' => $discharge->discharge_date, 'title' => 'ثبت ترخیص', 'detail' => 'مبلغ نهایی ' . Yii::$app->formatter->asInteger((int) $discharge->total_amount) . ' تومان'];
+    $recordedAmount = ServiceAmount::fromDatabase($discharge->total_amount);
+    $timeline[] = ['date' => $discharge->discharge_date, 'title' => 'ثبت ترخیص', 'detail' => 'مبلغ نهایی ' . ($recordedAmount === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($recordedAmount) . ' تومان')];
 }
 usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['date']));
 ?>
@@ -118,10 +120,8 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
 
                 <?php foreach ($items as $item): ?>
                     <?php
-                    $amount = (int) $item->quantity
-                        * (int) $item->unit_price;
-
-                    $total += $amount;
+                    $amount = ServiceAmount::line($item->quantity, $item->unit_price);
+                    $total = ServiceAmount::add($total, $amount);
                     ?>
 
                     <tr>
@@ -140,13 +140,13 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
                             ) ?>
                         </td>
                         <td>
-                            <?= Yii::$app->formatter->asInteger($amount) ?>
+                            <?= $amount === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($amount) ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
             <tfoot>
-                <tr><th colspan="3">جمع خدمات فعلی</th><td><?= Yii::$app->formatter->asInteger($total) ?> تومان</td></tr>
+                <tr><th colspan="3">جمع خدمات فعلی</th><td><?= $total === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($total) . ' تومان' ?></td></tr>
             </tfoot>
         </table>
     </div>
@@ -160,10 +160,7 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
             <br>
             مبلغ نهایی ثبت‌شده هنگام ترخیص:
             <strong>
-                <?= Yii::$app->formatter->asInteger(
-                    (int) $discharge->total_amount
-                ) ?>
-                تومان
+                <?= $recordedAmount === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($recordedAmount) . ' تومان' ?>
             </strong>
             <br>
             توضیحات:
@@ -172,7 +169,7 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
             ) ?>
         </p>
 
-        <?php if ($total !== (int) $discharge->total_amount): ?>
+        <?php if ($total !== ServiceAmount::fromDatabase($discharge->total_amount)): ?>
             <div class="alert alert-warning">
                 جمع خدمات فعلی با مبلغ ثبت‌شده هنگام ترخیص
                 متفاوت است؛ خدمات این پذیرش باید بررسی شوند.

@@ -30,9 +30,16 @@
             serviceTotal.textContent = 'ابتدا خدمت را انتخاب کنید';
             return;
         }
-        const price = Number(serviceSelect.selectedOptions[0]?.dataset.price || 0);
-        const quantity = Math.max(0, Number.parseInt(quantityInput.value, 10) || 0);
-        serviceTotal.textContent = persianDigits.format(price * quantity) + ' تومان';
+        const quantityText = quantityInput.value.trim();
+        if (!/^\d+$/.test(quantityText)) {
+            serviceTotal.textContent = 'تعداد معتبر وارد کنید';
+            return;
+        }
+        const price = BigInt(serviceSelect.selectedOptions[0]?.dataset.price || '0');
+        const total = price * BigInt(quantityText);
+        serviceTotal.textContent = total > 9223372036854775807n
+            ? 'بیش از حد مجاز'
+            : persianDigits.format(total) + ' تومان';
     }
     serviceSelect?.addEventListener('change', updateServiceTotal);
     quantityInput?.addEventListener('input', updateServiceTotal);
@@ -61,7 +68,7 @@
     const dirtyForms = new Set();
     document.querySelectorAll('form[data-unsaved-warning]').forEach(function (form) {
         const markDirty = event => {
-            if (event.target.matches('[data-live-search]')) return;
+            if (event.target.matches('[data-live-search]') || event.target.closest('.shamsi-popup')) return;
             form.dataset.dirty = '1';
         };
         form.addEventListener('input', markDirty);

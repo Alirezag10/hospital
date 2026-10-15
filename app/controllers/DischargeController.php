@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\components\FormInput;
+use app\components\ServiceAmount;
 use app\models\Discharge;
 use app\models\Admission;
 use Yii;
@@ -73,7 +74,7 @@ class DischargeController extends Controller
 
                     $transaction->rollBack();
                 } else {
-                    $model->total_amount = (int) $db->createCommand(
+                    $sum = $db->createCommand(
                         'SELECT COALESCE(
                             SUM(quantity * unit_price),
                             0
@@ -82,6 +83,17 @@ class DischargeController extends Controller
                          WHERE admission_id = :id',
                         [':id' => $model->admission_id]
                     )->queryScalar();
+                    $model->total_amount = ServiceAmount::fromDatabase($sum);
+                    if ($model->total_amount === null) {
+                        $model->addError('admission_id', 'جمع هزینه‌ها از محدودهٔ قابل ثبت بیشتر است؛ ریز خدمات را بررسی کنید.');
+                        $transaction->rollBack();
+                        return $this->render('create', [
+                            'model' => $model,
+                            'selectedAdmission' => $admission,
+                            'hasOpenAdmissions' => true,
+                            'items' => $admission?->getAdmissionServices()->with('service')->orderBy(['id' => SORT_ASC])->all() ?? [],
+                        ]);
+                    }
 
                     $now = $db->createCommand(
                         'SELECT NOW()'

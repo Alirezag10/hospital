@@ -30,9 +30,22 @@ class AdmissionSearch extends Model
         return ['name' => 'نام بیمار', 'national_code' => 'کد ملی', 'mobile' => 'موبایل', 'status' => 'وضعیت پذیرش'];
     }
 
-    public function search($params)
+    public function search($params, ?string $date = null, ?string $dischargedOn = null)
     {
         $query = Admission::find()->with('patient');
+        if ($date === 'unknown') {
+            $query->andWhere(['admission_date' => null]);
+        } elseif ($date !== null) {
+            $query->andWhere(['>=', 'admission_date', $date . ' 00:00:00'])
+                ->andWhere(['<', 'admission_date', (new \DateTimeImmutable($date))->modify('+1 day')->format('Y-m-d 00:00:00')]);
+        }
+        if ($dischargedOn !== null) {
+            $query->with('discharge');
+            $discharges = Discharge::find()->select('admission_id')
+                ->where(['>=', 'discharge_date', $dischargedOn . ' 00:00:00'])
+                ->andWhere(['<', 'discharge_date', (new \DateTimeImmutable($dischargedOn))->modify('+1 day')->format('Y-m-d 00:00:00')]);
+            $query->andWhere(['status' => 'discharged'])->andWhere(['in', 'id', $discharges]);
+        }
         $provider = new ActiveDataProvider([
             'query' => $query,
             'sort' => ['defaultOrder' => ['id' => SORT_DESC]],
@@ -56,7 +69,11 @@ class AdmissionSearch extends Model
             foreach (preg_split('/\s+/u', (string) $this->name, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $part) {
                 $patients->andWhere(['or', ['like', 'first_name', $part], ['like', 'last_name', $part]]);
             }
-            $patients->andFilterWhere(['like', 'national_code', $this->national_code]);
+            if ((string) $this->national_code !== '') {
+                $patients->andWhere(strlen((string) $this->national_code) === 10
+                    ? ['national_code' => $this->national_code]
+                    : ['like', 'national_code', $this->national_code . '%', false]);
+            }
             $patients->andFilterWhere(['like', 'mobile', $this->mobile]);
             $query->andWhere(['in', 'patient_id', $patients]);
         }

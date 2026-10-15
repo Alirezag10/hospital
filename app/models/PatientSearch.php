@@ -49,7 +49,11 @@ class PatientSearch extends Model
         foreach (preg_split('/\s+/u', trim((string) $this->name), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $part) {
             $query->andWhere(['or', ['like', 'first_name', $part], ['like', 'last_name', $part]]);
         }
-        $query->andFilterWhere(['like', 'national_code', $this->national_code]);
+        if ((string) $this->national_code !== '') {
+            $query->andWhere(strlen((string) $this->national_code) === 10
+                ? ['national_code' => $this->national_code]
+                : ['like', 'national_code', $this->national_code . '%', false]);
+        }
         $query->andFilterWhere(['like', 'mobile', $this->mobile]);
         return $provider;
     }

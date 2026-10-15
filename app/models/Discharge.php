@@ -21,7 +21,7 @@ class Discharge extends \yii\db\ActiveRecord
 
             [['admission_id'], 'integer', 'min' => 1],
             [['total_amount'], 'integer', 'min' => 0],
-            [['description'], 'string'],
+            [['description'], 'string', 'max' => 5000],
 
             [
                 ['admission_id'],

@@ -40,7 +40,7 @@ $config = [
     ],
 ];
 
-if (YII_DEBUG && YII_ENV_DEV) {
+if (YII_DEBUG && YII_ENV_DEV && class_exists(\yii\debug\Module::class)) {
     $config['bootstrap'][] = 'debug';
     $config['modules']['debug'] = [
         'class' => \yii\debug\Module::class,

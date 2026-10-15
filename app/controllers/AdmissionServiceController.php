@@ -2,6 +2,7 @@
 namespace app\controllers;
 
 use app\components\FormInput;
+use app\components\ServiceAmount;
 use app\models\Admission;
 use app\models\AdmissionService;
 use app\models\Discharge;
@@ -64,6 +65,18 @@ class AdmissionServiceController extends Controller
                 return false;
             }
             $model->unit_price = $service->price;
+            $currentSum = $db->createCommand(
+                'SELECT COALESCE(SUM(quantity * unit_price), 0) FROM admission_services WHERE admission_id = :id',
+                [':id' => $model->admission_id]
+            )->queryScalar();
+            if (ServiceAmount::add(
+                ServiceAmount::fromDatabase($currentSum),
+                ServiceAmount::line($model->quantity, $model->unit_price)
+            ) === null) {
+                $model->addError('quantity', 'جمع هزینه‌های پذیرش از محدودهٔ قابل ثبت بیشتر می‌شود.');
+                $transaction->rollBack();
+                return false;
+            }
             $model->created_at = $db->createCommand('SELECT NOW()')->queryScalar();
             if (!$model->save()) {
                 $transaction->rollBack();

@@ -20,19 +20,32 @@ $monthTitle = $monthNames[$jalaliMonth - 1] . ' ' . $persianDigits($jalaliYear);
 <section class="calendar-panel" aria-label="تقویم پذیرش‌ها">
     <div class="calendar-toolbar">
         <?= Html::a('ماه قبل', ['calendar', 'month' => $previousMonth], ['class' => 'btn btn-outline-secondary']) ?>
-        <h2><?= Html::encode($monthTitle) ?></h2>
+        <div class="calendar-heading">
+            <h2><?= Html::encode($monthTitle) ?></h2>
+            <?= Html::a('ماه جاری', ['calendar', 'month' => $currentMonth], ['class' => 'btn btn-sm btn-outline-primary']) ?>
+        </div>
         <?= Html::a('ماه بعد', ['calendar', 'month' => $nextMonth], ['class' => 'btn btn-outline-secondary']) ?>
     </div>
     <div class="calendar-grid" role="grid" aria-label="روزهای ماه">
+        <div class="calendar-row" role="row">
         <?php foreach (['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'] as $weekday): ?>
             <div class="calendar-weekday" role="columnheader"><?= Html::encode($weekday) ?></div>
         <?php endforeach; ?>
+        </div>
         <?php for ($cell = 0; $cell < $cellCount; $cell++): ?>
-            <?php $day = $cell - $startOffset + 1; $validDay = $day >= 1 && $day <= $daysInMonth; ?>
-            <div class="calendar-day<?= $validDay ? '' : ' is-outside' ?>" role="gridcell"<?= $validDay ? ' aria-label="روز ' . $persianDigits($day) . ' ' . $monthNames[$jalaliMonth - 1] . '"' : ' aria-hidden="true"' ?>>
+            <?php if ($cell % 7 === 0): ?><div class="calendar-row" role="row"><?php endif; ?>
+            <?php
+            $day = $cell - $startOffset + 1;
+            $validDay = $day >= 1 && $day <= $daysInMonth;
+            $key = $validDay ? $firstDay->modify('+' . ($day - 1) . ' days')->format('Y-m-d') : null;
+            $isToday = $key === $today;
+            ?>
+            <div class="calendar-day<?= $validDay ? ($isToday ? ' is-today' : '') : ' is-outside' ?>" role="gridcell"<?= $validDay ? ' aria-label="روز ' . $persianDigits($day) . ' ' . $monthNames[$jalaliMonth - 1] . '"' : ' aria-hidden="true"' ?>>
                 <?php if ($validDay): ?>
-                    <?php $key = $firstDay->modify('+' . ($day - 1) . ' days')->format('Y-m-d'); ?>
-                    <span class="calendar-day-number"><?= $persianDigits($day) ?></span>
+                    <div class="calendar-day-heading">
+                        <span class="calendar-day-number"<?= $isToday ? ' aria-current="date"' : '' ?>><?= $persianDigits($day) ?></span>
+                        <?php if ($isToday): ?><small class="calendar-today-label">امروز</small><?php endif; ?>
+                    </div>
                     <?php foreach (array_slice($admissionsByDay[$key] ?? [], 0, 3) as $admission): ?>
                         <?= Html::a(
                             Html::encode(($admission->patient->first_name ?? '') . ' ' . ($admission->patient->last_name ?? '')),
@@ -40,10 +53,16 @@ $monthTitle = $monthNames[$jalaliMonth - 1] . ' ' . $persianDigits($jalaliYear);
                             ['class' => 'calendar-event', 'title' => $admission->doctor_name . ' — ' . $admission->ward]
                         ) ?>
                     <?php endforeach; ?>
-                    <?php $more = count($admissionsByDay[$key] ?? []) - 3; ?>
-                    <?php if ($more > 0): ?><span class="calendar-more">و <?= $more ?> مورد دیگر</span><?php endif; ?>
+                    <?php $more = ($dayCounts[$key] ?? 0) - 3; ?>
+                    <?php if ($more > 0): ?><?= Html::a('و ' . Yii::$app->formatter->asInteger($more) . ' مورد دیگر', ['index', 'date' => $key], ['class' => 'calendar-more']) ?><?php endif; ?>
                 <?php endif; ?>
             </div>
+            <?php if ($cell % 7 === 6): ?></div><?php endif; ?>
         <?php endfor; ?>
     </div>
 </section>
+<?php if ($unknownCount > 0): ?>
+    <div class="alert alert-info mt-3">تاریخ <?= Yii::$app->formatter->asInteger($unknownCount) ?> پذیرش قدیمی مشخص نیست.
+        <?= Html::a('نمایش این پذیرش‌ها', ['index', 'date' => 'unknown'], ['class' => 'alert-link']) ?>
+    </div>
+<?php endif; ?>

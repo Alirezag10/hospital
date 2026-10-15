@@ -93,27 +93,43 @@
         if (!active) return;
         active.popup.hidden = true; active.toggle.setAttribute('aria-expanded', 'false'); active = null;
     }
+    function bounds(f) {
+        const minimum = f.original.min ? parts(new Date(f.original.min.slice(0, 10) + 'T00:00:00Z')) : [1200, 1];
+        const maximum = f.original.max ? parts(new Date(f.original.max.slice(0, 10) + 'T00:00:00Z')) : [1600, 12];
+        return {minimum, maximum};
+    }
     function render(f) {
+        const {minimum, maximum} = bounds(f);
+        f.year = Math.max(minimum[0], Math.min(f.year, maximum[0]));
+        const firstMonth = f.year === minimum[0] ? minimum[1] : 1;
+        const lastMonth = f.year === maximum[0] ? maximum[1] : 12;
+        f.month = Math.max(firstMonth, Math.min(f.month, lastMonth));
         const pop = f.popup; pop.replaceChildren();
         const nav = document.createElement('div'); nav.className = 'shamsi-nav';
         function move(delta) {
             let y = f.year, m = f.month + delta;
             if (m < 1) {m = 12; y--;} if (m > 12) {m = 1; y++;}
-            if (y < 1200 || y > 1600) return;
+            if (y * 12 + m < minimum[0] * 12 + minimum[1] || y * 12 + m > maximum[0] * 12 + maximum[1]) return;
             f.year = y; f.month = m; render(f);
             if (active === f) position(f);
             pop.querySelector(delta < 0 ? '[data-month-previous]' : '[data-month-next]')?.focus({preventScroll:true});
         }
         const month = document.createElement('select'); month.className = 'shamsi-month'; month.setAttribute('aria-label', 'ماه');
-        months.forEach((name, i) => month.add(new Option(name, String(i + 1)))); month.value = f.month;
+        months.forEach((name, i) => {
+            const option = new Option(name, String(i + 1));
+            option.disabled = i + 1 < firstMonth || i + 1 > lastMonth;
+            month.add(option);
+        }); month.value = f.month;
         const year = document.createElement('select'); year.className = 'shamsi-year'; year.setAttribute('aria-label', 'سال');
-        for (let y = 1200; y <= 1600; y++) year.add(new Option(persian(y), String(y)));
+        for (let y = maximum[0]; y >= minimum[0]; y--) year.add(new Option(persian(y), String(y)));
         year.value = f.year;
         month.addEventListener('change', e => {e.stopPropagation();f.month = +month.value; render(f);pop.querySelector('.shamsi-month').focus();});
         year.addEventListener('change', e => {e.stopPropagation();f.year = +year.value; render(f);pop.querySelector('.shamsi-year').focus();});
         const selectors = document.createElement('div'); selectors.className = 'shamsi-selectors'; selectors.append(month, year);
         const previous = iconButton('ماه قبل', 'M9 6l6 6-6 6', event => {event.stopPropagation();move(-1);}, 'shamsi-arrow'); previous.dataset.monthPrevious = '1';
         const next = iconButton('ماه بعد', 'M15 6l-6 6 6 6', event => {event.stopPropagation();move(1);}, 'shamsi-arrow'); next.dataset.monthNext = '1';
+        previous.disabled = f.year * 12 + f.month <= minimum[0] * 12 + minimum[1];
+        next.disabled = f.year * 12 + f.month >= maximum[0] * 12 + maximum[1];
         nav.append(previous, selectors, next); pop.append(nav);
         const grid = document.createElement('div'); grid.className = 'shamsi-days';
         ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'].forEach((name, index) => {const e = document.createElement('span');e.className = 'shamsi-weekday';e.textContent = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'][index];e.title = name;e.setAttribute('aria-label', name);grid.append(e);});
@@ -138,10 +154,13 @@
         }
         pop.append(grid);
         const actions = document.createElement('div'); actions.className = 'shamsi-actions';
-        actions.append(button('امروز', () => {
+        const todayButton = button('امروز', () => {
             const now = new Date(); const p = parts(new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())));
             choose(f, p[0] + '/' + pad(p[1]) + '/' + pad(p[2]));
-        }, 'shamsi-action'), button('پاک کردن', () => {f.visible.value = '';sync(f, true);close();f.visible.focus();}, 'shamsi-action'));
+        }, 'shamsi-action');
+        const todayIso = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())).toISOString().slice(0, 10);
+        todayButton.disabled = (f.original.min && todayIso < f.original.min) || (f.original.max && todayIso > f.original.max);
+        actions.append(todayButton, button('پاک کردن', () => {f.visible.value = '';sync(f, true);close();f.visible.focus();}, 'shamsi-action'));
         pop.append(actions);
     }
     function choose(f, date) {

@@ -39,7 +39,7 @@ use yii\widgets\ActiveForm;
                     'dir' => 'ltr',
                     'placeholder' => '۱۴۰۵/۰۷/۰۸',
                     'max' => date('Y-m-d'),
-                ]) ?>
+                ])->label('تاریخ تولد (اختیاری)') ?>
             </div>
         </div>
         </fieldset>

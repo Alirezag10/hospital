@@ -7,11 +7,12 @@
 .shamsi-popup[hidden] { display: none; }
 .shamsi-nav { display: flex; align-items: center; gap: 8px; padding: 12px; margin: -16px -16px 12px; background: var(--surface-soft); }
 .shamsi-selectors { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
-.shamsi-nav select { min-width: 0; min-height: 44px; padding: 6px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--surface); font: inherit; font-weight: 700; cursor: pointer; }
+.shamsi-nav select { min-width: 0; min-height: 44px; padding: 6px; border: 1px solid var(--control-border); border-radius: 8px; color: var(--ink); background: var(--surface); font: inherit; font-weight: 700; cursor: pointer; }
 .shamsi-month { flex: 1; }
 .shamsi-year { width: 86px; }
 .shamsi-arrow { flex: 0 0 44px; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; color: var(--primary-dark); background: transparent; }
 .shamsi-arrow:hover { background: var(--primary-soft); }
+.shamsi-arrow:disabled { color: var(--muted); opacity: .45; cursor: not-allowed; background: transparent; }
 .shamsi-nav select:hover { border-color: var(--primary); }
 .shamsi-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; text-align: center; font-variant-numeric: tabular-nums; }
 .shamsi-weekday { padding: 6px 0 10px; color: var(--muted); font-size: .8rem; font-weight: 700; }

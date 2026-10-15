@@ -12,11 +12,11 @@ $this->title = 'داشبورد بیمارستان';
     </div>
     <section class="dashboard-stats" aria-label="آمار سامانه">
         <?php foreach ([
-            ['بیماران', $patients, 'patient', '/patient/index'],
-            ['پذیرش‌های فعال', $activeAdmissions, 'admission', '/admission/index'],
-            ['ترخیص امروز', $dischargesToday, 'discharge', '/discharge/create'],
+            ['بیماران', $patients, 'patient', ['/patient/index']],
+            ['پذیرش‌های فعال', $activeAdmissions, 'admission', ['/admission/index', 'AdmissionSearch' => ['status' => 'admitted']]],
+            ['ترخیص امروز', $dischargesToday, 'discharge', ['/admission/index', 'discharged_on' => $today]],
         ] as [$label, $count, $icon, $route]): ?>
-            <?= Html::beginTag('a', ['href' => \yii\helpers\Url::to([$route]), 'class' => 'dashboard-stat', 'aria-label' => $label . ': ' . $count . '، مشاهده']) ?>
+            <?= Html::beginTag('a', ['href' => \yii\helpers\Url::to($route), 'class' => 'dashboard-stat', 'aria-label' => $label . ': ' . $count . '، مشاهده']) ?>
                 <span class="stat-label"><?= $this->render('/layouts/_icon', ['name' => $icon]) ?><?= Html::encode($label) ?></span>
                 <strong><?= Yii::$app->formatter->asInteger((int) $count) ?></strong>
             <?= Html::endTag('a') ?>
