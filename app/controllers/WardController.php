@@ -6,7 +6,7 @@ use app\components\FormInput;
 use app\models\Ward;
 use Yii;
 use yii\data\ActiveDataProvider;
-use yii\web\Controller;
+use app\components\RoleController as Controller;
 
 class WardController extends Controller
 {

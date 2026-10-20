@@ -6,7 +6,7 @@ use app\models\Patient;
 use app\models\PatientSearch;
 use Yii;
 use yii\data\ActiveDataProvider;
-use yii\web\Controller;
+use app\components\RoleController as Controller;
 use yii\web\NotFoundHttpException;
 
 class PatientController extends Controller

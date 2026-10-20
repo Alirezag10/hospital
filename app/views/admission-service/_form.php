@@ -12,7 +12,7 @@ use yii\widgets\ActiveForm;
 $selectedAdmissionId = filter_var($model->admission_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 $selectedAdmission = $selectedAdmissionId === false
     ? null
-    : Admission::find()->with('patient')->where(['id' => $selectedAdmissionId])->one();
+    : \app\components\Access::admissions()->with('patient')->andWhere(['id' => $selectedAdmissionId])->one();
 $selectedAdmissionLabel = $selectedAdmission ? $selectedAdmission->getSelectionLabel() : '';
 $serviceModels = Service::find()->where(['active' => 1])->orderBy(['title' => SORT_ASC])->all();
 $services = ArrayHelper::map($serviceModels, 'id', static function ($service) {

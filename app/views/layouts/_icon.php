@@ -8,6 +8,8 @@ $paths = [
     'admission' => 'M9 4H5v17h14V4h-4M9 2h6v4H9zM8 11h8m-8 4h5',
     'service' => 'M4 3h16v18H4zM12 7v6m-3-3h6M8 17h8',
     'discharge' => 'M13 3H4v18h9M10 12h11m-4-4 4 4-4 4',
+    'eye' => 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12m13 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
+    'eye-off' => 'm3 3 18 18M10.58 10.59a2 2 0 0 0 2.83 2.82M9.88 5.09A10.94 10.94 0 0 1 12 5c6.5 0 10 7 10 7a19.8 19.8 0 0 1-3.05 3.62M6.61 6.61A20 20 0 0 0 2 12s3.5 7 10 7a10.4 10.4 0 0 0 5.39-1.61',
 ];
 ?>
 <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="<?= $paths[$name] ?? $paths['dashboard'] ?>" /></svg>

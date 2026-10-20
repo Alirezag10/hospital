@@ -6,7 +6,7 @@ use app\components\FormInput;
 use app\models\Doctor;
 use Yii;
 use yii\data\ActiveDataProvider;
-use yii\web\Controller;
+use app\components\RoleController as Controller;
 
 class DoctorController extends Controller
 {
@@ -14,7 +14,7 @@ class DoctorController extends Controller
     {
         $term = $this->request->get('q', '');
         $term = is_string($term) ? mb_substr(trim($term), 0, 100) : '';
-        $query = Doctor::find();
+        $query = Doctor::find()->with('user');
         foreach (preg_split('/\s+/u', $term, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $part) {
             $query->andWhere(['or', ['like', 'name', $part], ['like', 'specialty', $part], ['like', 'mobile', $part]]);
         }
@@ -37,5 +37,10 @@ class DoctorController extends Controller
         }
 
         return $this->render('create', ['model' => $model]);
+    }
+
+    public function actionAccount($id)
+    {
+        return $this->redirect(['/user/create', 'doctor_id' => $id]);
     }
 }

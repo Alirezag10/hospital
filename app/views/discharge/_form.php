@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use app\components\ServiceAmount;
+use app\components\Billing;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
@@ -25,7 +26,6 @@ $total = 0;
         <?php if (!$hasOpenAdmissions): ?>
             <div class="alert alert-info">
                 پذیرش بستری و ترخیص‌نشده‌ای برای انتخاب وجود ندارد.
-                <?= Html::a('ثبت پذیرش جدید', ['/admission/create'], ['class' => 'alert-link']) ?>
             </div>
         <?php endif; ?>
         <?= Html::beginForm(['create'], 'get', ['id' => 'discharge-preview-form']) ?>
@@ -87,7 +87,6 @@ $total = 0;
                         <?php if (empty($items)): ?>
                             <tr><td colspan="4">
                                 خدمتی برای این پذیرش ثبت نشده است.
-                                <?= Html::a('افزودن خدمت', ['/admission-service/create', 'admission_id' => $selectedId]) ?>
                             </td></tr>
                         <?php endif; ?>
                         <?php foreach ($items as $item): ?>
@@ -102,6 +101,8 @@ $total = 0;
                         </tbody>
                     </table>
                 </div>
+                <?= $this->render('/clinical/_costs', ['admission' => $selectedAdmission]) ?>
+                <?php $total = Billing::total($selectedId); ?>
             </section>
             <section class="discharge-confirm-section" aria-labelledby="discharge-confirm-title">
                 <h2 class="h5 discharge-section-title" id="discharge-confirm-title">ثبت ترخیص</h2>
@@ -112,7 +113,7 @@ $total = 0;
                 <?php if ($total === null): ?><div class="alert alert-danger">جمع هزینه‌ها از محدودهٔ قابل ثبت بیشتر است. پیش از ترخیص، ریز خدمات را بررسی کنید.</div><?php endif; ?>
                 <p class="discharge-note">تاریخ و مبلغ نهایی هنگام ثبت محاسبه می‌شوند. ترخیص ثبت‌شده قابل ویرایش یا حذف نیست.</p>
                 <div class="discharge-final-total">
-                    <div><span>جمع هزینه خدمات</span><strong id="discharge-preview-total"><?= $total === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($total) . ' تومان' ?></strong></div>
+                    <div><span>جمع خدمات، دارو و مصرفی</span><strong id="discharge-preview-total"><?= $total === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($total) . ' تومان' ?></strong></div>
                     <div class="form-actions">
                     <?= Html::submitButton('ثبت ترخیص', [
                         'class' => 'btn btn-primary',

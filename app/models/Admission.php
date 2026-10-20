@@ -103,4 +103,9 @@ class Admission extends ActiveRecord
     {
         return $this->hasOne(Discharge::class, ['admission_id' => 'id']);
     }
+
+    public function getPrescriptions()
+    {
+        return $this->hasMany(Prescription::class, ['admission_id' => 'id']);
+    }
 }

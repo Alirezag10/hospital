@@ -34,4 +34,6 @@ class Doctor extends ActiveRecord
             'created_at' => 'تاریخ ثبت',
         ];
     }
+
+    public function getUser() { return $this->hasOne(User::class, ['doctor_id' => 'id']); }
 }

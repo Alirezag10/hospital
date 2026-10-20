@@ -8,7 +8,9 @@ use app\models\AdmissionService;
 use app\models\Discharge;
 use app\models\Service;
 use Yii;
-use yii\web\Controller;
+use app\components\RoleController as Controller;
+use app\components\Access;
+use app\components\Billing;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
@@ -20,7 +22,7 @@ class AdmissionServiceController extends Controller
         $admissionId = null;
         if ($admission_id !== null) {
             $admissionId = filter_var($admission_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-            $admission = $admissionId === false ? null : Admission::findOne(['id' => $admissionId]);
+            $admission = Access::admission($admission_id);
             if ($admission === null) {
                 throw new NotFoundHttpException('پذیرش انتخاب‌شده پیدا نشد.');
             }
@@ -49,10 +51,11 @@ class AdmissionServiceController extends Controller
         if (!$model->validate(['admission_id', 'service_id', 'quantity'])) {
             return false;
         }
+        Access::admission($model->admission_id);
         $db = Yii::$app->db;
         $transaction = $db->beginTransaction();
         try {
-            $status = $db->createCommand('SELECT status FROM admissions WHERE id = :id FOR UPDATE', [':id' => $model->admission_id])->queryScalar();
+            $status = Access::lockAdmission((int) $model->admission_id)['status'];
             if ($status !== 'admitted' || Discharge::find()->where(['admission_id' => $model->admission_id])->exists()) {
                 $model->addError('admission_id', 'ثبت خدمت فقط برای پذیرش بستری و ترخیص‌نشده مجاز است.');
                 $transaction->rollBack();
@@ -65,12 +68,8 @@ class AdmissionServiceController extends Controller
                 return false;
             }
             $model->unit_price = $service->price;
-            $currentSum = $db->createCommand(
-                'SELECT COALESCE(SUM(quantity * unit_price), 0) FROM admission_services WHERE admission_id = :id',
-                [':id' => $model->admission_id]
-            )->queryScalar();
             if (ServiceAmount::add(
-                ServiceAmount::fromDatabase($currentSum),
+                Billing::total($model->admission_id),
                 ServiceAmount::line($model->quantity, $model->unit_price)
             ) === null) {
                 $model->addError('quantity', 'جمع هزینه‌های پذیرش از محدودهٔ قابل ثبت بیشتر می‌شود.');

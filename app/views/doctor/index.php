@@ -41,6 +41,9 @@ $this->params['breadcrumbs'][] = $this->title;
         'specialty',
         ['attribute' => 'mobile', 'contentOptions' => ['dir' => 'ltr']],
         ['attribute' => 'created_at', 'format' => 'datetime', 'contentOptions' => ['dir' => 'ltr']],
+        ['label' => 'حساب کاربری', 'format' => 'raw', 'value' => static fn($doctor) => $doctor->user
+            ? Html::tag('span', 'حساب فعال: ' . Html::encode($doctor->user->username), ['class' => 'status-badge status-admitted'])
+            : Html::a('ساخت حساب پزشک', ['/user/create', 'doctor_id' => $doctor->id], ['class' => 'btn btn-sm btn-outline-primary'])],
     ],
 ]) ?>
 </div>

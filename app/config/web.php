@@ -18,6 +18,13 @@ $config = [
     ],
     'aliases' => ['@bower' => '@vendor/bower-asset', '@npm' => '@vendor/npm-asset'],
     'components' => [
+        'user' => [
+            'identityClass' => \app\models\User::class,
+            'enableAutoLogin' => true,
+            'loginUrl' => ['site/login'],
+            'identityCookie' => ['name' => '_hospital_identity', 'httpOnly' => true, 'sameSite' => 'Lax'],
+        ],
+        'session' => ['name' => 'HOSPITAL_SESSION', 'cookieParams' => ['httpOnly' => true, 'sameSite' => 'Lax']],
         'assetManager' => ['appendTimestamp' => true],
         'request' => ['cookieValidationKey' => 'hospital-local-project-7c49a83f2d614b90a5e8f036c1bd7294'],
         'urlManager' => [

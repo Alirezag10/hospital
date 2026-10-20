@@ -7,7 +7,8 @@ use app\components\ServiceAmount;
 use app\models\Discharge;
 use app\models\Admission;
 use Yii;
-use yii\web\Controller;
+use app\components\RoleController as Controller;
+use app\components\Billing;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
@@ -74,16 +75,7 @@ class DischargeController extends Controller
 
                     $transaction->rollBack();
                 } else {
-                    $sum = $db->createCommand(
-                        'SELECT COALESCE(
-                            SUM(quantity * unit_price),
-                            0
-                         )
-                         FROM admission_services
-                         WHERE admission_id = :id',
-                        [':id' => $model->admission_id]
-                    )->queryScalar();
-                    $model->total_amount = ServiceAmount::fromDatabase($sum);
+                    $model->total_amount = Billing::total($model->admission_id);
                     if ($model->total_amount === null) {
                         $model->addError('admission_id', 'جمع هزینه‌ها از محدودهٔ قابل ثبت بیشتر است؛ ریز خدمات را بررسی کنید.');
                         $transaction->rollBack();

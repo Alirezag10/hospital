@@ -32,7 +32,7 @@ class AdmissionSearch extends Model
 
     public function search($params, ?string $date = null, ?string $dischargedOn = null)
     {
-        $query = Admission::find()->with('patient');
+        $query = \app\components\Access::admissions()->with('patient');
         if ($date === 'unknown') {
             $query->andWhere(['admission_date' => null]);
         } elseif ($date !== null) {

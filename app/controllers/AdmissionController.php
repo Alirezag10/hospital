@@ -10,7 +10,8 @@ use app\models\Doctor;
 use app\models\Patient;
 use Yii;
 use yii\db\Expression;
-use yii\web\Controller;
+use app\components\RoleController as Controller;
+use app\components\Access;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
@@ -166,12 +167,11 @@ class AdmissionController extends Controller
             return [];
         }
 
-        $query = Admission::find()
-            ->alias('a')
+        $query = Access::admissions('a')
             ->select(['a.id', 'a.admission_date', 'a.doctor_name', 'a.ward', 'p.first_name', 'p.last_name', 'p.national_code'])
             ->innerJoin(['p' => Patient::tableName()], 'p.id = a.patient_id')
             ->leftJoin(['d' => Discharge::tableName()], 'd.admission_id = a.id')
-            ->where(['a.status' => 'admitted', 'd.id' => null])
+            ->andWhere(['a.status' => 'admitted', 'd.id' => null])
             ->orderBy(['p.last_name' => SORT_ASC, 'p.first_name' => SORT_ASC]);
 
         foreach ($parts as $part) {
@@ -232,11 +232,7 @@ class AdmissionController extends Controller
 
     public function actionView($id)
     {
-        $admissionId = filter_var($id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-        $model = $admissionId === false ? null : Admission::findOne(['id' => $admissionId]);
-        if ($model === null) {
-            throw new NotFoundHttpException('پذیرش پیدا نشد.');
-        }
+        $model = Access::admission($id);
         return $this->render('view', ['model' => $model]);
     }
 }
