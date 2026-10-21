@@ -70,7 +70,8 @@ class UserForm extends Model
     {
         if (!Doctor::find()->where(['id' => $this->doctor_id])->exists()) {
             $this->addError($attribute, 'پزشک انتخاب‌شده پیدا نشد.');
-        } elseif (User::find()->where(['doctor_id' => $this->doctor_id])->andWhere(['<>', 'id', $this->user?->id ?? 0])->exists()) {
+        } elseif (Doctor::find()->where(['id' => $this->doctor_id])->andWhere(['not', ['user_id' => null]])
+            ->andWhere(['<>', 'user_id', $this->user?->id ?? 0])->exists()) {
             $this->addError($attribute, 'این پزشک از قبل حساب دارد؛ همان حساب را ویرایش کنید.');
         }
     }
@@ -100,25 +101,36 @@ class UserForm extends Model
             }
             $doctor = null;
             if ($this->role === User::DOCTOR) {
-                $doctor = $this->doctor_id ? Doctor::findOne(['id' => $this->doctor_id])
+                $doctor = $this->doctor_id ? Doctor::findBySql('SELECT * FROM doctors WHERE id=:id FOR UPDATE', [':id' => $this->doctor_id])->one()
                     : new Doctor(['name' => $this->full_name, 'specialty' => $this->specialty, 'mobile' => $this->mobile]);
                 if ($doctor === null) { throw new NotFoundHttpException('پزشک انتخاب‌شده پیدا نشد.'); }
-                if ($doctor->isNewRecord && !$doctor->save()) {
+                if ($doctor->user_id !== null && (int) $doctor->user_id !== (int) $user->id) {
+                    $this->addError('doctor_id', 'این پزشک از قبل حساب دارد؛ همان حساب را ویرایش کنید.');
+                    $transaction->rollBack();
+                    return null;
+                }
+                if ($doctor->isNewRecord && !$doctor->validate()) {
                     foreach ($doctor->getFirstErrors() as $attribute => $error) { $this->addError($attribute === 'name' ? 'full_name' : $attribute, $error); }
                     $transaction->rollBack();
                     return null;
                 }
             }
             $rotateKey = $user->isNewRecord || $this->password !== '' || $user->role !== $this->role
-                || (int) $user->is_active !== (int) $this->is_active || (string) $user->doctor_id !== (string) $doctor?->id;
+                || (int) $user->is_active !== (int) $this->is_active || (string) $user->doctorId !== (string) $doctor?->id;
             $user->username = $this->username;
             $user->full_name = $doctor?->name ?? $this->full_name;
             $user->role = $this->role;
             $user->is_active = (int) $this->is_active;
-            $user->doctor_id = $doctor?->id;
             if ($rotateKey) { $user->auth_key = Yii::$app->security->generateRandomString(); }
             if ($this->password !== '') { $user->password_hash = Yii::$app->security->generatePasswordHash($this->password); }
             $user->save(false);
+            // Clear the former profile before linking the selected one (user_id is unique).
+            Doctor::updateAll(['user_id' => null], ['and', ['user_id' => $user->id], ['<>', 'id', $doctor?->id ?? 0]]);
+            if ($doctor !== null) {
+                $doctor->user_id = $user->id;
+                $doctor->save(false);
+            }
+            $user->populateRelation('doctor', $doctor);
             $transaction->commit();
             return $user;
         } catch (IntegrityException $error) {

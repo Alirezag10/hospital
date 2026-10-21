@@ -26,5 +26,6 @@ class User extends ActiveRecord implements IdentityInterface
     public function getAuthKey() { return $this->auth_key; }
     public function validateAuthKey($authKey) { return is_string($authKey) && hash_equals($this->auth_key, $authKey); }
     public function validatePassword(string $password): bool { return Yii::$app->security->validatePassword($password, $this->password_hash); }
-    public function getDoctor() { return $this->hasOne(Doctor::class, ['id' => 'doctor_id']); }
+    public function getDoctor() { return $this->hasOne(Doctor::class, ['user_id' => 'id'])->inverseOf('user'); }
+    public function getDoctorId(): ?int { return $this->doctor === null ? null : (int) $this->doctor->id; }
 }

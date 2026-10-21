@@ -15,7 +15,7 @@ $fields = [
     'data-original-price'=>$original?->unit_price??'','data-original-title'=>$original?->title??'','data-original-kind'=>$original?->kind??'']) ?>
     <legend>قلم درمانی</legend>
     <?= Html::activeHiddenInput($item,"[$index]medical_item_id",['data-line-medical_item_id'=>'1']) ?>
-    <?= Html::hiddenInput("PrescriptionItem[$index][item_id]",$item->sourceItemId??($item->isNewRecord?'':$item->id)) ?>
+    <?= Html::hiddenInput("PrescriptionItem[$index][item_id]", $item->sourceItemId ?? '') ?>
     <div class="prescription-item-grid">
         <?php foreach ($fields as $attribute => [$label, $class]): ?>
             <div class="clinical-field <?= $class ?><?= $item->hasErrors($attribute) ? ' has-error' : '' ?>">

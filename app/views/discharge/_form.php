@@ -8,7 +8,6 @@ use yii\widgets\ActiveForm;
 /** @var yii\web\View $this */
 /** @var app\models\Discharge $model */
 /** @var app\models\Admission|null $selectedAdmission */
-/** @var bool $hasOpenAdmissions */
 /** @var app\models\AdmissionService[] $items */
 
 $selectedId = filter_var($model->admission_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
@@ -19,28 +18,18 @@ $patientName = $isOpen ? $selectedAdmission->patient->first_name . ' ' . $select
 $total = $bill['total'];
 $isReady = $isOpen && $selectedAdmission->ready_at !== null;
 ?>
-<?php if (!$isOpen && $readyAdmissions): ?>
-<section class="mb-4" aria-labelledby="ready-queue-title">
-    <h2 class="h5" id="ready-queue-title">صف آمادهٔ ترخیص</h2>
-    <p>حداکثر ۱۰ پروندهٔ تأییدشده، به ترتیب زمان تأیید پزشک. برای سایر پرونده‌ها جست‌وجو کنید.</p>
-    <div class="table-panel table-responsive"><table class="table table-hover align-middle mb-0">
-    <thead><tr><th>بیمار</th><th>بخش</th><th>زمان تأیید</th><th>عملیات</th></tr></thead><tbody>
-    <?php foreach ($readyAdmissions as $readyAdmission): ?><tr>
-        <td><?= $this->render('/layouts/_patient_label',['patient'=>$readyAdmission->patient]) ?></td>
-        <td><?= Html::encode($readyAdmission->ward) ?></td><td><?= Html::encode(Yii::$app->formatter->asDatetime($readyAdmission->ready_at)) ?></td>
-        <td><?= Html::a('بررسی و ترخیص',['create','admission_id'=>$readyAdmission->id],['class'=>'btn btn-sm btn-outline-primary']) ?></td>
-    </tr><?php endforeach; ?></tbody></table></div>
-</section>
+<?php if (!$isOpen): ?>
+<div data-live-panel data-live-url="<?= Html::encode(Url::to(['/discharge/queue'])) ?>">
+    <?= $this->render('/layouts/_live_status') ?>
+    <div data-live-content>
+        <?= $this->render('_queue', ['readyAdmissions' => $readyAdmissions, 'readyTotal' => $readyTotal]) ?>
+    </div>
+</div>
 <?php endif; ?>
 <div class="discharge-form card" dir="rtl">
     <div class="card-body">
         <?php if (!$isOpen): ?>
         <h2 class="h5 discharge-section-title">انتخاب پذیرش</h2>
-        <?php if (!$hasOpenAdmissions): ?>
-            <div class="alert alert-info">
-                هنوز پرونده‌ای با تأیید پایان درمان در صف ترخیص وجود ندارد.
-            </div>
-        <?php endif; ?>
         <?= Html::beginForm(['create'], 'get', ['id' => 'discharge-preview-form']) ?>
         <?= Html::hiddenInput('admission_id', $isOpen ? $selectedId : '', ['id' => 'discharge-admission-id']) ?>
         <?= Html::label('پذیرش بیمار', 'discharge-admission-search', ['class' => 'form-label required-label']) ?>
@@ -51,7 +40,6 @@ $isReady = $isOpen && $selectedAdmission->ready_at !== null;
                 'placeholder' => 'نام یا کد ملی بیمار را وارد کنید',
                 'autocomplete' => 'off',
                 'required' => true,
-                'disabled' => !$hasOpenAdmissions,
                 'aria-autocomplete' => 'list',
                 'role' => 'combobox',
                 'aria-haspopup' => 'listbox',

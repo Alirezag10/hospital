@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="clinical-section-heading"><div><h2 id="prescription-items-title">دارو و لوازم مصرفی</h2><p>دارو یا وسیله را از فهرست جست‌وجو و انتخاب کنید. قیمت واحد به تومان است.</p></div>
                 <button type="button" class="btn btn-outline-primary" data-add-prescription-item>افزودن قلم</button></div>
             <div data-prescription-items>
-                <?php foreach ($items as $index => $item): $original=$originals[$item->sourceItemId??$item->id]??null; ?><?= $this->render('_item_row', compact('index', 'item','original')) ?><?php endforeach; ?>
+                <?php foreach ($items as $index => $item): $original=$originals[$item->sourceItemId??'']??null; ?><?= $this->render('_item_row', compact('index', 'item','original')) ?><?php endforeach; ?>
             </div>
             <p class="clinical-estimate">جمع اقلام این نسخه: <strong data-prescription-total aria-live="polite">۰ تومان</strong></p>
         </section>

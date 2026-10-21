@@ -10,7 +10,7 @@
                 <?= Html::a('سابقه اصلاحات',['/record-change/index','type'=>'prescription','id'=>$prescription->id],['class'=>'btn btn-sm btn-outline-secondary']) ?>
                 <span>ویرایش <?= Yii::$app->formatter->asInteger($prescription->revision) ?></span>
             </div><?php endif; ?>
-            <?php if ($prescription->author && (int) $prescription->author->doctor_id !== (int) $prescription->doctor_id): ?><p class="clinical-empty">ثبت‌کننده: <?= Html::encode($prescription->author->full_name) ?></p><?php endif; ?>
+            <?php if ($prescription->author && (int) $prescription->author->id !== (int) $prescription->doctor->user_id): ?><p class="clinical-empty">ثبت‌کننده: <?= Html::encode($prescription->author->full_name) ?></p><?php endif; ?>
             <h4>تشخیص و شرح وضعیت</h4><p class="clinical-prose"><?= Html::encode($prescription->diagnosis) ?></p>
             <?php if ($prescription->notes): ?><h4>دستورات پزشک</h4><p class="clinical-prose"><?= Html::encode($prescription->notes) ?></p><?php endif; ?>
             <?php if ($prescription->items): ?><?= $this->render('_item_table', ['items' => $prescription->items, 'showInstructions' => true]) ?><?php endif; ?>

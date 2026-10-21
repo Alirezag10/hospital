@@ -38,5 +38,5 @@ class Doctor extends ActiveRecord
         ];
     }
 
-    public function getUser() { return $this->hasOne(User::class, ['doctor_id' => 'id']); }
+    public function getUser() { return $this->hasOne(User::class, ['id' => 'user_id'])->inverseOf('doctor'); }
 }

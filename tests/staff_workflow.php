@@ -71,9 +71,19 @@ createStaff($admin, $secretary, 'test.secretary', 'منشی آزمایشی', 'se
 createStaff($admin, $doctor, 'test.doctor', 'پزشک آزمایشی اول', 'doctor');
 createStaff($admin, $otherDoctor, 'test.other', 'پزشک آزمایشی دوم', 'doctor');
 createStaff($admin, $discharge, 'test.discharge', 'ترخیص‌کار آزمایشی', 'discharge');
-$user = $db->query("SELECT * FROM users WHERE username='test.doctor'")->fetch(PDO::FETCH_ASSOC);
-$other = $db->query("SELECT * FROM users WHERE username='test.other'")->fetch(PDO::FETCH_ASSOC);
+$user = $db->query("SELECT u.*,d.id AS doctor_id FROM users u LEFT JOIN doctors d ON d.user_id=u.id WHERE u.username='test.doctor'")->fetch(PDO::FETCH_ASSOC);
+$other = $db->query("SELECT u.*,d.id AS doctor_id FROM users u LEFT JOIN doctors d ON d.user_id=u.id WHERE u.username='test.other'")->fetch(PDO::FETCH_ASSOC);
 check((int) $user['doctor_id'] !== 1 && $user['auth_key'] !== 'tampered', 'account creation ignores posted record ID and auth key');
+check((int) $db->query("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='users' AND column_name='doctor_id'")->fetchColumn() === 0,
+    'fresh schema contains no users.doctor_id column');
+check((int) $db->query('SELECT user_id FROM doctors WHERE id='.$user['doctor_id'])->fetchColumn() === (int) $user['id'],
+    'physician profile owns the account foreign key');
+[$status] = $admin->submit('/user/create', ['UserForm' => [
+    'username'=>'duplicate.doctor', 'full_name'=>'تکراری', 'role'=>'doctor', 'doctor_id'=>$user['doctor_id'],
+    'password'=>'StaffTest123!', 'password_repeat'=>'StaffTest123!',
+]]);
+check($status === 200 && (int) $db->query("SELECT COUNT(*) FROM users WHERE username='duplicate.doctor'")->fetchColumn() === 0,
+    'an already linked physician cannot receive a second account');
 check(password_verify('StaffTest123!', $user['password_hash']) && $user['password_hash'] !== 'StaffTest123!', 'password stored as hash');
 check($guest->request('/site/register')[0] === 404, 'public registration GET removed');
 check($guest->request('/site/register', ['RegisterForm'=>['username'=>'intruder','role'=>'admin','password'=>'StaffTest123!']])[0] === 404, 'public registration POST removed');
@@ -94,6 +104,47 @@ foreach ([[$user['doctor_id'], 'اول', '008150001'], [$other['doctor_id'], 'د
     $admissionIds[] = (int) $db->query('SELECT MAX(id) FROM admissions')->fetchColumn();
 }
 [$ownId, $otherId] = $admissionIds;
+[$status, $html] = $doctor->request('/site/index');
+check($status === 200 && str_contains($html, 'data-admission-id="'.$ownId.'"')
+    && !str_contains($html, 'data-admission-id="'.$otherId.'"'), 'doctor dashboard shows only assigned active admissions');
+[$status, $html] = $otherDoctor->request('/site/index');
+check($status === 200 && str_contains($html, 'data-admission-id="'.$otherId.'"')
+    && !str_contains($html, 'data-admission-id="'.$ownId.'"'), 'second doctor dashboard has its own scoped worklist');
+foreach ([$secretary, $admin] as $browser) {
+    [$status, $html] = $browser->request('/site/index');
+    check($status === 200 && str_contains($html, 'پذیرش‌های اخیر')
+        && str_contains($html, 'data-admission-id="'.$ownId.'"')
+        && str_contains($html, 'data-admission-id="'.$otherId.'"'), 'secretary and admin dashboards show recent admissions');
+}
+[$status, $html] = $discharge->request('/site/index');
+check($status === 200 && str_contains($html, 'پرونده‌ای در صف ترخیص نیست.')
+    && !str_contains($html, 'data-admission-id='), 'discharge dashboard explains the empty queue before approval');
+foreach ([[$doctor, $ownId, $otherId], [$otherDoctor, $otherId, $ownId]] as [$browser, $allowedId, $deniedId]) {
+    [$status, $json, $headers] = $browser->request('/site/dashboard');
+    $payload = json_decode($json, true);
+    check($status === 200 && isset($payload['updatedAt'], $payload['html'])
+        && str_contains($payload['html'], 'data-admission-id="'.$allowedId.'"')
+        && !str_contains($payload['html'], 'data-admission-id="'.$deniedId.'"'), 'live dashboard preserves doctor ownership');
+    check(str_contains(strtolower($headers), 'no-store')
+        && !str_contains($payload['html'], '<html'), 'live dashboard returns only an uncached fragment');
+}
+foreach ([$secretary, $admin, $discharge] as $browser) {
+    [$status, $json] = $browser->request('/site/dashboard');
+    check($status === 200 && isset(json_decode($json, true)['html']), 'live dashboard available to authorized role');
+}
+foreach ([$doctor, $secretary] as $browser) {
+    check($browser->request('/discharge/queue')[0] === 403, 'live discharge queue denied outside discharge and admin roles');
+}
+foreach ([$admin, $discharge] as $browser) {
+    [$status, $json, $headers] = $browser->request('/discharge/queue');
+    $payload = json_decode($json, true);
+    check($status === 200 && isset($payload['updatedAt'])
+        && !str_contains($payload['html'], 'data-admission-id=')
+        && str_contains(strtolower($headers), 'no-store'), 'live empty discharge queue is uncached and valid JSON');
+}
+check($doctor->submit('/site/dashboard', [])[0] === 405, 'live dashboard is read only');
+check($discharge->submit('/discharge/queue', [])[0] === 405, 'live discharge queue is read only');
+check(in_array($guest->request('/site/dashboard')[0], [302, 403], true), 'guest cannot refresh dashboard data');
 $ownPatient=(int)$db->query('SELECT patient_id FROM admissions WHERE id='.$ownId)->fetchColumn();
 $beforeAdmissions=(int)$db->query('SELECT COUNT(*) FROM admissions')->fetchColumn();
 [$status,$html]=$secretary->submit('/admission/create?patient_id='.$ownPatient,['Admission'=>['doctor_id'=>$user['doctor_id'],'ward_id'=>1]]);
@@ -108,8 +159,10 @@ check($db->query('SELECT birth_date FROM patients WHERE id='.$ownPatient)->fetch
 check($doctor->request('/patient/update?id='.$ownPatient)[0]===403,'doctor cannot edit patient master data');
 check($secretary->request('/patient/update?id=999999')[0]===404,'unknown patient edit returns not found');
 $oldDoctorName=$db->query('SELECT doctor_name FROM admissions WHERE id='.$ownId)->fetchColumn();
-$doctorEdit=['Doctor'=>['id'=>999,'name'=>'پزشک ویرایش‌شده','specialty'=>'داخلی','mobile'=>'09121234567']];
+$doctorEdit=['Doctor'=>['id'=>999,'user_id'=>$other['id'],'name'=>'پزشک ویرایش‌شده','specialty'=>'داخلی','mobile'=>'09121234567']];
 check($admin->submit('/doctor/update?id='.$user['doctor_id'],$doctorEdit)[0]===302,'admin edits physician master data');
+check((int) $db->query('SELECT user_id FROM doctors WHERE id='.$user['doctor_id'])->fetchColumn() === (int) $user['id'],
+    'physician form cannot overwrite its internal account binding');
 check($db->query('SELECT full_name FROM users WHERE id='.$user['id'])->fetchColumn()==='پزشک ویرایش‌شده','physician edit synchronizes linked account name');
 check($db->query('SELECT doctor_name FROM admissions WHERE id='.$ownId)->fetchColumn()===$oldDoctorName,'physician edit preserves admission historical name');
 check($admin->submit('/ward/update?id=1',['Ward'=>['name'=>'بخش ویرایش‌شده','floor'=>'دوم','id'=>999]])[0]===302,'admin edits ward master data');
@@ -220,6 +273,16 @@ check($secretary->submit('/admission/ready?id='.$ownId,readyPayload($db,$ownId))
 check($otherDoctor->submit('/admission/ready?id='.$ownId,readyPayload($db,$ownId))[0]===404,'unassigned doctor cannot approve discharge');
 check($discharge->submit('/discharge/create?admission_id='.$ownId,['Discharge'=>['admission_id'=>$ownId]])[0]===200 && (int)$db->query('SELECT COUNT(*) FROM discharges')->fetchColumn()===0,'discharge rejected without medical approval');
 check($doctor->submit('/admission/ready?id='.$ownId,readyPayload($db,$ownId))[0]===302,'assigned physician approves discharge');
+[$status, $json] = $discharge->request('/discharge/queue');
+$payload = json_decode($json, true);
+check($status === 200 && str_contains($payload['html'], 'data-admission-id="'.$ownId.'"')
+    && !str_contains($payload['html'], 'data-admission-id="'.$otherId.'"')
+    && str_contains($payload['html'], 'مدت انتظار'), 'live queue adds newly approved case with elapsed waiting time');
+[$status, $html] = $discharge->request('/site/index');
+check($status === 200 && str_contains($html, 'data-admission-id="'.$ownId.'"')
+    && !str_contains($html, 'data-admission-id="'.$otherId.'"')
+    && str_contains($html, 'مدت انتظار')
+    && str_contains($html, '/discharge/create?admission_id='.$ownId), 'discharge dashboard shows only approved cases with waiting time and direct action');
 $staleApproval=readyPayload($db,$ownId);
 [$status,$json]=$discharge->request('/admission/search-open-admissions?q='.nationalCode('008150002'));
 check($status===200 && json_decode($json,true)===[],'discharge lookup excludes unapproved admissions');
@@ -232,6 +295,10 @@ $db->exec('UPDATE services SET price=100000 WHERE id=1');
 $serviceEdit=['AdmissionService'=>['admission_id'=>$otherId,'service_id'=>1,'quantity'=>2,'unit_price'=>1],'CorrectionForm'=>['reason'=>'اصلاح تعداد خدمت','revision'=>1]];
 check($doctor->submit('/admission-service/update?id='.$serviceLineId,$serviceEdit)[0]===302,'service correction accepted with locked admission');
 check($db->query('SELECT ready_at FROM admissions WHERE id='.$ownId)->fetchColumn()===null,'service correction invalidates medical approval');
+[$status, $json] = $discharge->request('/discharge/queue');
+check($status === 200 && !str_contains(json_decode($json, true)['html'], 'data-admission-id="'.$ownId.'"'), 'live queue drops a case whose approval was revoked');
+[$status, $html] = $discharge->request('/site/index');
+check($status === 200 && !str_contains($html, 'data-admission-id="'.$ownId.'"'), 'treatment correction removes the case from the discharge dashboard');
 check($doctor->submit('/admission/ready?id='.$ownId,$staleApproval)[0]===409,'stale approval cannot certify changed treatment');
 check((int)$db->query('SELECT unit_price FROM admission_services WHERE id='.$serviceLineId)->fetchColumn()===100000,'service correction preserves historical tariff');
 check($doctor->submit('/admission-service/update?id='.$serviceLineId,$serviceEdit)[0]===409,'stale service correction blocked');
@@ -299,7 +366,7 @@ $db->exec("UPDATE services SET title='ویزیت',price=100000,active=1 WHERE id
 check($secretary->submit('/admission/create?patient_id='.$ownPatient,['Admission'=>['doctor_id'=>$user['doctor_id'],'ward_id'=>1]])[0]===302,'new admission allowed after previous discharge');
 
 [$status] = $admin->submit('/user/create?doctor_id=1', ['UserForm' => ['username'=>'test.existing','password'=>'StaffTest123!','password_repeat'=>'StaffTest123!','role'=>'discharge','full_name'=>'forged','doctor_id'=>$other['doctor_id']]]);
-$linked = $db->query("SELECT role,doctor_id,full_name FROM users WHERE username='test.existing'")->fetch(PDO::FETCH_ASSOC);
+$linked = $db->query("SELECT u.role,d.id AS doctor_id,u.full_name FROM users u LEFT JOIN doctors d ON d.user_id=u.id WHERE u.username='test.existing'")->fetch(PDO::FETCH_ASSOC);
 check($status === 302 && $linked['role'] === 'doctor' && (int) $linked['doctor_id'] === 1 && $linked['full_name'] !== 'forged', 'admin links existing doctor with locked route identity');
 check($doctor->request('/site/logout')[0] === 405, 'logout requires POST');
 $doctor->request('/site/index');
@@ -348,7 +415,7 @@ check($doctor->submit('/site/login',['LoginForm'=>['username'=>'test.doctor','pa
 check($doctor->submit('/site/login',['LoginForm'=>['username'=>'test.doctor','password'=>'UpdatedStaff123!']])[0] === 302, 'new password accepted');
 $doctorFields['password']=$doctorFields['password_repeat']=''; $doctorFields['role']='discharge';
 check($admin->submit('/user/update?id='.$user['id'],['UserForm'=>$doctorFields])[0] === 302, 'admin changes a staff role');
-$changed = $db->query('SELECT role,doctor_id FROM users WHERE id='.$user['id'])->fetch(PDO::FETCH_ASSOC);
+$changed = $db->query('SELECT u.role,d.id AS doctor_id FROM users u LEFT JOIN doctors d ON d.user_id=u.id WHERE u.id='.$user['id'])->fetch(PDO::FETCH_ASSOC);
 check($changed['role'] === 'discharge' && $changed['doctor_id'] === null, 'non-physician role cannot retain doctor binding');
 check($doctor->request('/clinical/print?admission_id='.$ownId)[0] !== 200, 'old session loses clinical permission after role change');
 check((int) $db->query('SELECT COUNT(*) FROM prescriptions WHERE admission_id='.$ownId)->fetchColumn() === 1, 'account updates preserve prescription history');
@@ -366,4 +433,69 @@ $db->exec(file_get_contents(__DIR__.'/../database/upgrade_catalog_and_revisions.
 $db->exec(file_get_contents(__DIR__.'/../database/upgrade_workflow_and_receipts.sql'));
 check((int) $db->query('SELECT COUNT(*) FROM users')->fetchColumn() === $beforeUpgrade, 'admin schema upgrade is repeatable and preserves accounts');
 check($db->query('SELECT receipt_data FROM discharges WHERE admission_id='.$ownId)->fetchColumn()===$frozen,'repeated workflow upgrade preserves frozen receipt');
+// A failed insert rolls back database rows, but ActiveRecord objects can still hold assigned IDs.
+$overflowCode = nationalCode('008150099');
+check($secretary->submit('/patient/create', ['Patient' => [
+    'first_name' => 'بیمار', 'last_name' => 'آزمون سقف مبلغ',
+    'national_code' => $overflowCode, 'mobile' => '09121234567',
+]])[0] === 302, 'create patient for overflow recovery regression');
+$overflowPatient = (int) $db->query("SELECT id FROM patients WHERE national_code='$overflowCode'")->fetchColumn();
+check($secretary->submit('/admission/create?patient_id='.$overflowPatient, ['Admission' => [
+    'doctor_id' => $other['doctor_id'], 'ward_id' => 1,
+]])[0] === 302, 'create separate active admission for overflow recovery');
+$overflowAdmission = (int) $db->query('SELECT id FROM admissions WHERE patient_id='.$overflowPatient)->fetchColumn();
+check($secondAdmin->submit('/medical-item/create', ['MedicalItem' => [
+    'kind' => 'medicine', 'title' => 'قلم آزمون سقف مبلغ', 'unit_price' => '4294967295', 'active' => 1,
+]])[0] === 302, 'create catalog item at maximum supported unit price');
+$overflowItem = (int) $db->query("SELECT id FROM medical_items WHERE title='قلم آزمون سقف مبلغ'")->fetchColumn();
+$overflowPayload = [
+    'Prescription' => ['diagnosis' => 'آزمون اصلاح تعداد پس از خطای مبلغ'],
+    'PrescriptionItem' => [[
+        'medical_item_id' => $overflowItem, 'kind' => 'medicine', 'quantity' => '4294967295',
+    ]],
+];
+[$status, $html] = $otherDoctor->submit('/clinical/create?admission_id='.$overflowAdmission, $overflowPayload);
+check($status === 200 && str_contains($html, 'مجموع هزینه‌های پرونده از محدوده'), 'overflow returns a recoverable form error');
+check((int) $db->query('SELECT COUNT(*) FROM prescriptions WHERE admission_id='.$overflowAdmission)->fetchColumn() === 0,
+    'overflow rolls back the complete new prescription');
+$document = new DOMDocument();
+@$document->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+$fields = (new DOMXPath($document))->query('//input[@name="PrescriptionItem[0][item_id]"]');
+check($fields->length === 1 && $fields->item(0)->getAttribute('value') === '',
+    'returned new row never exposes an ID from a rolled-back insert');
+$overflowPayload['PrescriptionItem'][0]['item_id'] = $fields->item(0)->getAttribute('value');
+$overflowPayload['PrescriptionItem'][0]['quantity'] = '1';
+check($otherDoctor->request('/clinical/create?admission_id='.$overflowAdmission, $overflowPayload)[0] === 302,
+    'correcting quantity on the returned form succeeds without reloading');
+check((int) $db->query('SELECT COUNT(*) FROM prescriptions WHERE admission_id='.$overflowAdmission)->fetchColumn() === 1,
+    'overflow recovery creates exactly one final prescription');
+$overflowPayload['PrescriptionItem'][0]['item_id'] = '99999999';
+check($otherDoctor->request('/clinical/create?admission_id='.$overflowAdmission, $overflowPayload)[0] === 400,
+    'a forged original row ID is still rejected after the recovery fix');
+
+$existingAccountId = (int) $db->query("SELECT id FROM users WHERE username='test.existing'")->fetchColumn();
+$rebind = ['UserForm' => [
+    'username'=>'test.existing', 'full_name'=>'نام ارسالی', 'role'=>'doctor',
+    'doctor_id'=>$user['doctor_id'], 'is_active'=>1, 'password'=>'', 'password_repeat'=>'',
+]];
+check($secondAdmin->submit('/user/update?id='.$existingAccountId, $rebind)[0] === 302,
+    'administrator can move a physician account to an unclaimed profile');
+check($db->query('SELECT user_id FROM doctors WHERE id=1')->fetchColumn() === null
+    && (int) $db->query('SELECT user_id FROM doctors WHERE id='.$user['doctor_id'])->fetchColumn() === $existingAccountId,
+    'rebinding releases the former profile and connects the selected one');
+check($secondAdmin->submit('/user/update?id='.$existingAccountId, $rebind)[0] === 302
+    && (int) $db->query('SELECT user_id FROM doctors WHERE id='.$user['doctor_id'])->fetchColumn() === $existingAccountId,
+    'saving the same profile again preserves its account binding');
+$reboundDoctor = new Browser($base);
+check($reboundDoctor->submit('/site/login', ['LoginForm'=>['username'=>'test.existing','password'=>'StaffTest123!']])[0] === 302,
+    'rebound doctor still logs in with the unchanged password');
+check($reboundDoctor->request('/admission/view?id='.$ownId)[0] === 200
+    && $reboundDoctor->request('/admission/view?id='.$otherId)[0] === 404,
+    'rebound account sees only admissions of its new physician profile');
+require __DIR__.'/../database/upgrade_doctor_user_link.php';
+upgradeDoctorUserLink($db);
+upgradeDoctorUserLink($db);
+check((int) $db->query('SELECT user_id FROM doctors WHERE id='.$user['doctor_id'])->fetchColumn() === $existingAccountId,
+    'link upgrade is also repeatable on the fresh schema');
+
 echo "SUCCESS: $checks checks passed.\n";

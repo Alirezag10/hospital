@@ -7,9 +7,11 @@ CREATE TABLE doctors (
     specialty VARCHAR(100) NOT NULL,
     mobile VARCHAR(20) NULL,
     active TINYINT(1) NOT NULL DEFAULT 1,
+    user_id INT UNSIGNED NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    UNIQUE KEY uq_doctors_name_specialty (name, specialty)
+    UNIQUE KEY uq_doctors_name_specialty (name, specialty),
+    UNIQUE KEY uq_doctors_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO doctors (name, specialty, mobile) VALUES
@@ -126,15 +128,14 @@ CREATE TABLE IF NOT EXISTS users (
     auth_key VARCHAR(64) NOT NULL,
     role ENUM('admin', 'doctor', 'secretary', 'discharge') NOT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
-    doctor_id INT UNSIGNED NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_users_username (username),
-    UNIQUE KEY uq_users_doctor (doctor_id),
-    KEY idx_users_role_active (role, is_active),
-    CONSTRAINT fk_users_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(id)
-        ON DELETE RESTRICT ON UPDATE CASCADE
+    KEY idx_users_role_active (role, is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE doctors ADD CONSTRAINT fk_doctors_user FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE SET NULL ON UPDATE CASCADE;
 
 CREATE TABLE IF NOT EXISTS prescriptions (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,

@@ -21,6 +21,7 @@ final class Access
         if (Yii::$app->user->isGuest) { return false; }
         $permissions = [
             'site/index' => [User::DOCTOR, User::SECRETARY, User::DISCHARGE],
+            'site/dashboard' => [User::DOCTOR, User::SECRETARY, User::DISCHARGE],
             'site/logout' => [User::DOCTOR, User::SECRETARY, User::DISCHARGE],
             'admission/index' => [User::DOCTOR, User::SECRETARY, User::DISCHARGE],
             'admission/view' => [User::DOCTOR, User::SECRETARY, User::DISCHARGE],
@@ -37,6 +38,7 @@ final class Access
             'admission-service/create' => [User::DOCTOR],
             'clinical/create' => [User::DOCTOR], 'clinical/print' => [User::DOCTOR],
             'discharge/create' => [User::DISCHARGE],
+            'discharge/queue' => [User::DISCHARGE],
             'user/index' => [], 'user/create' => [], 'user/update' => [],
             'medical-item/index' => [], 'medical-item/create' => [], 'medical-item/update' => [],
             'medical-item/search' => [User::DOCTOR],
@@ -54,7 +56,7 @@ final class Access
         if ($alias !== null) { $query->alias($alias); }
         if (Yii::$app->user->isGuest) { return $query->andWhere('0=1'); }
         if (self::is(User::DOCTOR)) {
-            $doctorId = Yii::$app->user->identity->doctor_id;
+            $doctorId = Yii::$app->user->identity->doctorId;
             return $doctorId === null ? $query->andWhere('0=1')
                 : $query->andWhere([($alias ? $alias . '.' : '') . 'doctor_id' => $doctorId]);
         }
@@ -76,7 +78,7 @@ final class Access
         $params = [':id' => $id];
         if (self::is(User::DOCTOR)) {
             $sql .= ' AND doctor_id = :doctor';
-            $params[':doctor'] = Yii::$app->user->identity->doctor_id;
+            $params[':doctor'] = Yii::$app->user->identity->doctorId;
         }
         $row = Yii::$app->db->createCommand($sql . ' FOR UPDATE', $params)->queryOne();
         if ($row === false) { throw new NotFoundHttpException('پذیرش پیدا نشد یا به شما اختصاص ندارد.'); }

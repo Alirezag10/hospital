@@ -57,7 +57,7 @@ class UserController extends RoleController
         $user = $id === false ? null : User::findOne(['id' => $id]);
         if ($user === null) { throw new NotFoundHttpException('کاربر پیدا نشد.'); }
         $model = new UserForm(['user' => $user, 'username' => $user->username, 'full_name' => $user->full_name,
-            'role' => $user->role, 'is_active' => $user->is_active, 'doctor_id' => $user->doctor_id]);
+            'role' => $user->role, 'is_active' => $user->is_active, 'doctor_id' => $user->doctorId]);
         if ($this->request->isPost && FormInput::load($model, $this->request->post())) {
             $saved = $model->save();
             if ($saved !== null) {
@@ -74,7 +74,7 @@ class UserController extends RoleController
     }
     private function availableDoctors(UserForm $model): array
     {
-        $claimed=User::find()->select('doctor_id')->where(['not',['doctor_id'=>null]])->andWhere(['<>','id',$model->user?->id??0]);
-        return Doctor::find()->where(['not in','id',$claimed])->orderBy(['name'=>SORT_ASC])->all();
+        return Doctor::find()->where(['or', ['user_id' => null], ['user_id' => $model->user?->id ?? 0]])
+            ->orderBy(['name' => SORT_ASC])->all();
     }
 }

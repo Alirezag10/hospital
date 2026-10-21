@@ -52,8 +52,10 @@ class DoctorController extends Controller
         if ($this->request->isPost && FormInput::load($model,$this->request->post()) && $model->validate()) {
             $tx = Yii::$app->db->beginTransaction();
             try {
+                // Match account edits' lock order before updating the profile and its user.
+                Yii::$app->db->createCommand("SELECT id FROM users WHERE role='admin' AND is_active=1 ORDER BY id FOR UPDATE")->queryColumn();
                 if ($model->save(false)) {
-                    \app\models\User::updateAll(['full_name'=>$model->name],['doctor_id'=>$model->id]);
+                    \app\models\User::updateAll(['full_name'=>$model->name], ['id' => Doctor::find()->select('user_id')->where(['id' => $model->id])]);
                     $tx->commit();
                     Yii::$app->session->setFlash('success','مشخصات پزشک و نام حساب متصل به‌روزرسانی شد.');
                     return $this->redirect(['index']);

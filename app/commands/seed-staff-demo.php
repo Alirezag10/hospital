@@ -26,7 +26,7 @@ $credentialLines = [];
 function demoUser(string $username, string $name, string $role, ?int $doctorId = null): User
 {
     global $added, $credentialLines;
-    $existing = $doctorId === null ? User::findOne(['username' => $username]) : User::findOne(['doctor_id' => $doctorId]);
+    $existing = $doctorId === null ? User::findOne(['username' => $username]) : \app\models\Doctor::findOne($doctorId)?->user;
     if ($existing !== null) {
         if ($existing->role !== $role || (int) $existing->is_active !== 1) {
             throw new RuntimeException('An existing account conflicts with the demo. No account will be overwritten.');

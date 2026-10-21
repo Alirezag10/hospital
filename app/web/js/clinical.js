@@ -10,6 +10,11 @@
         return value.replace(/[۰-۹٠-٩]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.includes(digit)
             ? '۰۱۲۳۴۵۶۷۸۹'.indexOf(digit) : '٠١٢٣٤٥٦٧٨٩'.indexOf(digit))).trim();
     }
+    function createRow() {
+        const fragment = document.createElement('template');
+        fragment.innerHTML = template.innerHTML.replaceAll('__index__', String(index++));
+        return fragment.content;
+    }
     function updateTotal() {
         let sum = 0n;
         let valid = true;
@@ -26,9 +31,7 @@
     }
     form.querySelector('[data-add-prescription-item]').addEventListener('click', () => {
         if (container.children.length >= 50) return;
-        const fragment = document.createElement('template');
-        fragment.innerHTML = template.innerHTML.replaceAll('__index__', String(index++));
-        container.append(fragment.content);
+        container.append(createRow());
         container.lastElementChild.querySelector('[data-line-title]').focus();
         form.dataset.dirty = '1';
         updateTotal();
@@ -39,9 +42,8 @@
         const row = remove.closest('[data-prescription-item]');
         if (container.children.length > 1) { row.remove(); }
         else {
-            ['originalId','originalPrice','originalTitle','originalKind'].forEach(key => { delete row.dataset[key]; });
-            row.querySelectorAll('input').forEach(input => { input.value = input.hasAttribute('data-line-quantity') ? '1' : input.hasAttribute('data-line-unit_price') ? '0' : ''; });
-            row.querySelector('select').value = 'medicine';
+            // A fresh row also resets readonly fields, catalog results, errors and original IDs.
+            row.replaceWith(createRow());
         }
         form.dataset.dirty = '1';
         updateTotal();

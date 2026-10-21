@@ -73,6 +73,16 @@ class Admission extends ActiveRecord
         return $this->hasOne(Patient::class, ['id' => 'patient_id']);
     }
 
+    // Treatment writers call this while holding the admission row lock in their transaction.
+    public static function invalidateTreatmentApproval(int $id): void
+    {
+        static::updateAll([
+            'ready_at' => null,
+            'ready_by' => null,
+            'treatment_version' => new \yii\db\Expression('treatment_version + 1'),
+        ], ['id' => $id]);
+    }
+
     public function getReadyBy()
     {
         return $this->hasOne(User::class, ['id'=>'ready_by']);
