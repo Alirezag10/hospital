@@ -11,12 +11,15 @@ NavBar::begin([
     'options' => ['class' => 'navbar-expand-lg navbar-light bg-white sticky-top'],
 ]);
 $items = [];
+$definitions = [];
 foreach ([
     ['داشبورد', 'dashboard', '/site/index'],
     ['کاربران', 'patient', '/user/index'],
     ['بیماران', 'patient', '/patient/index'],
     ['پزشکان', 'doctor', '/doctor/index'],
     ['بخش‌ها', 'ward', '/ward/index'],
+    ['دارو و مصرفی', 'service', '/medical-item/index'],
+    ['خدمات و تعرفه‌ها', 'service', '/service/index'],
     ['پذیرش‌ها', 'admission', '/admission/index'],
     ['ترخیص', 'discharge', '/discharge/create'],
 ] as [$label, $icon, $route]) {
@@ -24,15 +27,17 @@ foreach ([
     if ($route === '/admission/index' && Access::is(\app\models\User::DOCTOR)) { $label = 'بیماران من'; }
     $active = Yii::$app->controller->id === explode('/', trim($route, '/'))[0]
         || ($icon === 'admission' && in_array(Yii::$app->controller->id, ['admission-service', 'clinical'], true));
-    $items[] = ['label' => $this->render('_icon', ['name' => $icon]) . Html::tag('span', Html::encode($label)),
+    $entry = ['label' => $this->render('_icon', ['name' => $icon]) . Html::tag('span', Html::encode($label)),
         'url' => [$route], 'active' => $active,
         'linkOptions' => $active ? ['aria-current' => 'page'] : []];
+    if(in_array($route,['/doctor/index','/ward/index','/medical-item/index','/service/index'],true)){$definitions[]=$entry;}else{$items[]=$entry;}
 }
+if($definitions){array_splice($items,3,0,[['label'=>'تعاریف پایه','items'=>$definitions,'active'=>in_array(Yii::$app->controller->id,['doctor','ward','medical-item','service'],true)]]);}
 
 echo Nav::widget(['encodeLabels' => false, 'options' => ['class' => 'navbar-nav'], 'items' => $items]);
 if (!Yii::$app->user->isGuest) {
     $user = Yii::$app->user->identity;
-    echo '<div class="account-menu">' . Html::tag('span', Html::encode($user->full_name) . Html::tag('small', Html::encode($user->roleLabel)));
+    echo '<div class="account-menu">' . Html::tag('span', Html::encode($user->full_name) . Html::tag('small', Html::encode($user->roleLabel)), ['title'=>$user->full_name]);
     echo Html::beginForm(['/site/logout'], 'post');
     echo Html::submitButton('خروج', ['class' => 'btn btn-sm btn-outline-secondary']);
     echo Html::endForm() . '</div>';

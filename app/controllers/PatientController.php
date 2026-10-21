@@ -45,4 +45,20 @@ class PatientController extends Controller
 
         return $this->render('view', ['model' => $patient, 'admissions' => $admissions]);
     }
+
+    public function actionUpdate($id)
+    {
+        $id = filter_var($id,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+        $model = $id === false ? null : Patient::findOne($id);
+        if ($model === null) { throw new NotFoundHttpException('بیمار پیدا نشد.'); }
+        if ($model->birth_date) {
+            [$year,$month,$day] = array_map('intval',explode('-',$model->birth_date));
+            $model->birthDateInput = vsprintf('%04d/%02d/%02d',\app\components\JalaliDate::fromGregorian($year,$month,$day));
+        }
+        if ($this->request->isPost && FormInput::load($model,$this->request->post()) && $model->save()) {
+            Yii::$app->session->setFlash('success','مشخصات بیمار به‌روزرسانی شد.');
+            return $this->redirect(['view','id'=>$model->id]);
+        }
+        return $this->render('create',['model'=>$model]);
+    }
 }

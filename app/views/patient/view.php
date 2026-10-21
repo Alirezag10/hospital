@@ -12,6 +12,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <section class="patient-profile" aria-labelledby="patient-info-title">
+    <p class="print-hidden"><?= Html::a('ویرایش مشخصات بیمار',['update','id'=>$model->id],['class'=>'btn btn-outline-secondary']) ?></p>
     <h2 id="patient-info-title">مشخصات بیمار</h2>
     <dl class="detail-list">
         <dt>نام و نام خانوادگی</dt><dd><?= Html::encode($model->first_name . ' ' . $model->last_name) ?></dd>

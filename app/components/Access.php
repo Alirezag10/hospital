@@ -29,13 +29,20 @@ final class Access
             'admission/create' => [User::SECRETARY],
             'admission/search-patients' => [User::SECRETARY],
             'admission/search-doctors' => [User::SECRETARY],
-            'patient/index' => [User::SECRETARY], 'patient/view' => [User::SECRETARY], 'patient/create' => [User::SECRETARY],
-            'doctor/index' => [], 'doctor/create' => [], 'doctor/account' => [],
-            'ward/index' => [], 'ward/create' => [],
+            'patient/index' => [User::SECRETARY], 'patient/view' => [User::SECRETARY], 'patient/create' => [User::SECRETARY], 'patient/update' => [User::SECRETARY],
+            'doctor/index' => [], 'doctor/create' => [], 'doctor/account' => [], 'doctor/update' => [],
+            'ward/index' => [], 'ward/create' => [], 'ward/update' => [],
+            'service/index' => [], 'service/create' => [], 'service/update' => [],
+            'admission/ready' => [User::DOCTOR],
             'admission-service/create' => [User::DOCTOR],
             'clinical/create' => [User::DOCTOR], 'clinical/print' => [User::DOCTOR],
             'discharge/create' => [User::DISCHARGE],
             'user/index' => [], 'user/create' => [], 'user/update' => [],
+            'medical-item/index' => [], 'medical-item/create' => [], 'medical-item/update' => [],
+            'medical-item/search' => [User::DOCTOR],
+            'clinical/update' => [User::DOCTOR], 'admission-service/update' => [User::DOCTOR],
+            'record-change/index' => [User::DOCTOR],
+            'discharge/receipt' => [User::DISCHARGE],
         ];
         return array_key_exists($route, $permissions)
             && (self::is(User::ADMIN) || in_array(Yii::$app->user->identity->role, $permissions[$route], true));
@@ -65,7 +72,7 @@ final class Access
     // Called inside a transaction by both treatment writers. Discharge locks the same row.
     public static function lockAdmission(int $id): array
     {
-        $sql = 'SELECT id, status, doctor_id FROM admissions WHERE id = :id';
+        $sql = 'SELECT id, status, doctor_id, ready_at, ready_by, treatment_version FROM admissions WHERE id = :id';
         $params = [':id' => $id];
         if (self::is(User::DOCTOR)) {
             $sql .= ' AND doctor_id = :doctor';

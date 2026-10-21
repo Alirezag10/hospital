@@ -38,7 +38,7 @@ $onlyDischargeDate = $dischargedOn !== null && $date === null && (string) $searc
         'doctor_name', 'ward',
         ['attribute' => 'status', 'format' => 'raw', 'value' => static function ($model) {
             $isAdmitted = $model->status === 'admitted';
-            return Html::tag('span', $isAdmitted ? 'بستری' : 'ترخیص‌شده', [
+            return Html::tag('span', $isAdmitted ? ($model->ready_at !== null ? 'آمادهٔ ترخیص' : 'بستری') : 'ترخیص‌شده', [
                 'class' => 'status-badge ' . ($isAdmitted ? 'status-admitted' : 'status-discharged'),
             ]);
         }],

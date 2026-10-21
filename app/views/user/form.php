@@ -1,13 +1,10 @@
 <?php
-use app\models\Doctor;
 use app\models\User;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 $this->title = $model->user === null ? 'ساخت کاربر جدید' : 'ویرایش حساب کاربر';
 $this->params['breadcrumbs'][] = ['label' => 'کاربران', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
-$claimed = User::find()->select('doctor_id')->where(['not', ['doctor_id' => null]])->andWhere(['<>', 'id', $model->user?->id ?? 0]);
-$doctors = Doctor::find()->where(['not in', 'id', $claimed])->orderBy(['name' => SORT_ASC])->all();
 $options = $names = [];
 foreach ($doctors as $doctor) {
     $options[$doctor->id] = $doctor->name . ' (' . $doctor->specialty . ')';

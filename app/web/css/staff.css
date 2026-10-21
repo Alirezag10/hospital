@@ -1,5 +1,5 @@
 .account-menu { display: flex; align-items: center; gap: 16px; margin-inline-start: auto; padding-inline-start: 20px; }
-.account-menu > span { font-size: .88rem; line-height: 1.5; }
+.account-menu > span { font-size: .88rem; line-height: 1.5; white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
 .account-menu small { display: block; color: var(--muted); }
 .account-menu form { margin: 0; }
 .dashboard-intro > .ui-icon { width: 48px; height: 48px; color: var(--primary); }
@@ -75,6 +75,25 @@
 .clinical-costs { margin-top: 24px; }
 .clinical-costs h2, .clinical-records > h2 { font-size: 1.3rem; }
 .clinical-empty { color: var(--muted); }
+.catalog-results[hidden], .catalog-change[hidden] { display: none !important; }
+.catalog-results { max-height: 260px; overflow-y: auto; z-index: 20; }
+.catalog-results .dropdown-item { display: flex; justify-content: space-between; gap: 12px; padding: 12px; }
+.catalog-results small { color: var(--muted); white-space: nowrap; }
+.catalog-status { color: var(--muted); font-size: .85rem; margin-block: 6px; }
+.catalog-change { margin-top: 6px; }
+.record-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+.change-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.change-snapshot { background: var(--surface-soft); padding: 16px; border-radius: 8px; }
+.change-snapshot h4 { font-size: .95rem; font-weight: 700; margin: 16px 0 8px; }
+.change-snapshot p { overflow-wrap: anywhere; }
+.change-item { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 16px; }
+.change-item dd { margin: 6px 0 0; font-size: .9rem; overflow-wrap: anywhere; }
+.clinical-print-page table { width: 100%; table-layout: fixed; }
+.clinical-print-page td, .clinical-print-page th { white-space: normal; overflow-wrap: anywhere; }
+.receipt-totals { max-width: 540px; margin: 32px 0 0 auto; }
+.receipt-totals div { display: flex; justify-content: space-between; gap: 24px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.receipt-totals dd { margin: 0; white-space: nowrap; }
+.receipt-final { color: var(--primary-dark); font-weight: 700; font-size: 1.1rem; }
 .clinical-overall-total { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; background: var(--accent-soft); color: var(--accent-dark); border-radius: 10px; margin: 24px 0; }
 .clinical-print-body { background: var(--surface); }
 .clinical-print-page { max-width: 1000px; margin: 24px auto; padding: 24px; }
@@ -102,6 +121,7 @@
     .clinical-print-patient { grid-template-columns: 1fr; }
 }
 @media print {
+    .print-hidden { display: none !important; }
     @page { size: A4; margin: 14mm; }
     .clinical-print-page { max-width: none; margin: 0; padding: 0; }
     .print-toolbar, .account-menu, .clinical-print-page .table-scroll-hint { display: none !important; }

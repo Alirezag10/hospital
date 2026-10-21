@@ -17,6 +17,8 @@ class Doctor extends ActiveRecord
             [['name', 'specialty'], 'trim', 'skipOnArray' => true],
             [['mobile'], 'filter', 'filter' => [Patient::class, 'normalizeMobile'], 'skipOnArray' => true],
             [['mobile'], 'default', 'value' => null],
+            [['active'], 'default', 'value' => 1],
+            [['active'], 'in', 'range' => [0, 1]],
             [['name', 'specialty'], 'required'],
             [['name', 'specialty'], 'string', 'max' => 100],
             [['mobile'], 'match', 'pattern' => Patient::MOBILE_PATTERN, 'message' => 'شماره موبایل ایران را با پیش‌شماره معتبر وارد کنید.'],
@@ -31,6 +33,7 @@ class Doctor extends ActiveRecord
             'name' => 'نام پزشک',
             'specialty' => 'تخصص',
             'mobile' => 'موبایل',
+            'active' => 'وضعیت پذیرش جدید',
             'created_at' => 'تاریخ ثبت',
         ];
     }

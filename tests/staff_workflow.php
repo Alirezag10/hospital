@@ -94,6 +94,54 @@ foreach ([[$user['doctor_id'], 'اول', '008150001'], [$other['doctor_id'], 'د
     $admissionIds[] = (int) $db->query('SELECT MAX(id) FROM admissions')->fetchColumn();
 }
 [$ownId, $otherId] = $admissionIds;
+$ownPatient=(int)$db->query('SELECT patient_id FROM admissions WHERE id='.$ownId)->fetchColumn();
+$beforeAdmissions=(int)$db->query('SELECT COUNT(*) FROM admissions')->fetchColumn();
+[$status,$html]=$secretary->submit('/admission/create?patient_id='.$ownPatient,['Admission'=>['doctor_id'=>$user['doctor_id'],'ward_id'=>1]]);
+check($status===200 && str_contains($html,'پذیرش فعال دارد') && (int)$db->query('SELECT COUNT(*) FROM admissions')->fetchColumn()===$beforeAdmissions,'duplicate active admission rejected without changing existing record');
+check(str_contains($html,'مشاهدهٔ پروندهٔ فعال') && str_contains($html,'/admission/view?id='.$ownId),'duplicate admission form links to existing active case');
+$db->exec("UPDATE patients SET birth_date='2020-01-01' WHERE id=".$ownPatient);
+[$status,$html]=$secretary->request('/patient/update?id='.$ownPatient);
+check($status===200 && str_contains($html,'1398/10/11'),'patient edit preloads Jalali birth date');
+$patientEdit=['Patient'=>['id'=>999,'created_at'=>'2000-01-01','first_name'=>'بیمار','last_name'=>'اول','national_code'=>nationalCode('008150001'),'mobile'=>'09121234568','birthDateInput'=>'1398/10/11']];
+check($secretary->submit('/patient/update?id='.$ownPatient,$patientEdit)[0]===302 && $db->query('SELECT mobile FROM patients WHERE id='.$ownPatient)->fetchColumn()==='09121234568','secretary edits patient using locked route identity');
+check($db->query('SELECT birth_date FROM patients WHERE id='.$ownPatient)->fetchColumn()==='2020-01-01','unchanged Jalali date round trips on patient edit');
+check($doctor->request('/patient/update?id='.$ownPatient)[0]===403,'doctor cannot edit patient master data');
+check($secretary->request('/patient/update?id=999999')[0]===404,'unknown patient edit returns not found');
+$oldDoctorName=$db->query('SELECT doctor_name FROM admissions WHERE id='.$ownId)->fetchColumn();
+$doctorEdit=['Doctor'=>['id'=>999,'name'=>'پزشک ویرایش‌شده','specialty'=>'داخلی','mobile'=>'09121234567']];
+check($admin->submit('/doctor/update?id='.$user['doctor_id'],$doctorEdit)[0]===302,'admin edits physician master data');
+check($db->query('SELECT full_name FROM users WHERE id='.$user['id'])->fetchColumn()==='پزشک ویرایش‌شده','physician edit synchronizes linked account name');
+check($db->query('SELECT doctor_name FROM admissions WHERE id='.$ownId)->fetchColumn()===$oldDoctorName,'physician edit preserves admission historical name');
+check($admin->submit('/ward/update?id=1',['Ward'=>['name'=>'بخش ویرایش‌شده','floor'=>'دوم','id'=>999]])[0]===302,'admin edits ward master data');
+check($db->query('SELECT ward FROM admissions WHERE id='.$ownId)->fetchColumn()==='بخش آزمایشی','ward edit preserves historical admission name');
+check($secretary->request('/ward/update?id=1')[0]===403 && $doctor->request('/doctor/update?id='.$user['doctor_id'])[0]===403,'non-admin cannot edit physician or ward');
+$inactivePatientCode=nationalCode('008150003');
+check($secretary->submit('/patient/create',['Patient'=>['first_name'=>'بیمار','last_name'=>'وضعیت','national_code'=>$inactivePatientCode,'mobile'=>'09121234567']])[0]===302,'patient fixture for inactive reference checks');
+$inactivePatientId=(int)$db->query("SELECT id FROM patients WHERE national_code='$inactivePatientCode'")->fetchColumn();
+$doctorEdit['Doctor']['active']=0;
+check($admin->submit('/doctor/update?id='.$user['doctor_id'],$doctorEdit)[0]===302,'admin disables doctor for new admissions');
+check((int)$db->query('SELECT is_active FROM users WHERE id='.$user['id'])->fetchColumn()===1 && $doctor->request('/admission/view?id='.$ownId)[0]===200,'inactive doctor keeps account and assigned historical admission');
+[$status,$json]=$secretary->request('/admission/search-doctors?q=پزشک');
+check($status===200 && !in_array((int)$user['doctor_id'],array_column(json_decode($json,true),'id'),true),'inactive doctor excluded from admission search');
+check($secretary->submit('/admission/create?patient_id='.$inactivePatientId,['Admission'=>['doctor_id'=>$user['doctor_id'],'ward_id'=>1]])[0]===200,'posted inactive doctor rejected');
+$doctorEdit['Doctor']['active']=1;
+check($admin->submit('/doctor/update?id='.$user['doctor_id'],$doctorEdit)[0]===302,'admin reactivates doctor');
+$wardEdit=['Ward'=>['name'=>'بخش ویرایش‌شده','floor'=>'دوم','active'=>0]];
+check($admin->submit('/ward/update?id=1',$wardEdit)[0]===302,'admin disables ward for new admissions');
+[$status,$html]=$secretary->request('/admission/create?patient_id='.$inactivePatientId);
+check($status===200 && !str_contains($html,'<option value="1">بخش ویرایش‌شده'),'inactive ward excluded from admission form');
+check($secretary->submit('/admission/create?patient_id='.$inactivePatientId,['Admission'=>['doctor_id'=>$user['doctor_id'],'ward_id'=>1]])[0]===200,'posted inactive ward rejected');
+check((int)$db->query('SELECT COUNT(*) FROM admissions WHERE patient_id='.$inactivePatientId)->fetchColumn()===0,'inactive references create no admission');
+$wardEdit['Ward']['active']=1;
+check($admin->submit('/ward/update?id=1',$wardEdit)[0]===302,'admin reactivates ward');
+check($admin->submit('/service/create',['Service'=>['title'=>'خدمت آزمایشی جدید','price'=>'۱۲۰۰۰','active'=>1]])[0]===302,'admin creates service with Persian price');
+$newServiceId=(int)$db->query("SELECT id FROM services WHERE title='خدمت آزمایشی جدید'")->fetchColumn();
+check((int)$db->query('SELECT price FROM services WHERE id='.$newServiceId)->fetchColumn()===12000,'service tariff normalizes digits');
+check($admin->submit('/service/update?id='.$newServiceId,['Service'=>['title'=>'خدمت آزمایشی جدید','price'=>18000,'active'=>0]])[0]===302,'admin updates service tariff and deactivates reference');
+check($admin->submit('/service/create',['Service'=>['title'=>'خدمت آزمایشی جدید','price'=>100,'active'=>1]])[0]===200,'duplicate service title rejected');
+foreach ([$doctor,$secretary,$discharge] as $nonAdmin) {
+    check($nonAdmin->request('/service/index')[0]===403 && $nonAdmin->request('/service/update?id=1',['Service'=>['price'=>1]])[0]===403,'service management restricted to admin');
+}
 check($secretary->request('/index.php?r=patient/index')[0] === 200, 'script-style route also stays in isolated test application');
 foreach ([[$doctor, ['/patient/index','/patient/create','/doctor/index','/ward/create','/admission/create','/admission/calendar','/admission/search-patients?q=بیمار','/admission/search-doctors?q=پزشک','/discharge/create']],
     [$secretary, ['/admission-service/create','/clinical/create?admission_id='.$ownId,'/clinical/print?admission_id='.$ownId,'/discharge/create','/admission/search-open-admissions?q=بیمار']],
@@ -123,10 +171,19 @@ check($status === 404 && (int) $db->query('SELECT COUNT(*) FROM admission_servic
 [$status] = $doctor->submit('/admission-service/create?admission_id='.$ownId, ['AdmissionService' => ['admission_id' => $otherId, 'service_id' => 1, 'quantity' => 1, 'unit_price' => 1]]);
 $line = $db->query('SELECT * FROM admission_services')->fetch(PDO::FETCH_ASSOC);
 check($status === 302 && (int) $line['admission_id'] === $ownId && (int) $line['unit_price'] === 100000, 'service uses locked route and catalog price');
+foreach (['medicine'=>['داروی آزمایشی',20000],'supply'=>['پانسمان',5000]] as $kind=>[$title,$price]) {
+    check($admin->submit('/medical-item/create',['MedicalItem'=>['kind'=>$kind,'title'=>$title,'unit_price'=>$price,'active'=>1]])[0]===302,'administrator defines '.$kind.' catalog item');
+}
+$medicineId=(int)$db->query("SELECT id FROM medical_items WHERE title='داروی آزمایشی'")->fetchColumn();
+$supplyId=(int)$db->query("SELECT id FROM medical_items WHERE title='پانسمان'")->fetchColumn();
+check($doctor->request('/medical-item/create')[0]===403,'doctor cannot manage catalog');
+check($secretary->request('/medical-item/search?q=دارو&kind=medicine')[0]===403,'secretary cannot query treatment catalog');
+[$status,$json]=$doctor->request('/medical-item/search?q=داروی&kind=medicine');
+check($status===200 && (int)json_decode($json,true)[0]['id']===$medicineId,'catalog search returns permitted active kind');
 $prescriptionData = ['Prescription' => ['diagnosis' => 'تشخیص آزمایشی', 'notes' => '<script>alert(1)</script>', 'admission_id' => $otherId, 'doctor_id' => $other['doctor_id'], 'user_id' => $other['id']],
     'PrescriptionItem' => [
-        ['kind' => 'medicine', 'title' => 'داروی آزمایشی', 'quantity' => '۲', 'unit_price' => '۲۰۰۰۰', 'dosage' => 'هر ۱۲ ساعت یک عدد', 'instructions' => 'پس از غذا', 'prescription_id' => 999],
-        ['kind' => 'supply', 'title' => 'پانسمان', 'quantity' => 3, 'unit_price' => 5000],
+        ['medical_item_id'=>$medicineId, 'kind' => 'medicine', 'title' => 'نام دستکاری‌شده', 'quantity' => '۲', 'unit_price' => '۲۰۰۰۰', 'dosage' => 'هر ۱۲ ساعت یک عدد', 'instructions' => 'پس از غذا', 'prescription_id' => 999],
+        ['medical_item_id'=>$supplyId, 'kind' => 'supply', 'title' => 'پانسمان', 'quantity' => 3, 'unit_price' => 5000],
     ]];
 check($doctor->request('/clinical/create?admission_id='.$otherId, $prescriptionData)[0] === 404, 'POST cannot create prescription for unassigned admission');
 check($secretary->request('/clinical/create?admission_id='.$ownId, $prescriptionData)[0] === 403, 'secretary cannot POST prescriptions');
@@ -146,6 +203,74 @@ check($secretary->request('/admission/view?id='.$ownId)[0] === 200, 'secretary s
 check(!str_contains($html, 'تشخیص آزمایشی') && !str_contains($html, 'ثبت نسخه، دارو'), 'secretary has no clinical controls or notes');
 [$status, $html] = $discharge->request('/discharge/create?admission_id='.$ownId);
 check($status === 200 && str_contains($html, 'پانسمان') && !str_contains($html, 'تشخیص آزمایشی'), 'discharge sees itemized costs without clinical notes');
+// Corrections preserve ownership and snapshots, and atomically append their history.
+function correctionPayload(PDO $db,int $id,int $medicineQuantity): array {
+    $p=$db->query('SELECT * FROM prescriptions WHERE id='.$id)->fetch(PDO::FETCH_ASSOC);
+    $rows=$db->query('SELECT * FROM prescription_items WHERE prescription_id='.$id.' ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+    foreach($rows as &$row){$row['item_id']=$row['id'];if($row['kind']==='medicine')$row['quantity']=$medicineQuantity;$row['unit_price']=1;$row['title']='forged';}unset($row);
+    return ['Prescription'=>['diagnosis'=>$p['diagnosis'],'notes'=>$p['notes'],'admission_id'=>99999],
+        'PrescriptionItem'=>$rows,'CorrectionForm'=>['reason'=>'اصلاح تعداد نسخه','revision'=>$p['revision']]];
+}
+$prescriptionId=(int)$record['id'];$serviceLineId=(int)$line['id'];
+function readyPayload(PDO $db,int $admissionId,string $ready='1'): array {
+    return ['ready'=>$ready,'treatment_version'=>$db->query('SELECT treatment_version FROM admissions WHERE id='.$admissionId)->fetchColumn()];
+}
+check($doctor->request('/admission/ready?id='.$ownId)[0]===405,'approval requires POST');
+check($secretary->submit('/admission/ready?id='.$ownId,readyPayload($db,$ownId))[0]===403,'secretary cannot approve discharge');
+check($otherDoctor->submit('/admission/ready?id='.$ownId,readyPayload($db,$ownId))[0]===404,'unassigned doctor cannot approve discharge');
+check($discharge->submit('/discharge/create?admission_id='.$ownId,['Discharge'=>['admission_id'=>$ownId]])[0]===200 && (int)$db->query('SELECT COUNT(*) FROM discharges')->fetchColumn()===0,'discharge rejected without medical approval');
+check($doctor->submit('/admission/ready?id='.$ownId,readyPayload($db,$ownId))[0]===302,'assigned physician approves discharge');
+$staleApproval=readyPayload($db,$ownId);
+[$status,$json]=$discharge->request('/admission/search-open-admissions?q='.nationalCode('008150002'));
+check($status===200 && json_decode($json,true)===[],'discharge lookup excludes unapproved admissions');
+[$status,$html]=$discharge->request('/discharge/create');
+check($status===200 && str_contains($html,'صف آمادهٔ ترخیص') && str_contains($html,nationalCode('008150001')) && !str_contains($html,nationalCode('008150002')),'discharge queue shows approved records only');
+$db->exec('UPDATE services SET price=120000 WHERE id=1');
+[$status,$html]=$doctor->request('/admission-service/update?id='.$serviceLineId);
+check($status===200 && str_contains($html,'data-price="100000"') && str_contains($html,'قیمت ثبت‌شده'),'service preview preserves original tariff after price change');
+$db->exec('UPDATE services SET price=100000 WHERE id=1');
+$serviceEdit=['AdmissionService'=>['admission_id'=>$otherId,'service_id'=>1,'quantity'=>2,'unit_price'=>1],'CorrectionForm'=>['reason'=>'اصلاح تعداد خدمت','revision'=>1]];
+check($doctor->submit('/admission-service/update?id='.$serviceLineId,$serviceEdit)[0]===302,'service correction accepted with locked admission');
+check($db->query('SELECT ready_at FROM admissions WHERE id='.$ownId)->fetchColumn()===null,'service correction invalidates medical approval');
+check($doctor->submit('/admission/ready?id='.$ownId,$staleApproval)[0]===409,'stale approval cannot certify changed treatment');
+check((int)$db->query('SELECT unit_price FROM admission_services WHERE id='.$serviceLineId)->fetchColumn()===100000,'service correction preserves historical tariff');
+check($doctor->submit('/admission-service/update?id='.$serviceLineId,$serviceEdit)[0]===409,'stale service correction blocked');
+$serviceEdit['AdmissionService']['quantity']=1;$serviceEdit['CorrectionForm']['revision']=2;
+check($doctor->submit('/admission-service/update?id='.$serviceLineId,$serviceEdit)[0]===302,'second service correction restores count');
+check($otherDoctor->request('/admission-service/update?id='.$serviceLineId)[0]===404,'other doctor cannot edit service');
+$edit=correctionPayload($db,$prescriptionId,3);
+check($doctor->submit('/admission/ready?id='.$ownId,readyPayload($db,$ownId))[0]===302,'physician reapproves latest treatment');
+check($doctor->submit('/clinical/update?id='.$prescriptionId,$edit)[0]===302,'doctor corrects own prescription');
+check($db->query('SELECT ready_at FROM admissions WHERE id='.$ownId)->fetchColumn()===null,'prescription correction invalidates medical approval');
+check($doctor->submit('/clinical/update?id='.$prescriptionId,$edit)[0]===409,'stale prescription correction blocked');
+check($otherDoctor->request('/clinical/update?id='.$prescriptionId)[0]===404,'other doctor cannot edit prescription');
+check($secretary->request('/clinical/update?id='.$prescriptionId)[0]===403,'secretary cannot edit prescription');
+$tariff=['MedicalItem'=>['kind'=>'medicine','title'=>'داروی آزمایشی','unit_price'=>30000,'active'=>0]];
+check($admin->submit('/medical-item/update?id='.$medicineId,$tariff)[0]===302,'administrator changes tariff and disables item');
+[$status,$html]=$doctor->request('/clinical/update?id='.$prescriptionId);
+check($status===200 && str_contains($html,'data-original-price="20000"'),'prescription preview carries original tariff independently of catalog');
+$edit=correctionPayload($db,$prescriptionId,2);
+check($doctor->submit('/clinical/update?id='.$prescriptionId,$edit)[0]===302,'unchanged inactive catalog snapshot stays editable');
+check((int)$db->query("SELECT unit_price FROM prescription_items WHERE kind='medicine' AND prescription_id=".$prescriptionId)->fetchColumn()===20000,'historical prescription price survives catalog changes and spoofed price');
+$inactive=$prescriptionData;
+check($doctor->submit('/clinical/create?admission_id='.$ownId,$inactive)[0]===200 && (int)$db->query('SELECT COUNT(*) FROM prescriptions')->fetchColumn()===1,'new prescriptions reject inactive catalog items atomically');
+$tariff['MedicalItem']['active']=1;$tariff['MedicalItem']['unit_price']=20000;
+check($admin->submit('/medical-item/update?id='.$medicineId,$tariff)[0]===302,'catalog item reactivated');
+$forged=correctionPayload($db,$prescriptionId,2);$forged['PrescriptionItem'][0]['item_id']=999999;
+check($doctor->submit('/clinical/update?id='.$prescriptionId,$forged)[0]===400,'foreign item identity rejected');
+[$status,$html]=$doctor->request('/record-change/index?type=prescription&id='.$prescriptionId);
+check($status===200 && str_contains($html,'پیش از اصلاح') && str_contains($html,'پس از اصلاح') && str_contains($html,'اصلاح تعداد نسخه'),'correction history contains before/after and reason');
+check($otherDoctor->request('/record-change/index?type=prescription&id='.$prescriptionId)[0]===404,'correction history also enforces admission ownership');
+check($discharge->request('/record-change/index?type=prescription&id='.$prescriptionId)[0]===403,'financial role cannot see clinical history');
+check((int)$db->query('SELECT COUNT(*) FROM record_changes')->fetchColumn()===4,'only successful corrections append history');
+[$status,$html]=$doctor->request('/admission/view?id='.$ownId);
+check($status===200 && str_contains($html,'ثبت نسخه') && str_contains($html,'اصلاح نسخه'),'clinical timeline includes prescription and correction events');
+[$status,$html]=$discharge->request('/admission/view?id='.$ownId);
+check($status===200 && !str_contains($html,'اصلاح تعداد نسخه') && !str_contains($html,'تشخیص آزمایشی'),'financial timeline excludes clinical content');
+check($discharge->request('/discharge/receipt?admission_id='.$ownId)[0]===404,'receipt unavailable before discharge');
+check($doctor->submit('/admission/ready?id='.$ownId,readyPayload($db,$ownId))[0]===302,'physician confirms final treatment');
+check($doctor->submit('/admission/ready?id='.$ownId,readyPayload($db,$ownId,'0'))[0]===302 && $db->query('SELECT ready_at FROM admissions WHERE id='.$ownId)->fetchColumn()===null,'physician may revoke approval before discharge');
+check($doctor->submit('/admission/ready?id='.$ownId,readyPayload($db,$ownId))[0]===302,'physician approves again after review');
 [$status] = $discharge->submit('/discharge/create?admission_id='.$ownId, ['Discharge' => ['admission_id' => $otherId, 'total_amount' => 1, 'discharge_date' => '2000-01-01', 'description' => 'تست ترخیص']]);
 $settlement = $db->query('SELECT * FROM discharges')->fetch(PDO::FETCH_ASSOC);
 check($status === 302 && (int) $settlement['admission_id'] === $ownId && (int) $settlement['total_amount'] === 155000, 'discharge locks route and totals services plus medicines plus supplies');
@@ -153,6 +278,26 @@ check($db->query('SELECT status FROM admissions WHERE id='.$ownId)->fetchColumn(
 check($doctor->submit('/clinical/create?admission_id='.$ownId, $prescriptionData)[0] === 403, 'cannot prescribe after discharge');
 check($doctor->submit('/admission-service/create?admission_id='.$ownId, ['AdmissionService'=>['service_id'=>1,'quantity'=>1]])[0] === 403, 'cannot add service after discharge');
 check($doctor->request('/clinical/print?admission_id='.$ownId)[0] === 200, 'own historical prescription remains printable');
+check($doctor->submit('/clinical/update?id='.$prescriptionId,correctionPayload($db,$prescriptionId,4))[0]===403,'cannot correct prescription after discharge');
+$serviceEdit['CorrectionForm']['revision']=3;
+check($doctor->submit('/admission-service/update?id='.$serviceLineId,$serviceEdit)[0]===403,'cannot correct service after discharge');
+[$status,$html]=$discharge->request('/discharge/receipt?admission_id='.$ownId);
+check($status===200 && str_contains($html,'شماره رسید') && str_contains($html,'مبلغ قطعی') && str_contains($html,'پانسمان') && !str_contains($html,'تشخیص آزمایشی') && !str_contains($html,'هر ۱۲ ساعت'),'financial receipt excludes medical instructions');
+check($doctor->request('/discharge/receipt?admission_id='.$ownId)[0]===403,'doctor cannot access financial receipt route');
+check($doctor->request('/record-change/index?type=prescription&id='.$prescriptionId)[0]===200,'history remains readable after discharge');
+check($doctor->submit('/admission/ready?id='.$ownId,readyPayload($db,$ownId,'0'))[0]===403,'cannot revoke finalized discharge approval');
+$frozen=$db->query('SELECT receipt_data FROM discharges WHERE admission_id='.$ownId)->fetchColumn();
+check(is_array(json_decode($frozen,true)) && !str_contains($frozen,'هر ۱۲ ساعت') && !str_contains($frozen,'تشخیص آزمایشی'),'financial snapshot stores permitted receipt fields only');
+$beforeReceipt=$discharge->request('/discharge/receipt?admission_id='.$ownId)[1];
+$patientEdit['Patient']['last_name']='نام تغییرکرده پس از ترخیص';
+check($secretary->submit('/patient/update?id='.$ownPatient,$patientEdit)[0]===302,'patient information remains editable after discharge');
+check($admin->submit('/service/update?id=1',['Service'=>['title'=>'عنوان جدید ویزیت','price'=>120000,'active'=>0]])[0]===302,'admin changes service title and tariff after discharge');
+[$status,$afterReceipt]=$discharge->request('/discharge/receipt?admission_id='.$ownId);
+check($status===200 && str_contains($afterReceipt,'بیمار اول') && !str_contains($afterReceipt,'نام تغییرکرده پس از ترخیص') && !str_contains($afterReceipt,'عنوان جدید ویزیت'),'receipt preserves original patient identity and service titles');
+check($db->query('SELECT receipt_data FROM discharges WHERE admission_id='.$ownId)->fetchColumn()===$frozen,'reference edits never rewrite frozen receipt');
+$db->exec("UPDATE services SET title='ویزیت',price=100000,active=1 WHERE id=1");
+check($secretary->submit('/admission/create?patient_id='.$ownPatient,['Admission'=>['doctor_id'=>$user['doctor_id'],'ward_id'=>1]])[0]===302,'new admission allowed after previous discharge');
+
 [$status] = $admin->submit('/user/create?doctor_id=1', ['UserForm' => ['username'=>'test.existing','password'=>'StaffTest123!','password_repeat'=>'StaffTest123!','role'=>'discharge','full_name'=>'forged','doctor_id'=>$other['doctor_id']]]);
 $linked = $db->query("SELECT role,doctor_id,full_name FROM users WHERE username='test.existing'")->fetch(PDO::FETCH_ASSOC);
 check($status === 302 && $linked['role'] === 'doctor' && (int) $linked['doctor_id'] === 1 && $linked['full_name'] !== 'forged', 'admin links existing doctor with locked route identity');
@@ -176,7 +321,7 @@ check($admin->request('/site/register')[0] === 404, 'registration is removed eve
 [$status] = $admin->submit('/admission-service/create?admission_id='.$otherId, ['AdmissionService'=>['service_id'=>1,'quantity'=>1]]);
 check($status === 302, 'admin can register services without a personal doctor profile');
 [$status] = $admin->submit('/clinical/create?admission_id='.$otherId, ['Prescription'=>['diagnosis'=>'ثبت توسط مدیر'],
-    'PrescriptionItem'=>[['kind'=>'supply','title'=>'سرم آزمایشی','quantity'=>1,'unit_price'=>1000]]]);
+    'PrescriptionItem'=>[['medical_item_id'=>$supplyId,'kind'=>'supply','title'=>'سرم آزمایشی','quantity'=>1,'unit_price'=>1000]]]);
 $adminRecord = $db->query('SELECT * FROM prescriptions WHERE admission_id='.$otherId)->fetch(PDO::FETCH_ASSOC);
 check($status === 302 && (int) $adminRecord['doctor_id'] === (int) $other['doctor_id'] && (int) $adminRecord['user_id'] === 1, 'admin prescription retains assigned physician and actual author');
 [$status,$html] = $admin->request('/clinical/print?admission_id='.$otherId);
@@ -217,5 +362,8 @@ $secondFields=['username'=>'test.admin2','full_name'=>'مدیر دوم','role'=>
 check($secondAdmin->submit('/user/update?id='.$secondId,['UserForm'=>$secondFields])[0] === 200, 'remaining administrator is still protected');
 $beforeUpgrade=(int) $db->query('SELECT COUNT(*) FROM users')->fetchColumn();
 $db->exec(file_get_contents(__DIR__.'/../database/upgrade_admin_role.sql'));
+$db->exec(file_get_contents(__DIR__.'/../database/upgrade_catalog_and_revisions.sql'));
+$db->exec(file_get_contents(__DIR__.'/../database/upgrade_workflow_and_receipts.sql'));
 check((int) $db->query('SELECT COUNT(*) FROM users')->fetchColumn() === $beforeUpgrade, 'admin schema upgrade is repeatable and preserves accounts');
+check($db->query('SELECT receipt_data FROM discharges WHERE admission_id='.$ownId)->fetchColumn()===$frozen,'repeated workflow upgrade preserves frozen receipt');
 echo "SUCCESS: $checks checks passed.\n";

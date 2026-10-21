@@ -66,6 +66,7 @@ class SiteController extends Controller
             $stats[] = ['تمام پرونده‌های من', (int) Access::admissions()->count(), 'doctor', ['/admission/index']];
             $stats[] = ['نسخه‌های من', (int) \app\models\Prescription::find()->where(['doctor_id' => Yii::$app->user->identity->doctor_id])->count(), 'service', ['/admission/index']];
         } else {
+            $stats[] = ['آمادهٔ ترخیص', (int) Admission::find()->where(['status'=>'admitted'])->andWhere(['not',['ready_at'=>null]])->count(), 'discharge', ['/discharge/create']];
             $stats[] = ['ترخیص امروز', (int) $dischargesToday->count(), 'discharge', ['/admission/index', 'discharged_on' => $today]];
             $stats[] = ['کل ترخیص‌ها', (int) Discharge::find()->count(), 'discharge', ['/admission/index', 'AdmissionSearch' => ['status' => 'discharged']]];
         }

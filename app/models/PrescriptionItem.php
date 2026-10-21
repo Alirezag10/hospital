@@ -3,11 +3,14 @@ namespace app\models;
 
 class PrescriptionItem extends \yii\db\ActiveRecord
 {
+    public $sourceItemId;
+    public $newCatalogSelection = false;
     public static function tableName() { return 'prescription_items'; }
     public static function kindLabels(): array { return ['medicine' => 'دارو', 'supply' => 'لوازم مصرفی']; }
     public function rules()
     {
         return [
+            [['medical_item_id'], 'integer', 'min' => 1],
             [['title', 'dosage', 'instructions'], 'trim', 'skipOnArray' => true],
             [['quantity', 'unit_price'], 'filter', 'filter' => [Patient::class, 'normalizeDigits'], 'skipOnArray' => true],
             [['kind', 'title', 'quantity', 'unit_price'], 'required'],
@@ -21,7 +24,7 @@ class PrescriptionItem extends \yii\db\ActiveRecord
     }
     public function attributeLabels()
     {
-        return ['kind' => 'نوع قلم', 'title' => 'نام دارو یا وسیله', 'quantity' => 'تعداد',
+        return ['medical_item_id'=>'دارو یا وسیله', 'kind' => 'نوع قلم', 'title' => 'نام دارو یا وسیله', 'quantity' => 'تعداد',
             'unit_price' => 'قیمت واحد (تومان)', 'dosage' => 'مقدار و دفعات مصرف', 'instructions' => 'دستور مصرف یا توضیح'];
     }
 }

@@ -13,6 +13,7 @@ class Service extends \yii\db\ActiveRecord
     {
         return [
             [['title'], 'trim', 'skipOnArray' => true],
+            [['price'], 'filter', 'filter'=>[Patient::class,'normalizeDigits'], 'skipOnArray'=>true],
             [['active'], 'default', 'value' => 1],
             [['title', 'price'], 'required'],
             [['price'], 'integer', 'min' => 0, 'max' => 4294967295],

@@ -20,8 +20,8 @@ class Admission extends ActiveRecord
             [['patient_id', 'doctor_id', 'ward_id'], 'integer', 'min' => 1],
             [['doctor_name', 'ward'], 'string', 'max' => 100],
             [['patient_id'], 'exist', 'targetClass' => Patient::class, 'targetAttribute' => ['patient_id' => 'id']],
-            [['doctor_id'], 'exist', 'targetClass' => Doctor::class, 'targetAttribute' => ['doctor_id' => 'id'], 'message' => 'پزشک انتخاب‌شده پیدا نشد.'],
-            [['ward_id'], 'exist', 'targetClass' => Ward::class, 'targetAttribute' => ['ward_id' => 'id'], 'message' => 'بخش انتخاب‌شده پیدا نشد.'],
+            [['doctor_id'], 'exist', 'targetClass' => Doctor::class, 'targetAttribute' => ['doctor_id' => 'id'], 'filter' => ['active' => 1], 'message' => 'پزشک انتخاب‌شده برای پذیرش جدید فعال نیست.'],
+            [['ward_id'], 'exist', 'targetClass' => Ward::class, 'targetAttribute' => ['ward_id' => 'id'], 'filter' => ['active' => 1], 'message' => 'بخش انتخاب‌شده برای پذیرش جدید فعال نیست.'],
         ];
     }
 
@@ -52,10 +52,10 @@ class Admission extends ActiveRecord
             return false;
         }
         if ($insert) {
-            $doctor = Doctor::findOne(['id' => $this->doctor_id]);
-            $ward = Ward::findOne(['id' => $this->ward_id]);
+            $doctor = Doctor::findOne(['id' => $this->doctor_id, 'active' => 1]);
+            $ward = Ward::findOne(['id' => $this->ward_id, 'active' => 1]);
             if ($doctor === null || $ward === null) {
-                $this->addError('doctor_id', 'پزشک یا بخش انتخاب‌شده دیگر موجود نیست؛ دوباره انتخاب کنید.');
+                $this->addError('doctor_id', 'پزشک یا بخش انتخاب‌شده برای پذیرش جدید فعال نیست؛ دوباره انتخاب کنید.');
                 return false;
             }
             $this->doctor_name = $doctor->name;
@@ -71,6 +71,11 @@ class Admission extends ActiveRecord
     public function getPatient()
     {
         return $this->hasOne(Patient::class, ['id' => 'patient_id']);
+    }
+
+    public function getReadyBy()
+    {
+        return $this->hasOne(User::class, ['id'=>'ready_by']);
     }
 
     public function getSelectionLabel(): string

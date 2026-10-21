@@ -3,8 +3,6 @@
 use yii\helpers\Html;
 use app\components\ServiceAmount;
 use app\components\Access;
-use app\components\Billing;
-use app\models\User;
 
 /** @var yii\web\View $this */
 /** @var app\models\Admission $model */
@@ -13,31 +11,11 @@ $patient = $model->patient;
 $this->title = 'پرونده پذیرش ' . ($patient ? $patient->first_name . ' ' . $patient->last_name : 'بیمار');
 $discharge = $model->discharge;
 $isOpen = $model->status === 'admitted' && $discharge === null;
-$canTreat = Access::allows('/clinical/create');
-$canBill = $canTreat || Access::is(User::DISCHARGE);
-$this->params['breadcrumbs'][] = ['label' => 'پذیرش‌ها', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label'=>'پذیرش‌ها','url'=>['index']];
 $this->params['breadcrumbs'][] = $this->title;
-
-$items = !$canBill ? [] : $model->getAdmissionServices()
-    ->with('service')
-    ->orderBy(['id' => SORT_ASC])
-    ->all();
-
-$total = 0;
-
-$statusLabels = [
-    'admitted' => 'بستری',
-    'discharged' => 'ترخیص‌شده',
-];
-$timeline = [['date' => $model->admission_date, 'title' => 'ثبت پذیرش', 'detail' => 'پذیرش بیمار در ' . $model->ward . ' توسط ' . $model->doctor_name]];
-foreach ($items as $item) {
-    $timeline[] = ['date' => $item->created_at, 'title' => 'ثبت خدمت', 'detail' => ($item->service?->title ?? 'خدمت') . ' — تعداد ' . Yii::$app->formatter->asInteger($item->quantity)];
-}
-if ($discharge !== null) {
-    $recordedAmount = ServiceAmount::fromDatabase($discharge->total_amount);
-    $timeline[] = ['date' => $discharge->discharge_date, 'title' => 'ثبت ترخیص', 'detail' => $canBill ? 'مبلغ نهایی ' . ($recordedAmount === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($recordedAmount) . ' تومان') : 'پایان بستری بیمار'];
-}
-usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['date']));
+$total=$bill['total'];
+$recordedAmount=$discharge===null?null:ServiceAmount::fromDatabase($discharge->total_amount);
+$statusLabels=['admitted'=>'بستری','discharged'=>'ترخیص‌شده'];
 ?>
 
 <div class="admission-summary" dir="rtl">
@@ -48,7 +26,7 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
             <p>اطلاعات بیمار، وضعیت بستری و ریز هزینه‌های پرونده.</p>
         </div>
         <span class="status-badge <?= $isOpen ? 'status-admitted' : 'status-discharged' ?>">
-            <?= Html::encode($statusLabels[$model->status] ?? $model->status) ?>
+            <?= Html::encode($isOpen && $model->ready_at !== null ? 'آمادهٔ ترخیص' : ($statusLabels[$model->status] ?? $model->status)) ?>
         </span>
     </div>
 
@@ -56,8 +34,9 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
         <?php if ($canTreat): ?>
             <?= Html::a('چاپ نسخه و پرونده درمانی', ['/clinical/print', 'admission_id' => $model->id], ['class' => 'btn btn-outline-primary', 'target' => '_blank', 'rel' => 'noopener']) ?>
         <?php else: ?>
-            <?= Html::button($discharge !== null ? 'چاپ رسید ترخیص' : 'چاپ پرونده', ['class' => 'btn btn-outline-secondary', 'data-print-trigger' => '1']) ?>
+            <?= Html::button('چاپ پرونده', ['class' => 'btn btn-outline-secondary', 'data-print-trigger' => '1']) ?>
         <?php endif; ?>
+        <?php if($discharge!==null && Access::allows('/discharge/receipt')): ?><?= Html::a('چاپ رسید ترخیص',['/discharge/receipt','admission_id'=>$model->id],['class'=>'btn btn-outline-primary','target'=>'_blank','rel'=>'noopener']) ?><?php endif; ?>
         <?php if ($isOpen): ?>
             <?php if ($canTreat): ?>
             <?= Html::a('ثبت نسخه، دارو و مصرفی', ['/clinical/create', 'admission_id' => $model->id], ['class' => 'btn btn-primary']) ?>
@@ -72,6 +51,23 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
         <?= Html::a('بازگشت به پذیرش‌ها', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
     </div>
 
+    <?php if ($isOpen): ?>
+    <section class="alert <?= $model->ready_at !== null ? 'alert-success' : 'alert-info' ?> print-hidden" aria-label="تأیید پایان درمان">
+        <strong><?= $model->ready_at !== null ? 'پایان درمان تأیید شده است.' : 'در انتظار تأیید پایان درمان توسط پزشک' ?></strong>
+        <p class="mb-2"><?= $model->ready_at !== null ? 'پرونده در صف ترخیص است. ثبت یا اصلاح نسخه و خدمات، تأیید را لغو می‌کند.' : 'پس از تکمیل نسخه و خدمات، پزشک پرونده را برای ترخیص تأیید می‌کند.' ?></p>
+        <?php if (Access::allows('/admission/ready')): ?>
+            <?= Html::beginForm(['ready','id'=>$model->id],'post',['class'=>'form-actions mt-0','data-loading-form'=>'1']) ?>
+            <?= Html::hiddenInput('ready',$model->ready_at === null ? '1' : '0') ?>
+            <?= Html::hiddenInput('treatment_version',$model->treatment_version) ?>
+            <?= Html::submitButton($model->ready_at === null ? 'تأیید پایان درمان و ارسال به ترخیص' : 'لغو تأیید پایان درمان',[
+                'class'=>'btn '.($model->ready_at === null ? 'btn-success' : 'btn-outline-secondary'),
+                'data-confirm'=>$model->ready_at === null ? 'نسخه و خدمات این پرونده کامل است و بیمار برای ترخیص تأیید می‌شود؟' : 'تأیید پایان درمان لغو شود؟',
+                'data-loading-label'=>'در حال ثبت…',
+            ]) ?>
+            <?= Html::endForm() ?>
+        <?php endif; ?>
+    </section>
+    <?php endif; ?>
     <div class="admission-details">
         <section>
             <h2>بیمار</h2>
@@ -117,14 +113,14 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
                     <th>خدمت</th>
                     <th>تعداد</th>
                     <th>قیمت واحد (تومان)</th>
-                    <th>مبلغ (تومان)</th>
+                    <th>مبلغ (تومان)</th><?php if($canTreat): ?><th class="print-hidden">عملیات</th><?php endif; ?>
                 </tr>
             </thead>
 
             <tbody>
                 <?php if (empty($items)): ?>
                     <tr>
-                        <td colspan="4">
+                        <td colspan="<?= $canTreat?5:4 ?>">
                             خدمتی برای این پذیرش ثبت نشده است.
                             <?php if ($isOpen && $canTreat): ?>
                                 <?= Html::a('افزودن خدمت', ['/admission-service/create', 'admission_id' => $model->id]) ?>
@@ -136,7 +132,7 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
                 <?php foreach ($items as $item): ?>
                     <?php
                     $amount = ServiceAmount::line($item->quantity, $item->unit_price);
-                    $total = ServiceAmount::add($total, $amount);
+
                     ?>
 
                     <tr>
@@ -157,21 +153,24 @@ usort($timeline, static fn($a, $b) => strcmp((string) $a['date'], (string) $b['d
                         <td>
                             <?= $amount === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($amount) ?>
                         </td>
+                        <?php if($canTreat): ?><td class="print-hidden"><div class="record-actions">
+                            <?php if($isOpen): ?><?= Html::a('اصلاح',['/admission-service/update','id'=>$item->id],['class'=>'btn btn-sm btn-outline-primary']) ?><?php endif; ?>
+                            <?= Html::a('سابقه',['/record-change/index','type'=>'admission_service','id'=>$item->id],['class'=>'btn btn-sm btn-outline-secondary']) ?>
+                        </div></td><?php endif; ?>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
             <tfoot>
-                <tr><th colspan="3">جمع خدمات فعلی</th><td><?= $total === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($total) . ' تومان' ?></td></tr>
+                <tr><th colspan="3">جمع خدمات فعلی</th><td><?= $bill['services'] === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($bill['services']) . ' تومان' ?></td><?php if($canTreat): ?><td class="print-hidden"></td><?php endif; ?></tr>
             </tfoot>
         </table>
     </div>
 
     <?php if ($canTreat): ?>
-        <?= $this->render('/clinical/_records', ['prescriptions' => $model->getPrescriptions()->with(['items', 'doctor', 'author'])->orderBy(['id' => SORT_ASC])->all()]) ?>
+        <?= $this->render('/clinical/_records', ['prescriptions'=>$prescriptions,'showActions'=>true,'canCorrect'=>$isOpen]) ?>
     <?php else: ?>
-        <?= $this->render('/clinical/_costs', ['admission' => $model]) ?>
+        <?= $this->render('/clinical/_costs', ['costItems'=>$costItems]) ?>
     <?php endif; ?>
-    <?php $total = Billing::total($model->id); ?>
     <div class="clinical-overall-total"><span>جمع خدمات، دارو و لوازم مصرفی</span><strong><?= $total === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($total) . ' تومان' ?></strong></div>
     <?php endif; ?>
 

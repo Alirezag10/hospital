@@ -1,154 +1,152 @@
-# Graph Report - hospital  (2026-10-20)
+# Graph Report - hospital  (2026-10-21)
 
 ## Corpus Check
-- 102 files · ~26,080 words
+- 125 files · ~32,541 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 438 nodes · 697 edges · 46 communities (12 shown, 34 thin omitted)
-- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 30 edges (avg confidence: 0.87)
-- Token cost: local AST uses 0 API tokens; semantic extraction used this Codex session. Exact session token counts are unavailable.
-
-## Graph Freshness
-- Built from commit: `a25eeacf`
-- Run `git rev-parse HEAD` and compare to check if the graph is stale.
-- Run `graphify update .` after code changes (no API cost).
+- 542 nodes · 859 edges · 72 communities (11 shown, 61 thin omitted)
+- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 37 edges (avg confidence: 0.87)
+- Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
 - Authorization and clinical access
-- User accounts and doctor profiles
-- Patient and discharge controllers
-- Staff workflow documentation
-- Admission queries and calendar
-- Composer and autoloading
-- Form validation and searches
-- Jalali date picker
-- ActiveForm treatment inputs
-- Hospital database schema
-- Staff workflow integration tests
-- Prescription items and forms
-- Jalali output formatting
-- Frontend asset loading
-- Searchable record selectors
-- Service catalog model
-- Development debug configuration
-- Persian grid numbering
-- Historical date-input documentation
-- Clinical cost calculations
-- Yii software licensing
-- Font redistribution license
-- In-page confirmations
+- Hospital workflow concepts
+- Treatment and ward models
+- Composer and Yii dependencies
+- Patient search and discharge
+- Database schema and accounts
+- Persian date picker
+- Admission model relations
+- Medical item catalog
+- Admission search and input
+- Service catalog management
+- Prescription item model
+- User identity sessions
+- Staff integration tests
+- Staff account provisioning
+- Admission actions and lookup
+- Doctor management
+- Money amount calculations
+- Site login and dashboard
+- Jalali calendar conversion
+- Persian date formatting
+- User form validation
+- Admission form references
+- Bootstrap asset bundle
+- Patient search JavaScript
+- Discharge receipt snapshot
+- Patient management actions
+- User account management
+- Login form validation
+- Yii debug toolbar guidance
+- Persian serial numbers
+- Discharge actions
+- Birth date history
+- Calendar query tests
+- Admission registration lock
+- Clinical cost preview
+- Medical catalog search
+- Yii software license
+- Font license terms
+- Confirmation dialog
 
 ## God Nodes (most connected - your core abstractions)
-1. `User` - 31 edges
-2. `Admission` - 26 edges
-3. `Access` - 24 edges
-4. `Patient` - 24 edges
-5. `FormInput` - 21 edges
-6. `RoleController` - 21 edges
-7. `Doctor` - 19 edges
-8. `Discharge` - 16 edges
-9. `Staff login and account administration guide` - 16 edges
-10. `render()` - 15 edges
+1. `Admission` - 33 edges
+2. `Access` - 29 edges
+3. `User` - 20 edges
+4. `Doctor` - 20 edges
+5. `PrescriptionItem` - 18 edges
+6. `render()` - 15 edges
+7. `MedicalItem` - 14 edges
+8. `Service` - 14 edges
+9. `Patient` - 13 edges
+10. `AdmissionController` - 13 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Access.php permission definitions and controller AccessControl` --references--> `Access`  [EXTRACTED]
-  docs/staff-guide.md → app/components/Access.php
-- `Original single-operator workflow (outdated README)` --conceptually_related_to--> `Login interface and disabled public registration`  [AMBIGUOUS]
+- `Role-Based Access` --semantically_similar_to--> `AccessControl and Doctor Scope`  [INFERRED] [semantically similar]
+  PRODUCT.md → docs/staff-guide.md
+- `Treatment Revision Audit` --semantically_similar_to--> `Revision History`  [INFERRED] [semantically similar]
+  PRODUCT.md → docs/staff-guide.md
+- `Medical Item Catalog` --semantically_similar_to--> `Drug and Consumable Catalog`  [INFERRED] [semantically similar]
+  PRODUCT.md → docs/staff-guide.md
+- `Access.php Role Authorization` --semantically_similar_to--> `AccessControl and Doctor Scope`  [INFERRED] [semantically similar]
   README.md → docs/staff-guide.md
-- `doctor_id isolation across lists, search, direct URLs, and POST` --implements--> `Doctor access restricted to assigned admissions`  [INFERRED]
-  docs/staff-guide.md → PRODUCT.md
-- `Login interface and disabled public registration` --implements--> `Administrator-only account creation and server authorization`  [INFERRED]
-  docs/staff-guide.md → PRODUCT.md
-- `Retain staff accounts instead of deleting them` --rationale_for--> `Preserve existing costs and data`  [INFERRED]
-  docs/staff-guide.md → PRODUCT.md
+- `Active Doctor and Ward Selection` --semantically_similar_to--> `Doctor and Ward New-Admission Status`  [INFERRED] [semantically similar]
+  README.md → docs/staff-guide.md
 
 ## Import Cycles
 - None detected.
 
 ## Hyperedges (group relationships)
-- **Role-based admission, treatment, billing, and discharge flow** — docs_staff_guide_role_permissions, readme_admission_workflow, docs_staff_guide_prescriptions, readme_discharge_billing, docs_staff_guide_treatment_print [INFERRED 0.95]
+- **Treatment to Discharge Flow** — readme_prescription, product_treatment_completion_approval, docs_staff_guide_discharge_queue, readme_discharge [INFERRED 0.85]
+- **Historical Financial Integrity** — product_historical_pricing, readme_historical_pricing, product_immutable_discharge_receipt, readme_receipt_snapshot [INFERRED 0.85]
 
-## Communities (46 total, 34 thin omitted)
+## Communities (72 total, 61 thin omitted)
 
 ### Community 0 - "Authorization and clinical access"
-Cohesion: 0.05
-Nodes (10): Access, Billing, {closure#1}(), RoleController, ServiceAmount, AdmissionServiceController, ClinicalController, DischargeController (+2 more)
+Cohesion: 0.07
+Nodes (10): Access, AdmissionData, Billing, {closure#1}(), RoleController, AdmissionServiceController, ClinicalController, RecordChangeController (+2 more)
 
-### Community 1 - "User accounts and doctor profiles"
-Cohesion: 0.06
-Nodes (9): demoUser(), FormInput, DoctorController, UserController, WardController, Doctor, User, UserForm (+1 more)
-
-### Community 2 - "Patient and discharge controllers"
-Cohesion: 0.06
-Nodes (5): AdmissionController, PatientController, SiteController, Discharge, Patient
-
-### Community 3 - "Staff workflow documentation"
+### Community 1 - "Hospital workflow concepts"
 Cohesion: 0.08
-Nodes (23): Access.php permission definitions and controller AccessControl, CLI first-administrator bootstrap, User account linked to an existing or new doctor profile, 130-check staff workflow tests on an empty _test database, Login interface and disabled public registration, Prescription services, medicines, and consumables, Four-role capability matrix, Account and credential changes invalidate existing sessions (+15 more)
+Nodes (20): Drug and Consumable Catalog, Approved Discharge Queue, Financial Discharge Receipt, Patient Admission, Revision History, Staff Guide, Treatment Record Print, Hospital System (+12 more)
 
-### Community 5 - "Composer and autoloading"
+### Community 2 - "Treatment and ward models"
+Cohesion: 0.08
+Nodes (4): WardController, AdmissionService, Prescription, Ward
+
+### Community 4 - "Composer and Yii dependencies"
 Cohesion: 0.09
 Nodes (21): yiisoft/yii2-composer, autoload, psr-4, config, allow-plugins, fxp-asset, process-timeout, description (+13 more)
 
-### Community 7 - "Form validation and searches"
-Cohesion: 0.11
-Nodes (4): AdmissionSearch, LoginForm, PatientSearch, {closure#1}()
+### Community 5 - "Patient search and discharge"
+Cohesion: 0.10
+Nodes (3): Discharge, Patient, PatientSearch
 
-### Community 8 - "Jalali date picker"
+### Community 6 - "Database schema and accounts"
+Cohesion: 0.19
+Nodes (17): admission_services, admissions, discharges, doctors, medical_items, `patients`, prescription_items, prescriptions (+9 more)
+
+### Community 7 - "Persian date picker"
 Cohesion: 0.34
 Nodes (16): bounds(), button(), choose(), close(), display(), enhance(), gregorian(), iconButton() (+8 more)
 
-### Community 10 - "Hospital database schema"
-Cohesion: 0.28
-Nodes (13): admission_services, admissions, discharges, doctors, `patients`, prescription_items, prescriptions, services (+5 more)
+### Community 15 - "Staff integration tests"
+Cohesion: 0.26
+Nodes (5): Browser, check(), correctionPayload(), createStaff(), readyPayload()
 
-### Community 12 - "Staff workflow integration tests"
-Cohesion: 0.36
-Nodes (3): Browser, check(), createStaff()
-
-### Community 16 - "Searchable record selectors"
+### Community 29 - "Patient search JavaScript"
 Cohesion: 0.53
 Nodes (5): enhance(), clearResults(), renderResults(), updateClearButton(), init()
 
-### Community 19 - "Development debug configuration"
+### Community 35 - "Yii debug toolbar guidance"
 Cohesion: 0.40
 Nodes (4): Debug Toolbar Allowed IPs, Development Environment Flags, How to Enable Yii2 Debug Toolbar on Every Page, Yii2 Debug Toolbar Configuration
 
-### Community 22 - "Historical date-input documentation"
+### Community 40 - "Birth date history"
 Cohesion: 0.67
 Nodes (3): Patient Form Native Date Input, Patient Model Gregorian Date Validation, Why Patient Birth Date Used Gregorian Input
 
-## Ambiguous Edges - Review These
-- `Original single-operator workflow (outdated README)` → `Login interface and disabled public registration`  [AMBIGUOUS]
-  README.md · relation: conceptually_related_to
-
 ## Knowledge Gaps
-- **26 isolated node(s):** `yiisoft/yii2-composer`, `process-timeout`, `description`, `enabled`, `license` (+21 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 205 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **34 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **29 isolated node(s):** `yiisoft/yii2-composer`, `process-timeout`, `description`, `enabled`, `license` (+24 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 251 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **61 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **What is the exact relationship between `Original single-operator workflow (outdated README)` and `Login interface and disabled public registration`?**
-  _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `Access` connect `Authorization and clinical access` to `Staff workflow documentation`, `Patient and discharge controllers`, `Admission list actions`, `Admission queries and calendar`?**
-  _High betweenness centrality (0.121) - this node is a cross-community bridge._
-- **Are the 2 inferred relationships involving `Patient` (e.g. with `.search()` and `.search()`) actually correct?**
-  _`Patient` has 2 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `Access` connect `Authorization and clinical access` to `Admission list interface`, `Admission model relations`, `Navigation bar`, `User identity sessions`, `Admission actions and lookup`, `Money amount calculations`, `Site login and dashboard`, `Patient validation helpers`?**
+  _High betweenness centrality (0.074) - this node is a cross-community bridge._
 - **What connects `yiisoft/yii2-composer`, `process-timeout`, `description` to the rest of the system?**
-  _26 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _29 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Authorization and clinical access` be split into smaller, more focused modules?**
-  _Cohesion score 0.05182443151771549 - nodes in this community are weakly interconnected._
-- **Why does `User` connect `User accounts and doctor profiles` to `Authorization and clinical access`, `Patient and discharge controllers`, `Admission queries and calendar`, `Form validation and searches`, `ActiveForm treatment inputs`, `Staff and patient grids`, `Admission list actions`?**
-  _High betweenness centrality (0.089) - this node is a cross-community bridge._
-- **Should `User accounts and doctor profiles` be split into smaller, more focused modules?**
-  _Cohesion score 0.06431372549019608 - nodes in this community are weakly interconnected._
-## Update Integrity Notes
-- Indexed the current working tree, including uncommitted staff/login/clinical changes; source rows and credentials in the live database are not part of this source-code graph.
-- AST limitation: 36 changed code files yielded no symbols (mostly entry/configuration/view boilerplate). Shared views remain represented where the extractor emits file or reference nodes.
-- Graph health warning: raw extraction has 6 self-loops and 25 parallel relations sharing undirected endpoint pairs. Distinct original relation records are preserved in graph.json (722 links); clustering uses 697 topology edges.
-- No missing or dangling endpoints were found in fresh extraction.
-- Documentation drift: README.md still describes no login and seven tables. PRODUCT.md, docs/staff-guide.md and the current code describe four roles and ten tables. The outdated claims are labeled as historical rather than treated as current application behavior.
-- Exact semantic token usage was not exposed by the subagent tool; no estimate is reported as a measured zero.
+  _Cohesion score 0.07268170426065163 - nodes in this community are weakly interconnected._
+- **Why does `User` connect `User identity sessions` to `Login form validation`, `Treatment and ward models`, `Staff account provisioning`, `User form validation`, `User list interface`?**
+  _High betweenness centrality (0.054) - this node is a cross-community bridge._
+- **Should `Hospital workflow concepts` be split into smaller, more focused modules?**
+  _Cohesion score 0.07557354925775979 - nodes in this community are weakly interconnected._
+- **Why does `Admission` connect `Admission model relations` to `Authorization and clinical access`, `Treatment and ward models`, `Discharge actions`, `Admission registration lock`, `Admission actions and lookup`, `Doctor management`, `Site login and dashboard`, `Patient validation helpers`, `Discharge receipt snapshot`?**
+  _High betweenness centrality (0.053) - this node is a cross-community bridge._
+- **Should `Treatment and ward models` be split into smaller, more focused modules?**
+  _Cohesion score 0.082010582010582 - nodes in this community are weakly interconnected._

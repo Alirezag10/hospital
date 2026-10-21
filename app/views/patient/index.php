@@ -30,6 +30,7 @@ $hasFilters = (string) $searchModel->name !== '' || (string) $searchModel->natio
         ['attribute' => 'mobile', 'contentOptions' => ['dir' => 'ltr']],
         ['label' => 'عملیات', 'format' => 'raw', 'value' => static function ($model) {
             return Html::a('پرونده', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary']) . ' '
+                . Html::a('ویرایش', ['update', 'id'=>$model->id], ['class'=>'btn btn-sm btn-outline-secondary']) . ' '
                 . Html::a('ثبت پذیرش', ['/admission/create', 'patient_id' => $model->id], ['class' => 'btn btn-sm btn-primary']);
         }],
     ],

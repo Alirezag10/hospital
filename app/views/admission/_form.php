@@ -1,6 +1,4 @@
 <?php
-use app\models\Patient;
-use app\models\Doctor;
 use app\models\Ward;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
@@ -9,21 +7,21 @@ use yii\widgets\ActiveForm;
 
 /** @var app\models\Admission $model */
 /** @var bool $patientLocked */
-$selectedPatientId = filter_var($model->patient_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-$selectedPatient = $selectedPatientId === false ? null : Patient::findOne(['id' => $selectedPatientId]);
 $selectedPatientLabel = $selectedPatient === null
     ? ''
     : $selectedPatient->first_name . ' ' . $selectedPatient->last_name . ' (کد ملی: ' . $selectedPatient->national_code . ')';
-$selectedDoctorId = filter_var($model->doctor_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-$selectedDoctor = $selectedDoctorId === false ? null : Doctor::findOne(['id' => $selectedDoctorId]);
 $selectedDoctorLabel = $selectedDoctor ? $selectedDoctor->name . ' (' . $selectedDoctor->specialty . ')' : '';
 $wards = ArrayHelper::map(
-    Ward::find()->orderBy(['name' => SORT_ASC])->all(),
+    $wardModels,
     'id',
     static fn(Ward $ward): string => $ward->name . ($ward->floor ? ' (' . $ward->floor . ')' : '')
 );
 ?>
 <div class="card"><div class="card-body">
+    <?php if ($activeAdmission !== null): ?><div class="alert alert-info">
+        این بیمار پذیرش فعال دارد.
+        <?= Html::a('مشاهدهٔ پروندهٔ فعال',['/admission/view','id'=>$activeAdmission->id],['class'=>'alert-link']) ?>
+    </div><?php endif; ?>
     <?php $form = ActiveForm::begin(['options' => ['data-loading-form' => '1', 'data-unsaved-warning' => '1']]); ?>
     <?= $form->errorSummary($model) ?>
     <fieldset class="form-section">

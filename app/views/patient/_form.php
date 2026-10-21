@@ -58,7 +58,7 @@ use yii\widgets\ActiveForm;
         </div>
         </fieldset>
         <div class="form-actions">
-            <?= Html::submitButton('ثبت بیمار', [
+            <?= Html::submitButton($model->isNewRecord ? 'ثبت بیمار' : 'ذخیره تغییرات', [
                 'class' => 'btn btn-primary',
                 'data-loading-label' => 'در حال ثبت…',
             ]) ?>

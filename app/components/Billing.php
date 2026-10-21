@@ -5,6 +5,14 @@ use Yii;
 
 final class Billing
 {
+    public static function breakdown(array $services, array $items): array
+    {
+        $totals=['services'=>0,'medicine'=>0,'supply'=>0];
+        foreach ($services as $row) { $totals['services']=ServiceAmount::add($totals['services'],ServiceAmount::line($row->quantity,$row->unit_price)); }
+        foreach ($items as $row) { $totals[$row->kind]=ServiceAmount::add($totals[$row->kind],ServiceAmount::line($row->quantity,$row->unit_price)); }
+        $totals['total']=ServiceAmount::add(ServiceAmount::add($totals['services'],$totals['medicine']),$totals['supply']);
+        return $totals;
+    }
     public static function total($admissionId): ?int
     {
         $services = Yii::$app->db->createCommand(

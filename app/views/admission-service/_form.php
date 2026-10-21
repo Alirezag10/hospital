@@ -1,6 +1,4 @@
 <?php
-use app\models\Admission;
-use app\models\Service;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -9,18 +7,15 @@ use yii\widgets\ActiveForm;
 /** @var app\models\AdmissionService $model */
 /** @var bool $admissionLocked */
 
-$selectedAdmissionId = filter_var($model->admission_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-$selectedAdmission = $selectedAdmissionId === false
-    ? null
-    : \app\components\Access::admissions()->with('patient')->andWhere(['id' => $selectedAdmissionId])->one();
 $selectedAdmissionLabel = $selectedAdmission ? $selectedAdmission->getSelectionLabel() : '';
-$serviceModels = Service::find()->where(['active' => 1])->orderBy(['title' => SORT_ASC])->all();
-$services = ArrayHelper::map($serviceModels, 'id', static function ($service) {
-    return $service->title . ' (' . Yii::$app->formatter->asInteger($service->price) . ' تومان)';
+$services = ArrayHelper::map($serviceModels, 'id', static function ($service) use ($model,$editing) {
+    $historical=$editing && (int)$service->id===(int)$model->getOldAttribute('service_id');
+    $price=$historical?$model->getOldAttribute('unit_price'):$service->price;
+    return $service->title . ' (' . Yii::$app->formatter->asInteger($price) . ' تومان'.($historical?'؛ قیمت ثبت‌شده':'').')';
 });
 $serviceOptions = [];
 foreach ($serviceModels as $service) {
-    $serviceOptions[$service->id] = ['data-price' => (int) $service->price];
+    $serviceOptions[$service->id] = ['data-price' => (int) ($editing && (int)$service->id===(int)$model->getOldAttribute('service_id')?$model->getOldAttribute('unit_price'):$service->price)];
 }
 ?>
 <div class="card"><div class="card-body">
@@ -78,8 +73,9 @@ foreach ($serviceModels as $service) {
     </div>
     <p class="service-cost-preview" aria-live="polite">برآورد هزینه این ردیف: <strong data-service-total>۰ تومان</strong><small>مبلغ نهایی در سرور محاسبه می‌شود.</small></p>
     </fieldset>
+    <?php if($editing): ?><?= $form->field($correction,'reason')->textarea(['rows'=>2,'maxlength'=>500]) ?><?= Html::activeHiddenInput($correction,'revision') ?><?php endif; ?>
     <div class="form-actions">
-        <?= Html::submitButton('ثبت خدمت', ['class' => 'btn btn-primary', 'data-loading-label' => 'در حال ثبت…']) ?>
+        <?= Html::submitButton($editing?'ذخیره اصلاح':'ثبت خدمت', ['class' => 'btn btn-primary', 'data-loading-label' => 'در حال ثبت…']) ?>
         <?= Html::a('انصراف', $model->admission_id ? ['/admission/view', 'id' => $model->admission_id] : ['/admission/index'], ['class' => 'btn btn-outline-secondary']) ?>
     </div>
     <?php ActiveForm::end(); ?>

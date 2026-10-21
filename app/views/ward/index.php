@@ -39,6 +39,8 @@ $this->params['breadcrumbs'][] = $this->title;
         ['class' => 'app\components\PersianSerialColumn', 'header' => 'ردیف'],
         'name',
         'floor',
+        ['attribute' => 'active', 'format' => 'raw', 'value' => static fn($ward) => Html::tag('span', $ward->active ? 'فعال' : 'غیرفعال', ['class' => 'status-badge ' . ($ward->active ? 'status-admitted' : 'status-discharged')])],
+        ['label'=>'عملیات','format'=>'raw','value'=>static fn($ward)=>Html::a('ویرایش',['update','id'=>$ward->id],['class'=>'btn btn-sm btn-outline-secondary'])],
         ['attribute' => 'created_at', 'format' => 'datetime', 'contentOptions' => ['dir' => 'ltr']],
     ],
 ]) ?>

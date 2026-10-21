@@ -39,10 +39,12 @@ $this->params['breadcrumbs'][] = $this->title;
         ['class' => 'app\components\PersianSerialColumn', 'header' => 'ردیف'],
         'name',
         'specialty',
+        ['attribute' => 'active', 'format' => 'raw', 'value' => static fn($doctor) => Html::tag('span', $doctor->active ? 'فعال' : 'غیرفعال', ['class' => 'status-badge ' . ($doctor->active ? 'status-admitted' : 'status-discharged')])],
+        ['label'=>'عملیات','format'=>'raw','value'=>static fn($doctor)=>Html::a('ویرایش',['update','id'=>$doctor->id],['class'=>'btn btn-sm btn-outline-secondary'])],
         ['attribute' => 'mobile', 'contentOptions' => ['dir' => 'ltr']],
         ['attribute' => 'created_at', 'format' => 'datetime', 'contentOptions' => ['dir' => 'ltr']],
         ['label' => 'حساب کاربری', 'format' => 'raw', 'value' => static fn($doctor) => $doctor->user
-            ? Html::tag('span', 'حساب فعال: ' . Html::encode($doctor->user->username), ['class' => 'status-badge status-admitted'])
+            ? Html::tag('span', ($doctor->user->is_active ? 'حساب فعال: ' : 'حساب غیرفعال: ') . Html::encode($doctor->user->username), ['class' => 'status-badge ' . ($doctor->user->is_active ? 'status-admitted' : 'status-discharged')])
             : Html::a('ساخت حساب پزشک', ['/user/create', 'doctor_id' => $doctor->id], ['class' => 'btn btn-sm btn-outline-primary'])],
     ],
 ]) ?>

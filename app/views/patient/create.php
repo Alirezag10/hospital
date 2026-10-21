@@ -5,7 +5,7 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var app\models\Patient $model */
 
-$this->title = 'ثبت بیمار جدید';
+$this->title = $model->isNewRecord ? 'ثبت بیمار جدید' : 'ویرایش مشخصات بیمار';
 $this->params['breadcrumbs'][] = ['label' => 'بیماران', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>

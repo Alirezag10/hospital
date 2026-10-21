@@ -75,9 +75,15 @@ try {
             ['supply', 'ست سرم (نمونه)', 1, 25000],
         ];
         foreach ($rows as [$kind, $title, $quantity, $price]) {
+            $reference=\app\models\MedicalItem::findOne(['kind'=>$kind,'title'=>$title]);
+            if($reference===null){
+                $reference=new \app\models\MedicalItem(['kind'=>$kind,'title'=>$title,'unit_price'=>$price,'active'=>1]);
+                if(!$reference->save()){throw new RuntimeException('Could not create demonstration catalog item.');}
+            }
             $item = new PrescriptionItem([
+                'medical_item_id'=>$reference->id,
                 'prescription_id' => $prescription->id, 'kind' => $kind, 'title' => $title,
-                'quantity' => $quantity, 'unit_price' => $price,
+                'quantity' => $quantity, 'unit_price' => $reference->unit_price,
                 'dosage' => $kind === 'medicine' ? 'نمونه آموزشی' : null,
                 'instructions' => 'صرفاً برای نمایش فرم، چاپ و محاسبه هزینه در پروژه.',
             ]);

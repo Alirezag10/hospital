@@ -14,6 +14,6 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="page-heading"><div><h1><?= Html::encode($this->title) ?></h1><p>بیمار، پزشک و بخش را انتخاب کنید تا پروندهٔ بستری باز شود.</p></div></div>
     <?= $this->render('_form', [
         'model' => $model,
-        'patientLocked' => $patientLocked,
+        'patientLocked' => $patientLocked, 'selectedPatient'=>$selectedPatient,'selectedDoctor'=>$selectedDoctor,'wardModels'=>$wardModels,'activeAdmission'=>$activeAdmission,
     ]) ?>
 </div>

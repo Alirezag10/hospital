@@ -2,95 +2,152 @@
 namespace app\controllers;
 
 use app\components\Access;
+use app\components\AdmissionData;
 use app\components\Billing;
 use app\components\FormInput;
 use app\components\RoleController;
-use app\components\ServiceAmount;
+use app\models\CorrectionForm;
+use app\models\MedicalItem;
 use app\models\Prescription;
 use app\models\PrescriptionItem;
+use app\models\RecordChange;
 use Yii;
-use yii\base\Model;
 use yii\web\BadRequestHttpException;
+use yii\web\ConflictHttpException;
 use yii\web\ForbiddenHttpException;
+use yii\web\NotFoundHttpException;
 
 class ClinicalController extends RoleController
 {
     public function actionCreate($admission_id)
     {
-        $admission = Access::admission($admission_id);
-        if ($admission->status !== 'admitted' || $admission->discharge !== null) {
-            throw new ForbiddenHttpException('پس از ترخیص نمی‌توان نسخه یا اقلام درمانی ثبت کرد.');
-        }
-        $model = new Prescription();
-        $items = [];
-        if ($this->request->isPost && FormInput::load($model, $this->request->post())) {
-            $rows = $this->request->post('PrescriptionItem', []);
-            if (!is_array($rows) || count($rows) > 50) {
-                throw new BadRequestHttpException('در هر نسخه حداکثر ۵۰ قلم ثبت کنید.');
-            }
-            foreach (array_values($rows) as $row) {
-                if (!is_array($row)) { throw new BadRequestHttpException('ساختار اقلام نسخه معتبر نیست.'); }
-                $item = new PrescriptionItem();
-                FormInput::load($item, ['PrescriptionItem' => $row]);
-                // Ignore only a completely untouched optional row.
-                if (trim((string) $item->title) === '' && trim((string) $item->dosage) === ''
-                    && trim((string) $item->instructions) === '' && in_array((string) $item->unit_price, ['', '0'], true)
-                    && in_array((string) $item->quantity, ['', '1'], true)) { continue; }
-                $items[] = $item;
-            }
-            $valid = $model->validate();
-            $valid = Model::validateMultiple($items) && $valid;
-            if ($valid && $this->savePrescription($model, $items, $admission->id)) {
-                Yii::$app->session->setFlash('success', 'نسخه و اقلام درمانی ثبت شدند. از پرونده می‌توانید چاپ بگیرید.');
-                return $this->redirect(['/admission/view', 'id' => $admission->id, '#' => 'prescription-' . $model->id]);
-            }
-        }
-        if ($items === []) { $items[] = new PrescriptionItem(['kind' => 'medicine', 'quantity' => 1, 'unit_price' => 0]); }
-        return $this->render('create', compact('model', 'items', 'admission'));
+        return $this->form(new Prescription(), Access::admission($admission_id));
     }
 
-    private function savePrescription(Prescription $model, array $items, int $admissionId): bool
+    public function actionUpdate($id)
     {
-        $db = Yii::$app->db;
-        $transaction = $db->beginTransaction();
-        try {
-            $lockedAdmission = Access::lockAdmission($admissionId);
-            $doctorId = $lockedAdmission['doctor_id'];
-            $status = $lockedAdmission['status'];
-            if ($status !== 'admitted' || \app\models\Discharge::find()->where(['admission_id' => $admissionId])->exists()) {
-                throw new ForbiddenHttpException('پذیرش دیگر برای ثبت نسخه در دسترس نیست.');
-            }
-            $total = Billing::total($admissionId);
-            foreach ($items as $item) { $total = ServiceAmount::add($total, ServiceAmount::line($item->quantity, $item->unit_price)); }
-            if ($total === null) {
-                $model->addError('diagnosis', 'مجموع هزینه‌های پرونده از محدوده قابل ثبت بیشتر می‌شود.');
-                $transaction->rollBack();
-                return false;
-            }
-            $model->admission_id = $admissionId;
-            $model->doctor_id = $doctorId;
-            $model->user_id = Yii::$app->user->id;
-            $model->save(false);
-            foreach ($items as $item) {
-                $item->prescription_id = $model->id;
-                $item->save(false);
-            }
-            $transaction->commit();
-            return true;
-        } catch (\Throwable $error) {
-            if ($transaction->isActive) { $transaction->rollBack(); }
-            throw $error;
+        $id = filter_var($id,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+        $model = $id === false ? null : Prescription::findOne($id);
+        if ($model === null) { throw new NotFoundHttpException('نسخه پیدا نشد.'); }
+        return $this->form($model,Access::admission($model->admission_id));
+    }
+
+    private function form(Prescription $model, $admission)
+    {
+        if ($admission->status !== 'admitted' || $admission->discharge !== null) {
+            throw new ForbiddenHttpException('پس از ترخیص نمی‌توان نسخه یا اقلام درمانی را ثبت یا اصلاح کرد.');
         }
+        $editing = !$model->isNewRecord;
+        $originals = $editing ? $model->getItems()->indexBy('id')->all() : [];
+        $items = array_values($originals);
+        $correction = new CorrectionForm(['revision'=>$editing?$model->revision:1]);
+        if ($this->request->isPost && FormInput::load($model,$this->request->post())) {
+            if ($editing) {
+                FormInput::load($correction,$this->request->post());
+                $submittedRevision=filter_var($correction->revision,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+                if($submittedRevision!==false && $submittedRevision!==(int)$model->revision){throw new ConflictHttpException('این نسخه هم‌زمان تغییر کرده است؛ صفحه را دوباره باز کنید.');}
+            }
+            $rows = $this->request->post('PrescriptionItem',[]);
+            if (!is_array($rows) || count($rows)>50) { throw new BadRequestHttpException('در هر نسخه حداکثر ۵۰ قلم ثبت کنید.'); }
+            $items=[]; $seen=[]; $newSelections=[]; $catalogIds=[];
+            foreach (array_values($rows) as $row) {
+                if (!is_array($row)) { throw new BadRequestHttpException('ساختار اقلام معتبر نیست.'); }
+                $oldId = $row['item_id']??null;
+                $old = null;
+                if ($oldId !== null && $oldId !== '') {
+                    $oldId=filter_var($oldId,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+                    if ($oldId===false || !isset($originals[$oldId]) || isset($seen[$oldId])) { throw new BadRequestHttpException('قلم انتخاب‌شده متعلق به این نسخه نیست یا تکرار شده است.'); }
+                    $old=$originals[$oldId]; $seen[$oldId]=true;
+                }
+                $item = new PrescriptionItem();
+                FormInput::load($item,['PrescriptionItem'=>$row]);
+                if (!$item->medical_item_id && trim((string)$item->title)==='' && trim((string)$item->dosage)==='' && trim((string)$item->instructions)==='' && in_array((string)$item->quantity,['','1'],true) && $old===null) { continue; }
+                // Existing snapshots retain their price even if the catalog tariff changed.
+                if ($old !== null && (string)$old->medical_item_id===(string)$item->medical_item_id && $old->kind===$item->kind) {
+                    $item->title=$old->title; $item->unit_price=$old->unit_price;
+                } else {
+                    $catalogId=filter_var($item->medical_item_id,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+                    $newSelections[] = [$item,$catalogId];
+                    if ($catalogId !== false) { $catalogIds[$catalogId]=$catalogId; }
+                }
+                // Retain only this record's UI identity; it is not an assignable database ID.
+                $item->sourceItemId=$old?->id;
+                $items[]=$item;
+            }
+            // Resolve all newly selected catalog items with one query, independent of row count.
+            $references = $catalogIds === [] ? [] : MedicalItem::find()
+                ->where(['id'=>array_values($catalogIds),'active'=>1])->indexBy('id')->all();
+            foreach ($newSelections as [$item,$catalogId]) {
+                $reference=$catalogId===false?null:($references[$catalogId]??null);
+                if ($reference===null || $reference->kind!==$item->kind) {
+                    $item->addError('medical_item_id','یک قلم فعال از فهرست انتخاب کنید.');
+                    $item->title=''; $item->unit_price=0;
+                } else {
+                    $item->medical_item_id=$reference->id;
+                    $item->title=$reference->title;
+                    $item->unit_price=$reference->unit_price;
+                    $item->newCatalogSelection=true;
+                }
+            }
+            $valid=$model->validate();
+            if ($editing) { $valid=$correction->validate() && $valid; }
+            foreach ($items as $item) { $valid=$item->validate(null,false) && !$item->hasErrors() && $valid; }
+            if ($valid && $this->savePrescription($model,$items,(int)$admission->id,$editing?$correction:null)) {
+                Yii::$app->session->setFlash('success',$editing?'اصلاح نسخه با ثبت سابقه انجام شد.':'نسخه و اقلام درمانی ثبت شدند.');
+                return $this->redirect(['/admission/view','id'=>$admission->id,'#'=>'prescription-'.$model->id]);
+            }
+        }
+        if ($items===[]) { $items[] = new PrescriptionItem(['kind'=>'medicine','quantity'=>1,'unit_price'=>0]); }
+        return $this->render('create',compact('model','items','admission','editing','correction','originals'));
+    }
+
+    private function savePrescription(Prescription $model,array $items,int $admissionId,?CorrectionForm $correction): bool
+    {
+        $db=Yii::$app->db; $tx=$db->beginTransaction();
+        try {
+            $locked=Access::lockAdmission($admissionId);
+            if ($locked['status']!=='admitted' || \app\models\Discharge::find()->where(['admission_id'=>$admissionId])->exists()) { throw new ForbiddenHttpException('پذیرش دیگر برای ثبت یا اصلاح نسخه در دسترس نیست.'); }
+            $catalogIds=array_unique(array_map(static fn($i)=>(int)$i->medical_item_id,array_filter($items,static fn($i)=>$i->newCatalogSelection)));
+            $references=$catalogIds ? MedicalItem::findBySql('SELECT * FROM medical_items WHERE id IN ('.implode(',',$catalogIds).') ORDER BY id FOR UPDATE')->indexBy('id')->all() : [];
+            foreach ($items as $item) {
+                if (!$item->newCatalogSelection) { continue; }
+                $reference=$references[$item->medical_item_id]??null;
+                if ($reference===null || !$reference->active || $reference->kind!==$item->kind) {
+                    $item->addError('medical_item_id','قلم انتخاب‌شده تغییر کرده یا غیرفعال شده است.');$tx->rollBack();return false;
+                }
+                $item->title=$reference->title; $item->unit_price=$reference->unit_price;
+            }
+            $before=null;
+            if ($correction!==null) {
+                $current=Prescription::findOne(['id'=>$model->id,'admission_id'=>$admissionId]);
+                if ($current===null || (int)$current->revision!==(int)$correction->revision) { throw new ConflictHttpException('این نسخه هم‌زمان تغییر کرده است؛ صفحه را دوباره باز کنید.'); }
+                $before=$current->attributes;
+                $before['items']=array_map(static fn($i)=>$i->attributes,$current->getItems()->all());
+                $model->revision=(int)$current->revision+1;
+            } else { $model->user_id=Yii::$app->user->id; }
+            $model->admission_id=$admissionId; $model->doctor_id=$locked['doctor_id'];
+            $model->save(false);
+            if ($correction!==null) { PrescriptionItem::deleteAll(['prescription_id'=>$model->id]); }
+            foreach ($items as $item) {
+                $item->prescription_id=$model->id; $item->save(false);
+            }
+            if (Billing::total($admissionId)===null) {
+                $model->addError('diagnosis','مجموع هزینه‌های پرونده از محدوده قابل ثبت بیشتر می‌شود.');$tx->rollBack();return false;
+            }
+            if ($correction!==null) {
+                $after=$model->attributes;$after['items']=array_map(static fn($i)=>$i->attributes,$items);
+                RecordChange::record($admissionId,'prescription',(int)$model->id,$correction->reason,$before,$after);
+            }
+            // Any treatment change requires a fresh medical approval before discharge.
+            \app\models\Admission::updateAll(['ready_at'=>null,'ready_by'=>null,'treatment_version'=>new \yii\db\Expression('treatment_version+1')],['id'=>$admissionId]);
+            $tx->commit(); return true;
+        } catch (\Throwable $error) { if ($tx->isActive) {$tx->rollBack();} throw $error; }
     }
 
     public function actionPrint($admission_id)
     {
-        $admission = Access::admission($admission_id);
-        $this->layout = 'print';
-        return $this->render('print', [
-            'admission' => $admission,
-            'prescriptions' => $admission->getPrescriptions()->with(['items', 'doctor', 'author'])->orderBy(['id' => SORT_ASC])->all(),
-            'services' => $admission->getAdmissionServices()->with('service')->orderBy(['id' => SORT_ASC])->all(),
-        ]);
+        $admission=Access::admission($admission_id);$this->layout='print';
+        $data=AdmissionData::load($admission,true,true);
+        return $this->render('print',['admission'=>$admission,'prescriptions'=>$data['prescriptions'],'services'=>$data['items']]);
     }
 }

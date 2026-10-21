@@ -17,6 +17,43 @@ use yii\web\Response;
 
 class AdmissionController extends Controller
 {
+    public function behaviors()
+    {
+        return array_merge(parent::behaviors(), ['verbs'=>[
+            'class'=>\yii\filters\VerbFilter::class, 'actions'=>['ready'=>['post']],
+        ]]);
+    }
+
+    public function actionReady($id)
+    {
+        $admission = Access::admission($id);
+        $ready = $this->request->post('ready');
+        $version = filter_var($this->request->post('treatment_version'),FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+        if (!in_array($ready,['0','1'],true)) { throw new \yii\web\BadRequestHttpException('درخواست تأیید معتبر نیست.'); }
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            $locked = Access::lockAdmission((int)$admission->id);
+            if ($locked['status'] !== 'admitted' || Discharge::find()->where(['admission_id'=>$admission->id])->exists()) {
+                throw new \yii\web\ForbiddenHttpException('پروندهٔ ترخیص‌شده قابل تغییر نیست.');
+            }
+            if ($version === false || $version !== (int)$locked['treatment_version']) {
+                throw new \yii\web\ConflictHttpException('اطلاعات درمان تغییر کرده است؛ پرونده را دوباره باز و بررسی کنید.');
+            }
+            if ($ready === '0' || $locked['ready_at'] === null) {
+                Admission::updateAll([
+                    'ready_at'=>$ready === '1' ? new Expression('NOW()') : null,
+                    'ready_by'=>$ready === '1' ? Yii::$app->user->id : null,
+                ],['id'=>$admission->id]);
+            }
+            $tx->commit();
+        } catch (\Throwable $error) {
+            if ($tx->isActive) { $tx->rollBack(); }
+            throw $error;
+        }
+        Yii::$app->session->setFlash('success',$ready === '1' ? 'پایان درمان تأیید شد؛ پرونده در صف ترخیص قرار گرفت.' : 'تأیید پایان درمان لغو شد.');
+        return $this->redirect(['view','id'=>$admission->id]);
+    }
+
     public function actionIndex($date = null, $discharged_on = null)
     {
         foreach (['date' => $date, 'discharged_on' => $discharged_on] as $parameter => $value) {
@@ -59,19 +96,20 @@ class AdmissionController extends Controller
 
         $days = [];
         $dayCounts = [];
-        $previewIds = [];
         foreach ($counts as $row) {
             $dayCounts[$row['day']] = (int) $row['amount'];
-            $previewIds[$row['day']] = Admission::find()->select('id')
-                ->where(['>=', 'admission_date', $row['day'] . ' 00:00:00'])
-                ->andWhere(['<', 'admission_date', (new \DateTimeImmutable($row['day']))->modify('+1 day')->format('Y-m-d 00:00:00')])
-                ->orderBy(['admission_date' => SORT_ASC, 'id' => SORT_ASC])
-                ->limit(3)->column();
         }
-        $ids = array_merge(...array_values($previewIds ?: [[]]));
+        // One bounded query selects three previews per day instead of one query per occupied day.
+        $ids = Yii::$app->db->createCommand(
+            'SELECT id FROM (SELECT id, admission_date, ROW_NUMBER() OVER (PARTITION BY DATE(admission_date) ORDER BY admission_date,id) AS position_in_day
+             FROM admissions WHERE admission_date>=:start AND admission_date<:end) ranked
+             WHERE position_in_day<=3 ORDER BY admission_date,id',
+            [':start'=>$firstDay->format('Y-m-d 00:00:00'), ':end'=>$nextMonth->format('Y-m-d 00:00:00')]
+        )->queryColumn();
         $previews = $ids === [] ? [] : Admission::find()->with('patient')->where(['id' => $ids])->indexBy('id')->all();
-        foreach ($previewIds as $day => $dayIds) {
-            $days[$day] = array_map(static fn($id) => $previews[$id], $dayIds);
+        foreach ($ids as $id) {
+            $preview = $previews[$id];
+            $days[substr($preview->admission_date,0,10)][] = $preview;
         }
 
         return $this->render('calendar', [
@@ -104,7 +142,7 @@ class AdmissionController extends Controller
             if ($patientId !== null) {
                 $model->patient_id = $patientId;
             }
-            if ($model->save()) {
+            if (\app\components\AdmissionRegistration::save($model)) {
                 Yii::$app->session->setFlash('success', 'پذیرش بیمار با موفقیت ثبت شد.');
                 return $this->redirect(['view', 'id' => $model->id]);
             }
@@ -112,6 +150,11 @@ class AdmissionController extends Controller
         return $this->render('create', [
             'model' => $model,
             'patientLocked' => $patientId !== null,
+            'selectedPatient' => ($id=filter_var($model->patient_id,FILTER_VALIDATE_INT))===false?null:Patient::findOne($id),
+            'selectedDoctor' => ($id=filter_var($model->doctor_id,FILTER_VALIDATE_INT))===false?null:Doctor::findOne(['id'=>$id,'active'=>1]),
+            'wardModels' => \app\models\Ward::find()->where(['active'=>1])->orderBy(['name'=>SORT_ASC])->all(),
+            'activeAdmission' => filter_var($model->patient_id,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]) === false ? null
+                : Admission::find()->where(['patient_id'=>$model->patient_id,'status'=>'admitted'])->orderBy(['id'=>SORT_DESC])->one(),
         ]);
     }
 
@@ -174,6 +217,10 @@ class AdmissionController extends Controller
             ->andWhere(['a.status' => 'admitted', 'd.id' => null])
             ->orderBy(['p.last_name' => SORT_ASC, 'p.first_name' => SORT_ASC]);
 
+        if (Access::is(\app\models\User::DISCHARGE) || $this->request->get('ready') === '1') {
+            $query->andWhere(['not',['a.ready_at'=>null]]);
+        }
+
         foreach ($parts as $part) {
             $query->andWhere(ctype_digit($part)
                 ? (strlen($part) === 10 ? ['p.national_code' => $part] : ['like', 'p.national_code', $part . '%', false])
@@ -204,7 +251,8 @@ class AdmissionController extends Controller
         $term = mb_strtolower($term, 'UTF-8');
         $doctors = Doctor::find()
             ->select(['id', 'name', 'specialty'])
-            ->where(['or',
+            ->where(['active'=>1])
+            ->andWhere(['or',
                 ['like', new Expression('LOWER([[name]])'), $term],
                 ['like', new Expression('LOWER([[specialty]])'), $term],
             ])
@@ -233,6 +281,9 @@ class AdmissionController extends Controller
     public function actionView($id)
     {
         $model = Access::admission($id);
-        return $this->render('view', ['model' => $model]);
+        $canTreat=Access::allows('/clinical/create');
+        $canBill=$canTreat || Access::is(\app\models\User::DISCHARGE);
+        $data=\app\components\AdmissionData::load($model,$canTreat,$canBill);
+        return $this->render('view', array_merge(['model'=>$model,'canTreat'=>$canTreat,'canBill'=>$canBill],$data));
     }
 }

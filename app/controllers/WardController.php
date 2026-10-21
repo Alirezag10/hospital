@@ -38,4 +38,16 @@ class WardController extends Controller
 
         return $this->render('create', ['model' => $model]);
     }
+
+    public function actionUpdate($id)
+    {
+        $id = filter_var($id,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+        $model = $id === false ? null : Ward::findOne($id);
+        if ($model === null) { throw new \yii\web\NotFoundHttpException('بخش پیدا نشد.'); }
+        if ($this->request->isPost && FormInput::load($model,$this->request->post()) && $model->save()) {
+            Yii::$app->session->setFlash('success','مشخصات بخش به‌روزرسانی شد.');
+            return $this->redirect(['index']);
+        }
+        return $this->render('create',['model'=>$model]);
+    }
 }

@@ -39,6 +39,7 @@
         const row = remove.closest('[data-prescription-item]');
         if (container.children.length > 1) { row.remove(); }
         else {
+            ['originalId','originalPrice','originalTitle','originalKind'].forEach(key => { delete row.dataset[key]; });
             row.querySelectorAll('input').forEach(input => { input.value = input.hasAttribute('data-line-quantity') ? '1' : input.hasAttribute('data-line-unit_price') ? '0' : ''; });
             row.querySelector('select').value = 'medicine';
         }

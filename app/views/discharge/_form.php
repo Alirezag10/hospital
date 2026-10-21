@@ -2,7 +2,6 @@
 
 use yii\helpers\Html;
 use app\components\ServiceAmount;
-use app\components\Billing;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
@@ -17,15 +16,29 @@ $isOpen = $selectedAdmission !== null && $selectedAdmission->status === 'admitte
     && $selectedAdmission->discharge === null;
 $selectedAdmissionLabel = $isOpen ? $selectedAdmission->getSelectionLabel() : '';
 $patientName = $isOpen ? $selectedAdmission->patient->first_name . ' ' . $selectedAdmission->patient->last_name : '';
-$total = 0;
+$total = $bill['total'];
+$isReady = $isOpen && $selectedAdmission->ready_at !== null;
 ?>
+<?php if (!$isOpen && $readyAdmissions): ?>
+<section class="mb-4" aria-labelledby="ready-queue-title">
+    <h2 class="h5" id="ready-queue-title">صف آمادهٔ ترخیص</h2>
+    <p>حداکثر ۱۰ پروندهٔ تأییدشده، به ترتیب زمان تأیید پزشک. برای سایر پرونده‌ها جست‌وجو کنید.</p>
+    <div class="table-panel table-responsive"><table class="table table-hover align-middle mb-0">
+    <thead><tr><th>بیمار</th><th>بخش</th><th>زمان تأیید</th><th>عملیات</th></tr></thead><tbody>
+    <?php foreach ($readyAdmissions as $readyAdmission): ?><tr>
+        <td><?= $this->render('/layouts/_patient_label',['patient'=>$readyAdmission->patient]) ?></td>
+        <td><?= Html::encode($readyAdmission->ward) ?></td><td><?= Html::encode(Yii::$app->formatter->asDatetime($readyAdmission->ready_at)) ?></td>
+        <td><?= Html::a('بررسی و ترخیص',['create','admission_id'=>$readyAdmission->id],['class'=>'btn btn-sm btn-outline-primary']) ?></td>
+    </tr><?php endforeach; ?></tbody></table></div>
+</section>
+<?php endif; ?>
 <div class="discharge-form card" dir="rtl">
     <div class="card-body">
         <?php if (!$isOpen): ?>
         <h2 class="h5 discharge-section-title">انتخاب پذیرش</h2>
         <?php if (!$hasOpenAdmissions): ?>
             <div class="alert alert-info">
-                پذیرش بستری و ترخیص‌نشده‌ای برای انتخاب وجود ندارد.
+                هنوز پرونده‌ای با تأیید پایان درمان در صف ترخیص وجود ندارد.
             </div>
         <?php endif; ?>
         <?= Html::beginForm(['create'], 'get', ['id' => 'discharge-preview-form']) ?>
@@ -46,7 +59,7 @@ $total = 0;
                 'aria-expanded' => 'false',
                 'data-live-search' => 'true',
                 'data-target-input' => 'discharge-admission-id',
-                'data-search-url' => Url::to(['/admission/search-open-admissions']),
+                'data-search-url' => Url::to(['/admission/search-open-admissions','ready'=>'1']),
                 'data-submit-on-select' => 'true',
             ]) ?>
             <div id="discharge-admission-search-results" class="dropdown-menu w-100 entity-search-dropdown" role="listbox" hidden></div>
@@ -56,13 +69,13 @@ $total = 0;
         <?php if ($model->hasErrors()): ?>
             <?= Html::errorSummary($model, ['class' => 'alert alert-danger mt-3']) ?>
         <?php endif; ?>
-        <p class="discharge-empty-hint">برای نمایش ریز هزینه و ثبت ترخیص، یک پذیرش بستری را جست‌وجو و انتخاب کنید.</p>
+        <p class="discharge-empty-hint">برای نمایش ریز هزینه و ثبت ترخیص، یک پذیرش تأییدشده توسط پزشک را انتخاب کنید.</p>
         <p class="mt-3 mb-0"><?= Html::a('بازگشت به پذیرش‌ها', ['/admission/index'], ['class' => 'btn btn-outline-secondary']) ?></p>
         <?php else: ?>
             <section class="discharge-patient-summary" aria-label="پذیرش انتخاب‌شده">
                 <div class="discharge-patient-heading">
                     <div>
-                        <h2><?= Html::encode($patientName) ?> <span class="status-badge status-admitted">بستری</span></h2>
+                        <h2><?= Html::encode($patientName) ?> <span class="status-badge status-admitted"><?= $isReady ? 'آمادهٔ ترخیص' : 'بستری' ?></span></h2>
                         <p>کد ملی: <bdi dir="ltr"><?= Html::encode($selectedAdmission->patient->national_code) ?></bdi>
                             <span> · پرونده <?= Yii::$app->formatter->asInteger($selectedId) ?></span></p>
                     </div>
@@ -90,7 +103,7 @@ $total = 0;
                             </td></tr>
                         <?php endif; ?>
                         <?php foreach ($items as $item): ?>
-                            <?php $amount = ServiceAmount::line($item->quantity, $item->unit_price); $total = ServiceAmount::add($total, $amount); ?>
+                            <?php $amount = ServiceAmount::line($item->quantity, $item->unit_price);  ?>
                             <tr>
                                 <td><?= Html::encode($item->service?->title ?? 'خدمت نامشخص') ?></td>
                                 <td><?= Yii::$app->formatter->asInteger($item->quantity) ?></td>
@@ -101,13 +114,13 @@ $total = 0;
                         </tbody>
                     </table>
                 </div>
-                <?= $this->render('/clinical/_costs', ['admission' => $selectedAdmission]) ?>
-                <?php $total = Billing::total($selectedId); ?>
+                <?= $this->render('/clinical/_costs', ['costItems'=>$costItems]) ?>
             </section>
             <section class="discharge-confirm-section" aria-labelledby="discharge-confirm-title">
                 <h2 class="h5 discharge-section-title" id="discharge-confirm-title">ثبت ترخیص</h2>
                 <?php $form = ActiveForm::begin(['id' => 'discharge-form', 'action' => ['create', 'admission_id' => $selectedId], 'options' => ['data-loading-form' => '1', 'data-unsaved-warning' => '1']]); ?>
                 <?= $form->errorSummary($model) ?>
+                <?php if (!$isReady): ?><p class="alert alert-info">پایان درمان هنوز توسط پزشک تأیید نشده است؛ ثبت ترخیص پس از تأیید امکان‌پذیر می‌شود.</p><?php endif; ?>
                 <?= Html::activeHiddenInput($model, 'admission_id') ?>
                 <?= $form->field($model, 'description')->textarea(['rows' => 2, 'maxlength' => 5000, 'placeholder' => 'در صورت نیاز توضیحی برای پرونده بنویسید'])->label('توضیحات ترخیص (اختیاری)') ?>
                 <?php if ($total === null): ?><div class="alert alert-danger">جمع هزینه‌ها از محدودهٔ قابل ثبت بیشتر است. پیش از ترخیص، ریز خدمات را بررسی کنید.</div><?php endif; ?>
@@ -123,7 +136,7 @@ $total = 0;
                         'data-confirm' => 'بیمار: ' . $patientName . "\nشماره پرونده: " . Yii::$app->formatter->asInteger($selectedId)
                             . "\nمبلغ محاسبه‌شده: " . ($total === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($total) . ' تومان')
                             . "\n\nترخیص ثبت‌شده قابل ویرایش یا حذف نیست. مبلغ هنگام ثبت دوباره محاسبه می‌شود.",
-                        'disabled' => $total === null,
+                        'disabled' => $total === null || !$isReady,
                     ]) ?>
                     <?= Html::a('بازگشت به پرونده', ['/admission/view', 'id' => $selectedAdmission->id], ['class' => 'btn btn-outline-secondary']) ?>
                     </div>

@@ -48,7 +48,7 @@ class UserController extends RoleController
             }
         }
         $model->password = $model->password_repeat = '';
-        return $this->render('form', ['model' => $model, 'doctorLocked' => $doctor !== null]);
+        return $this->render('form', ['model' => $model, 'doctorLocked' => $doctor !== null, 'doctors'=>$this->availableDoctors($model)]);
     }
 
     public function actionUpdate($id)
@@ -70,6 +70,11 @@ class UserController extends RoleController
             }
         }
         $model->password = $model->password_repeat = '';
-        return $this->render('form', ['model' => $model, 'doctorLocked' => false]);
+        return $this->render('form', ['model' => $model, 'doctorLocked' => false, 'doctors'=>$this->availableDoctors($model)]);
+    }
+    private function availableDoctors(UserForm $model): array
+    {
+        $claimed=User::find()->select('doctor_id')->where(['not',['doctor_id'=>null]])->andWhere(['<>','id',$model->user?->id??0]);
+        return Doctor::find()->where(['not in','id',$claimed])->orderBy(['name'=>SORT_ASC])->all();
     }
 }

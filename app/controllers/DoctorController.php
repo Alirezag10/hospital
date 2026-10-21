@@ -43,4 +43,27 @@ class DoctorController extends Controller
     {
         return $this->redirect(['/user/create', 'doctor_id' => $id]);
     }
+
+    public function actionUpdate($id)
+    {
+        $id = filter_var($id,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+        $model = $id === false ? null : Doctor::findOne($id);
+        if ($model === null) { throw new \yii\web\NotFoundHttpException('پزشک پیدا نشد.'); }
+        if ($this->request->isPost && FormInput::load($model,$this->request->post()) && $model->validate()) {
+            $tx = Yii::$app->db->beginTransaction();
+            try {
+                if ($model->save(false)) {
+                    \app\models\User::updateAll(['full_name'=>$model->name],['doctor_id'=>$model->id]);
+                    $tx->commit();
+                    Yii::$app->session->setFlash('success','مشخصات پزشک و نام حساب متصل به‌روزرسانی شد.');
+                    return $this->redirect(['index']);
+                }
+                $tx->rollBack();
+            } catch (\Throwable $error) {
+                if ($tx->isActive) { $tx->rollBack(); }
+                throw $error;
+            }
+        }
+        return $this->render('create',['model'=>$model]);
+    }
 }
