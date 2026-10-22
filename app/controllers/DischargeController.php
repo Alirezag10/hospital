@@ -171,7 +171,7 @@ class DischargeController extends Controller
 
         $this->layout = 'print';
         if ($admission->discharge->receipt_data === null) {
-            throw new ServiceUnavailableHttpException('رسیدهای قدیمی هنوز تثبیت نشده‌اند؛ دستور ارتقای رسیدها را اجرا کنید.');
+            throw new ServiceUnavailableHttpException('اطلاعات رسید نهایی این پذیرش موجود نیست؛ برای بررسی پرونده با مدیر سیستم تماس بگیرید.');
         }
 
         return $this->render('receipt', ['snapshot' => ReceiptSnapshot::read($admission->discharge)]);

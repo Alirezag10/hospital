@@ -32,7 +32,7 @@ foreach ([
         'linkOptions' => $active ? ['aria-current' => 'page'] : []];
     if(in_array($route,['/doctor/index','/ward/index','/medical-item/index','/service/index'],true)){$definitions[]=$entry;}else{$items[]=$entry;}
 }
-if($definitions){array_splice($items,3,0,[['label'=>'تعاریف پایه','items'=>$definitions,'active'=>in_array(Yii::$app->controller->id,['doctor','ward','medical-item','service'],true)]]);}
+if($definitions){array_splice($items,3,0,[['label'=>'اطلاعات پایه','items'=>$definitions,'active'=>in_array(Yii::$app->controller->id,['doctor','ward','medical-item','service'],true)]]);}
 
 echo Nav::widget(['encodeLabels' => false, 'options' => ['class' => 'navbar-nav'], 'items' => $items]);
 if (!Yii::$app->user->isGuest) {

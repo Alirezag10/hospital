@@ -194,7 +194,7 @@ CREATE TABLE record_changes (
     CONSTRAINT fk_changes_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Initial reference data. Create the first administrator with app/commands/create-admin.php.
+-- Initial reference data. Provision the first administrator separately before signing in.
 
 INSERT INTO doctors (name, specialty, mobile) VALUES
 ('دکتر علی رضایی', 'قلب و عروق', '09122000001'),
