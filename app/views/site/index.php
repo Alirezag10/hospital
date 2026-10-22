@@ -31,7 +31,6 @@ $actions = [
         <?= $this->render('/layouts/_icon', ['name' => $isDoctor ? 'doctor' : 'admission']) ?>
     </div>
     <div data-live-panel data-live-url="<?= Html::encode(Url::to(['/site/dashboard'])) ?>">
-        <?= $this->render('/layouts/_live_status') ?>
         <div data-live-content>
             <?= $this->render('_dashboard', $dashboard) ?>
         </div>

@@ -4,7 +4,6 @@ namespace app\controllers;
 
 use app\components\Access;
 use app\components\AdmissionData;
-use app\components\DischargeQueue;
 use app\components\FormInput;
 use app\components\ReceiptSnapshot;
 use app\models\Discharge;
@@ -18,26 +17,6 @@ use yii\web\ServiceUnavailableHttpException;
 
 class DischargeController extends Controller
 {
-    public function behaviors()
-    {
-        return array_merge(parent::behaviors(), [
-            'verbs' => [
-                'class' => \yii\filters\VerbFilter::class,
-                'actions' => ['queue' => ['get']],
-            ],
-        ]);
-    }
-
-    public function actionQueue()
-    {
-        Yii::$app->response->headers->set('Cache-Control', 'no-store, private');
-
-        return $this->asJson([
-            'html' => $this->renderPartial('_queue', DischargeQueue::load()),
-            'updatedAt' => Yii::$app->formatter->asDatetime(time()),
-        ]);
-    }
-
     public function actionCreate($admission_id = null)
     {
         $model = new Discharge();
@@ -173,17 +152,11 @@ class DischargeController extends Controller
                 ->one();
         }
 
-        $isOpen = $admission !== null
-            && $admission->status === 'admitted'
-            && $admission->discharge === null;
-        $queue = $isOpen
-            ? ['readyAdmissions' => [], 'readyTotal' => 0]
-            : DischargeQueue::load();
         $data = $admission === null
             ? ['items' => [], 'costItems' => [], 'bill' => Billing::breakdown([], [])]
             : AdmissionData::load($admission, false, true);
 
-        return $this->render('create', array_merge($data, $queue, [
+        return $this->render('create', array_merge($data, [
             'model' => $model,
             'selectedAdmission' => $admission,
         ]));

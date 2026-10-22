@@ -1,7 +1,6 @@
 <?php
 namespace app\controllers;
 
-use app\components\JalaliDate;
 use app\components\FormInput;
 use app\models\Admission;
 use app\models\AdmissionSearch;
@@ -50,7 +49,7 @@ class AdmissionController extends Controller
             if ($tx->isActive) { $tx->rollBack(); }
             throw $error;
         }
-        Yii::$app->session->setFlash('success',$ready === '1' ? 'پایان درمان تأیید شد؛ پرونده در صف ترخیص قرار گرفت.' : 'تأیید پایان درمان لغو شد.');
+        Yii::$app->session->setFlash('success',$ready === '1' ? 'پایان درمان تأیید شد؛ ثبت ترخیص این پرونده امکان‌پذیر است.' : 'تأیید پایان درمان لغو شد.');
         return $this->redirect(['view','id'=>$admission->id]);
     }
 
@@ -71,59 +70,6 @@ class AdmissionController extends Controller
             'dataProvider' => $searchModel->search($this->request->queryParams, $date, $discharged_on),
             'date' => $date,
             'dischargedOn' => $discharged_on,
-        ]);
-    }
-
-    public function actionCalendar($month = null)
-    {
-        $today = date('Y-m-d');
-        [$currentYear, $currentMonth] = JalaliDate::fromGregorian((int) date('Y'), (int) date('n'), (int) date('j'));
-        $thisMonth = sprintf('%04d-%02d', $currentYear, $currentMonth);
-        if (is_string($month) && preg_match('/^(1[2-5]\d{2}|1600)-(0[1-9]|1[0-2])$/D', $month, $matches)) {
-            $currentYear = (int) $matches[1];
-            $currentMonth = (int) $matches[2];
-        }
-        $firstDay = JalaliDate::toGregorian($currentYear, $currentMonth, 1);
-        $nextYear = $currentMonth === 12 ? $currentYear + 1 : $currentYear;
-        $nextMonthNumber = $currentMonth === 12 ? 1 : $currentMonth + 1;
-        $nextMonth = JalaliDate::toGregorian($nextYear, $nextMonthNumber, 1);
-        $counts = Admission::find()
-            ->select(['day' => new Expression('DATE(admission_date)'), 'amount' => new Expression('COUNT(*)')])
-            ->where(['>=', 'admission_date', $firstDay->format('Y-m-d 00:00:00')])
-            ->andWhere(['<', 'admission_date', $nextMonth->format('Y-m-d 00:00:00')])
-            ->groupBy(new Expression('DATE(admission_date)'))
-            ->asArray()->all();
-
-        $days = [];
-        $dayCounts = [];
-        foreach ($counts as $row) {
-            $dayCounts[$row['day']] = (int) $row['amount'];
-        }
-        // One bounded query selects three previews per day instead of one query per occupied day.
-        $ids = Yii::$app->db->createCommand(
-            'SELECT id FROM (SELECT id, admission_date, ROW_NUMBER() OVER (PARTITION BY DATE(admission_date) ORDER BY admission_date,id) AS position_in_day
-             FROM admissions WHERE admission_date>=:start AND admission_date<:end) ranked
-             WHERE position_in_day<=3 ORDER BY admission_date,id',
-            [':start'=>$firstDay->format('Y-m-d 00:00:00'), ':end'=>$nextMonth->format('Y-m-d 00:00:00')]
-        )->queryColumn();
-        $previews = $ids === [] ? [] : Admission::find()->with('patient')->where(['id' => $ids])->indexBy('id')->all();
-        foreach ($ids as $id) {
-            $preview = $previews[$id];
-            $days[substr($preview->admission_date,0,10)][] = $preview;
-        }
-
-        return $this->render('calendar', [
-            'month' => sprintf('%04d-%02d', $currentYear, $currentMonth),
-            'today' => $today,
-            'currentMonth' => $thisMonth,
-            'firstDay' => $firstDay,
-            'daysInMonth' => (int) $firstDay->diff($nextMonth)->days,
-            'startOffset' => ((int) $firstDay->format('N') + 1) % 7,
-            'admissionsByDay' => $days,
-            'dayCounts' => $dayCounts,
-            'unknownCount' => (int) Admission::find()->where(['admission_date' => null])->count(),
-            'previousMonth' => sprintf('%04d-%02d', $currentMonth === 1 ? $currentYear - 1 : $currentYear, $currentMonth === 1 ? 12 : $currentMonth - 1),
-            'nextMonth' => sprintf('%04d-%02d', $nextYear, $nextMonthNumber),
         ]);
     }
 

@@ -59,7 +59,6 @@ class SiteController extends Controller
 
         return $this->asJson([
             'html' => $this->renderPartial('_dashboard', DashboardData::load()),
-            'updatedAt' => Yii::$app->formatter->asDatetime(time()),
         ]);
     }
 }

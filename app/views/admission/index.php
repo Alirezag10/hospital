@@ -13,7 +13,7 @@ $onlyDischargeDate = $dischargedOn !== null && $date === null && (string) $searc
 ?>
 <div class="page-heading">
     <div><h1><?= Html::encode($this->title) ?></h1><p><?= $dischargedOn !== null ? 'پرونده‌های ترخیص‌شده در این روز را بررسی کنید.' : ($date === 'unknown' ? 'پذیرش‌های قدیمی با تاریخ نامشخص' : ($date !== null ? 'پذیرش‌های روز ' . Html::encode(Yii::$app->formatter->asDate($date)) : 'وضعیت پذیرش‌ها و خلاصهٔ پرونده‌ها را بررسی کنید.')) ?></p></div>
-    <?php if (Access::allows('/admission/create')): ?><div class="form-actions mt-0"><?= Html::a('تقویم پذیرش‌ها', ['calendar'], ['class' => 'btn btn-outline-primary']) ?><?= Html::a('ثبت پذیرش', ['create'], ['class' => 'btn btn-primary']) ?></div><?php endif; ?>
+    <?php if (Access::allows('/admission/create')): ?><div class="form-actions mt-0"><?= Html::a('ثبت پذیرش', ['create'], ['class' => 'btn btn-primary']) ?></div><?php endif; ?>
 </div>
 <?= $this->render('_search', ['model' => $searchModel, 'date' => $date, 'dischargedOn' => $dischargedOn]) ?>
 <?= $this->render('../layouts/_page_size', ['dataProvider' => $dataProvider]) ?>

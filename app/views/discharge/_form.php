@@ -18,14 +18,6 @@ $patientName = $isOpen ? $selectedAdmission->patient->first_name . ' ' . $select
 $total = $bill['total'];
 $isReady = $isOpen && $selectedAdmission->ready_at !== null;
 ?>
-<?php if (!$isOpen): ?>
-<div data-live-panel data-live-url="<?= Html::encode(Url::to(['/discharge/queue'])) ?>">
-    <?= $this->render('/layouts/_live_status') ?>
-    <div data-live-content>
-        <?= $this->render('_queue', ['readyAdmissions' => $readyAdmissions, 'readyTotal' => $readyTotal]) ?>
-    </div>
-</div>
-<?php endif; ?>
 <div class="discharge-form card" dir="rtl">
     <div class="card-body">
         <?php if (!$isOpen): ?>

@@ -3,11 +3,7 @@
 
     document.querySelectorAll('[data-live-panel]').forEach(function (panel) {
         const content = panel.querySelector('[data-live-content]');
-        const status = panel.querySelector('[data-live-status]');
-        const button = panel.querySelector('[data-live-refresh]');
-        const label = button?.querySelector('[data-live-button-label]');
-        const login = panel.querySelector('[data-live-login]');
-        if (!content || !status || !button || !label) return;
+        if (!content) return;
 
         const interval = 30000;
         let timer;
@@ -16,7 +12,6 @@
         let stopped = false;
         let suspended = false;
         let resumePending = false;
-        let lastUpdated = status.dataset.liveUpdated;
 
         function schedule(delay = Math.min(interval * (2 ** failures), 120000)) {
             window.clearTimeout(timer);
@@ -27,7 +22,6 @@
 
         function showFailure() {
             panel.dataset.liveState = 'error';
-            status.textContent = 'به‌روزرسانی انجام نشد؛ داده‌های قبلی نمایش داده می‌شوند. آخرین به‌روزرسانی: ' + lastUpdated;
         }
 
         function resume() {
@@ -35,14 +29,14 @@
             else refresh();
         }
 
-        async function refresh(manual = false) {
+        async function refresh() {
             if (stopped || suspended || document.hidden || request) return;
             if (!navigator.onLine) {
                 showFailure();
                 return;
             }
             // Leave a keyboard user's focused case link in place until they move away.
-            if (!manual && content.contains(document.activeElement)) {
+            if (content.contains(document.activeElement)) {
                 schedule();
                 return;
             }
@@ -50,8 +44,6 @@
             window.clearTimeout(timer);
             request = new AbortController();
             const timeout = window.setTimeout(() => request?.abort(), 10000);
-            button.disabled = true;
-            label.textContent = 'در حال به‌روزرسانی…';
             content.setAttribute('aria-busy', 'true');
             panel.dataset.liveState = 'loading';
 
@@ -67,22 +59,18 @@
                 if (response.redirected || response.status === 401 || response.status === 403) {
                     stopped = true;
                     panel.dataset.liveState = 'stopped';
-                    status.textContent = 'نشست شما پایان یافته یا دسترسی تغییر کرده است؛ دوباره وارد شوید.';
-                    if (login) login.hidden = false;
                     return;
                 }
                 if (!response.ok) throw new Error('Refresh failed');
 
                 const data = await response.json();
-                if (typeof data.html !== 'string' || typeof data.updatedAt !== 'string') {
+                if (typeof data.html !== 'string') {
                     throw new Error('Invalid refresh response');
                 }
-                if (document.hidden || suspended || (!manual && content.contains(document.activeElement))) return;
+                if (document.hidden || suspended || content.contains(document.activeElement)) return;
 
                 // HTML is rendered by the same role-checked Yii view as the initial page.
                 content.innerHTML = data.html;
-                lastUpdated = data.updatedAt;
-                status.textContent = 'آخرین به‌روزرسانی: ' + lastUpdated;
                 panel.dataset.liveState = 'ready';
                 failures = 0;
             } catch (error) {
@@ -93,8 +81,6 @@
             } finally {
                 window.clearTimeout(timeout);
                 request = null;
-                button.disabled = stopped;
-                label.textContent = 'به‌روزرسانی';
                 content.setAttribute('aria-busy', 'false');
                 if (resumePending) {
                     resumePending = false;
@@ -105,7 +91,6 @@
             }
         }
 
-        button.addEventListener('click', () => refresh(true));
         document.addEventListener('visibilitychange', function () {
             window.clearTimeout(timer);
             if (document.hidden) {
