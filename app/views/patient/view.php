@@ -1,6 +1,7 @@
 <?php
 use yii\grid\GridView;
 use yii\helpers\Html;
+use app\components\Access;
 
 $this->title = 'پرونده بیمار: ' . $model->first_name . ' ' . $model->last_name;
 $this->params['breadcrumbs'][] = ['label' => 'بیماران', 'url' => ['index']];
@@ -8,11 +9,11 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="page-heading">
     <div><h1><?= Html::encode($model->first_name . ' ' . $model->last_name) ?></h1><p>کد ملی: <bdi><?= Html::encode($model->national_code) ?></bdi> · مشخصات و سابقه پذیرش‌های بیمار</p></div>
-    <div class="form-actions mt-0"><?= Html::button('چاپ پرونده بیمار', ['class' => 'btn btn-outline-secondary', 'data-print-trigger' => '1']) ?><?= Html::a('ثبت پذیرش جدید', ['/admission/create', 'patient_id' => $model->id], ['class' => 'btn btn-primary']) ?></div>
+    <div class="form-actions mt-0"><?= Html::button('چاپ پرونده بیمار', ['class' => 'btn btn-outline-secondary', 'data-print-trigger' => '1']) ?><?php if (Access::allows('/admission/create')): ?><?= Html::a('ثبت پذیرش جدید', ['/admission/create', 'patient_id' => $model->id], ['class' => 'btn btn-primary']) ?><?php endif; ?></div>
 </div>
 
 <section class="patient-profile" aria-labelledby="patient-info-title">
-    <p class="print-hidden"><?= Html::a('ویرایش مشخصات بیمار',['update','id'=>$model->id],['class'=>'btn btn-outline-secondary']) ?></p>
+    <?php if (Access::allows('/patient/update')): ?><p class="print-hidden"><?= Html::a('ویرایش مشخصات بیمار',['update','id'=>$model->id],['class'=>'btn btn-outline-secondary']) ?></p><?php endif; ?>
     <h2 id="patient-info-title">مشخصات بیمار</h2>
     <dl class="detail-list">
         <dt>نام و نام خانوادگی</dt><dd><?= Html::encode($model->first_name . ' ' . $model->last_name) ?></dd>
@@ -31,7 +32,8 @@ $this->params['breadcrumbs'][] = $this->title;
     'summary' => 'نمایش {begin, number, integer} تا {end, number, integer} از {totalCount, number, integer} پذیرش',
     'emptyText' => $this->render('../layouts/_empty_state', [
         'icon' => 'admission', 'message' => 'برای این بیمار هنوز پذیرشی ثبت نشده است.',
-        'action' => 'ثبت اولین پذیرش', 'route' => ['/admission/create', 'patient_id' => $model->id],
+        'action' => Access::allows('/admission/create') ? 'ثبت اولین پذیرش' : null,
+        'route' => Access::allows('/admission/create') ? ['/admission/create', 'patient_id' => $model->id] : null,
     ]),
     'columns' => [
         ['class' => 'app\components\PersianSerialColumn', 'header' => 'ردیف'],

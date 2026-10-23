@@ -31,7 +31,7 @@ $statusLabels=['admitted'=>'بستری','discharged'=>'ترخیص‌شده'];
     </div>
 
     <div class="form-actions admission-actions">
-        <?php if ($canTreat): ?>
+        <?php if ($canSeeClinical): ?>
             <?= Html::a('چاپ نسخه و پرونده درمانی', ['/clinical/print', 'admission_id' => $model->id], ['class' => 'btn btn-outline-primary', 'target' => '_blank', 'rel' => 'noopener']) ?>
         <?php else: ?>
             <?= Html::button('چاپ پرونده', ['class' => 'btn btn-outline-secondary', 'data-print-trigger' => '1']) ?>
@@ -113,14 +113,14 @@ $statusLabels=['admitted'=>'بستری','discharged'=>'ترخیص‌شده'];
                     <th>خدمت</th>
                     <th>تعداد</th>
                     <th>قیمت واحد (تومان)</th>
-                    <th>مبلغ (تومان)</th><?php if($canTreat): ?><th class="print-hidden">عملیات</th><?php endif; ?>
+                    <th>مبلغ (تومان)</th><?php if($canSeeClinical): ?><th class="print-hidden">عملیات</th><?php endif; ?>
                 </tr>
             </thead>
 
             <tbody>
                 <?php if (empty($items)): ?>
                     <tr>
-                        <td colspan="<?= $canTreat?5:4 ?>">
+                        <td colspan="<?= $canSeeClinical?5:4 ?>">
                             خدمتی برای این پذیرش ثبت نشده است.
                             <?php if ($isOpen && $canTreat): ?>
                                 <?= Html::a('افزودن خدمت', ['/admission-service/create', 'admission_id' => $model->id]) ?>
@@ -153,21 +153,21 @@ $statusLabels=['admitted'=>'بستری','discharged'=>'ترخیص‌شده'];
                         <td>
                             <?= $amount === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($amount) ?>
                         </td>
-                        <?php if($canTreat): ?><td class="print-hidden"><div class="record-actions">
-                            <?php if($isOpen): ?><?= Html::a('اصلاح',['/admission-service/update','id'=>$item->id],['class'=>'btn btn-sm btn-outline-primary']) ?><?php endif; ?>
+                        <?php if($canSeeClinical): ?><td class="print-hidden"><div class="record-actions">
+                            <?php if($isOpen && $canTreat): ?><?= Html::a('اصلاح',['/admission-service/update','id'=>$item->id],['class'=>'btn btn-sm btn-outline-primary']) ?><?php endif; ?>
                             <?= Html::a('سابقه',['/record-change/index','type'=>'admission_service','id'=>$item->id],['class'=>'btn btn-sm btn-outline-secondary']) ?>
                         </div></td><?php endif; ?>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
             <tfoot>
-                <tr><th colspan="3">جمع خدمات فعلی</th><td><?= $bill['services'] === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($bill['services']) . ' تومان' ?></td><?php if($canTreat): ?><td class="print-hidden"></td><?php endif; ?></tr>
+                <tr><th colspan="3">جمع خدمات فعلی</th><td><?= $bill['services'] === null ? 'بیش از حد مجاز' : Yii::$app->formatter->asInteger($bill['services']) . ' تومان' ?></td><?php if($canSeeClinical): ?><td class="print-hidden"></td><?php endif; ?></tr>
             </tfoot>
         </table>
     </div>
 
-    <?php if ($canTreat): ?>
-        <?= $this->render('/clinical/_records', ['prescriptions'=>$prescriptions,'showActions'=>true,'canCorrect'=>$isOpen]) ?>
+    <?php if ($canSeeClinical): ?>
+        <?= $this->render('/clinical/_records', ['prescriptions'=>$prescriptions,'showActions'=>true,'canCorrect'=>$isOpen && $canTreat]) ?>
     <?php else: ?>
         <?= $this->render('/clinical/_costs', ['costItems'=>$costItems]) ?>
     <?php endif; ?>

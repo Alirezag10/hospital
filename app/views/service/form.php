@@ -11,7 +11,7 @@ $this->params['breadcrumbs'][]=$this->title;
 <?= $form->errorSummary($model) ?>
 <fieldset class="form-section"><legend>مشخصات خدمت</legend><div class="row g-3">
 <div class="col-md-12"><?= $form->field($model,'title')->textInput(['maxlength'=>150,'placeholder'=>'مثلاً ویزیت']) ?></div>
-<div class="col-md-6"><?= $form->field($model,'price')->textInput(['inputmode'=>'numeric','dir'=>'ltr'])->label('تعرفه (تومان)') ?></div>
+<div class="col-md-6"><?= $form->field($model,'price',['enableClientValidation'=>false])->textInput(['inputmode'=>'numeric','dir'=>'ltr'])->label('تعرفه (تومان)') ?></div>
 <div class="col-md-6"><?= $form->field($model,'active')->dropDownList([1=>'فعال',0=>'غیرفعال']) ?></div>
 </div></fieldset><div class="form-actions"><?= Html::submitButton('ذخیره خدمت',['class'=>'btn btn-primary','data-loading-label'=>'در حال ذخیره…']) ?><?= Html::a('انصراف',['index'],['class'=>'btn btn-outline-secondary']) ?></div>
 <?php ActiveForm::end(); ?></div></div></div>

@@ -18,10 +18,10 @@
     "semantic_hash": "c43f71adc104c8d424ff9ee8333dd728"
   },
   "app/controllers/AdmissionController.php": {
-    "mtime": 1792666623.5134108,
-    "seen": 1792668196.3460748,
-    "ast_hash": "9f0ff7ddb692f7baeafd198480badaba",
-    "semantic_hash": "9f0ff7ddb692f7baeafd198480badaba"
+    "mtime": 1792753978.0747454,
+    "seen": 1792758635.7649457,
+    "ast_hash": "6b032a04cc4af89648efe50561ccd7e0",
+    "semantic_hash": "6b032a04cc4af89648efe50561ccd7e0"
   },
   "app/controllers/AdmissionServiceController.php": {
     "mtime": 1792580667.9333017,
@@ -30,10 +30,10 @@
     "semantic_hash": "3ab6c76f43b65971b3893a5c65b7af27"
   },
   "app/controllers/DischargeController.php": {
-    "mtime": 1792693693.8521974,
-    "seen": 1792699350.7480638,
-    "ast_hash": "6adce5e3068b0b8b22d39eeb0369a160",
-    "semantic_hash": "6adce5e3068b0b8b22d39eeb0369a160"
+    "mtime": 1792753978.072252,
+    "seen": 1792758635.7649457,
+    "ast_hash": "9d16aa648f59a9501103d0fb2260ff68",
+    "semantic_hash": "9d16aa648f59a9501103d0fb2260ff68"
   },
   "app/controllers/PatientController.php": {
     "mtime": 1792527551.7608454,
@@ -114,10 +114,10 @@
     "semantic_hash": "c6d3c8680b78d483961e3874134fcb41"
   },
   "app/views/admission/view.php": {
-    "mtime": 1792527704.6571755,
-    "seen": 1792529565.7559762,
-    "ast_hash": "c8a037024d4a5fb91487a49c8b3f7340",
-    "semantic_hash": "c8a037024d4a5fb91487a49c8b3f7340"
+    "mtime": 1792754057.7273095,
+    "seen": 1792758635.7649457,
+    "ast_hash": "8a6342b7f04163c4864584e84455a6d1",
+    "semantic_hash": "8a6342b7f04163c4864584e84455a6d1"
   },
   "app/views/discharge/_form.php": {
     "mtime": 1792666474.7130752,
@@ -174,10 +174,10 @@
     "semantic_hash": "27db2312a05167fb1430260066a0dc85"
   },
   "app/views/patient/index.php": {
-    "mtime": 1792527623.5374663,
-    "seen": 1792529565.7559762,
-    "ast_hash": "036b61b87f17c5605e5dbdeda8e1086b",
-    "semantic_hash": "036b61b87f17c5605e5dbdeda8e1086b"
+    "mtime": 1792754375.6725895,
+    "seen": 1792758635.7649457,
+    "ast_hash": "1c627f48801b420b9b66c08c8e7ebe08",
+    "semantic_hash": "1c627f48801b420b9b66c08c8e7ebe08"
   },
   "app/views/site/error.php": {
     "mtime": 1791217041.4745286,
@@ -186,10 +186,10 @@
     "semantic_hash": "88645bcc42cf290794062dd0eb4a1fb5"
   },
   "app/views/site/index.php": {
-    "mtime": 1792666474.7130752,
-    "seen": 1792668196.3460748,
-    "ast_hash": "ca1332cd69ffeb3da7e7abb637436796",
-    "semantic_hash": "ca1332cd69ffeb3da7e7abb637436796"
+    "mtime": 1792753978.0767524,
+    "seen": 1792758635.7649457,
+    "ast_hash": "7807cc1f6f34c4dd1c641b66aef41ee1",
+    "semantic_hash": "7807cc1f6f34c4dd1c641b66aef41ee1"
   },
   "app/web/index.php": {
     "mtime": 1792666474.715472,
@@ -210,10 +210,10 @@
     "semantic_hash": "a76bb07dc13ccd60842e52fd10c6bcac"
   },
   "README.md": {
-    "mtime": 1792699087.8082387,
-    "seen": 1792699350.7480638,
-    "ast_hash": "7d80cff9ee6dcf53a95585fb110aef0e",
-    "semantic_hash": "7d80cff9ee6dcf53a95585fb110aef0e"
+    "mtime": 1792758548.0358052,
+    "seen": 1792758635.7649457,
+    "ast_hash": "ce6ddecf2c1dd3f9068d0e344a66eac4",
+    "semantic_hash": "ce6ddecf2c1dd3f9068d0e344a66eac4"
   },
   "app/LICENSE.md": {
     "mtime": 1778301214.0,
@@ -288,10 +288,10 @@
     "semantic_hash": "4614f5889e1ca9eb2103737490691c40"
   },
   "app/views/patient/view.php": {
-    "mtime": 1792527623.541292,
-    "seen": 1792529565.7559762,
-    "ast_hash": "99a82f7a74552c32ee04b875f6547590",
-    "semantic_hash": "99a82f7a74552c32ee04b875f6547590"
+    "mtime": 1792754375.6725895,
+    "seen": 1792758635.7649457,
+    "ast_hash": "ca6872a829a00541762d7b828d4f929f",
+    "semantic_hash": "ca6872a829a00541762d7b828d4f929f"
   },
   "app/views/ward/create.php": {
     "mtime": 1792529027.5730681,
@@ -390,10 +390,10 @@
     "semantic_hash": "5cb328a5da5a48cd2ba4fbcb6b594cb9"
   },
   "app/components/Access.php": {
-    "mtime": 1792666474.7120662,
-    "seen": 1792668196.3460748,
-    "ast_hash": "9a71dee5ce026b4b8b69f9b1b84e7a53",
-    "semantic_hash": "9a71dee5ce026b4b8b69f9b1b84e7a53"
+    "mtime": 1792753978.072252,
+    "seen": 1792758635.7649457,
+    "ast_hash": "4217cde90d11de814b003671c56fe32f",
+    "semantic_hash": "4217cde90d11de814b003671c56fe32f"
   },
   "app/components/Billing.php": {
     "mtime": 1792580480.1039176,
@@ -540,16 +540,10 @@
     "semantic_hash": "bb5137086e06ee0bb8edeabd338bd21e"
   },
   "PRODUCT.md": {
-    "mtime": 1792666623.5134108,
-    "seen": 1792668196.3460748,
-    "ast_hash": "67e60c4961e76a69550d7fb2746a4c44",
-    "semantic_hash": "67e60c4961e76a69550d7fb2746a4c44"
-  },
-  "docs/staff-guide.md": {
-    "mtime": 1792699087.8082387,
-    "seen": 1792699350.7480638,
-    "ast_hash": "cf66dab3ff0d12780692ac0e367a02a8",
-    "semantic_hash": "cf66dab3ff0d12780692ac0e367a02a8"
+    "mtime": 1792758388.68045,
+    "seen": 1792758635.7649457,
+    "ast_hash": "6b4d7b8ed847144731d88f90259aef56",
+    "semantic_hash": "6b4d7b8ed847144731d88f90259aef56"
   },
   "app/components/AdmissionData.php": {
     "mtime": 1792580517.1206465,
@@ -636,10 +630,10 @@
     "semantic_hash": "95f703feb5fe1df562b224e2f5b178a6"
   },
   "app/views/service/form.php": {
-    "mtime": 1792527623.5549488,
-    "seen": 1792529565.7559762,
-    "ast_hash": "0f58eda3638b29b371674a4f8a87c9fe",
-    "semantic_hash": "0f58eda3638b29b371674a4f8a87c9fe"
+    "mtime": 1792757529.6843588,
+    "seen": 1792758635.7649457,
+    "ast_hash": "d0d4ad8ef299f92d30f4114834e3aa26",
+    "semantic_hash": "d0d4ad8ef299f92d30f4114834e3aa26"
   },
   "app/views/service/index.php": {
     "mtime": 1792527623.5524435,

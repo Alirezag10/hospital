@@ -129,7 +129,7 @@ select.form-control, .form-select { padding-left: 32px; background-position: lef
 .has-error .help-block { color: #b02a37; }
 .error-summary { color: #842029; background: #fff0f1; border: 1px solid #f1cbd0; padding: 16px; margin-bottom: 20px; border-radius: 8px; }
 .table-panel { overflow: hidden; }
-.table-panel.table-responsive { overflow-x: auto; overflow-y: hidden; scrollbar-gutter: stable; }
+.table-panel.table-responsive { overflow-x: auto; overflow-y: hidden; }
 .table-scroll-hint { margin: 0 0 8px; color: var(--muted); font-size: .85rem; }
 .table-scroll-hint[hidden] { display: none; }
 .table-responsive:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }

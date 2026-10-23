@@ -44,8 +44,17 @@ final class Access
             'record-change/index' => [User::DOCTOR],
             'discharge/receipt' => [User::DISCHARGE],
         ];
-        return array_key_exists($route, $permissions)
-            && (self::is(User::ADMIN) || in_array(Yii::$app->user->identity->role, $permissions[$route], true));
+        if (!array_key_exists($route, $permissions)) { return false; }
+        if (self::is(User::ADMIN)) {
+            return !in_array($route, [
+                'admission/create', 'admission/search-patients', 'admission/search-doctors',
+                'patient/create', 'patient/update', 'admission/ready',
+                'admission-service/create', 'admission-service/update',
+                'clinical/create', 'clinical/update', 'medical-item/search',
+                'discharge/create',
+            ], true);
+        }
+        return in_array(Yii::$app->user->identity->role, $permissions[$route], true);
     }
 
     public static function admissions(?string $alias = null): ActiveQuery
@@ -57,6 +66,12 @@ final class Access
             $doctorId = Yii::$app->user->identity->doctorId;
             return $doctorId === null ? $query->andWhere('0=1')
                 : $query->andWhere([($alias ? $alias . '.' : '') . 'doctor_id' => $doctorId]);
+        }
+        if (self::is(User::DISCHARGE)) {
+            $column = ($alias ? $alias . '.' : '') . 'status';
+            $ready = ($alias ? $alias . '.' : '') . 'ready_at';
+            return $query->andWhere(['or', [$column => 'discharged'],
+                ['and', [$column => 'admitted'], ['not', [$ready => null]]]]);
         }
         return $query;
     }

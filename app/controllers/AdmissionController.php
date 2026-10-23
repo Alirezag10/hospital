@@ -228,8 +228,9 @@ class AdmissionController extends Controller
     {
         $model = Access::admission($id);
         $canTreat=Access::allows('/clinical/create');
-        $canBill=$canTreat || Access::is(\app\models\User::DISCHARGE);
-        $data=\app\components\AdmissionData::load($model,$canTreat,$canBill);
-        return $this->render('view', array_merge(['model'=>$model,'canTreat'=>$canTreat,'canBill'=>$canBill],$data));
+        $canSeeClinical=$canTreat || Access::is(\app\models\User::ADMIN);
+        $canBill=$canSeeClinical || Access::is(\app\models\User::DISCHARGE);
+        $data=\app\components\AdmissionData::load($model,$canSeeClinical,$canBill);
+        return $this->render('view', array_merge(['model'=>$model,'canTreat'=>$canTreat,'canSeeClinical'=>$canSeeClinical,'canBill'=>$canBill],$data));
     }
 }

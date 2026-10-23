@@ -27,10 +27,7 @@ class DischargeController extends Controller
             $admissionId = filter_var($admission_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
             $admission = $admissionId === false
                 ? null
-                : Admission::find()
-                    ->with(['patient', 'discharge'])
-                    ->where(['id' => $admissionId])
-                    ->one();
+                : Access::admission($admissionId);
             if ($admission === null) {
                 throw new NotFoundHttpException('پذیرش انتخاب‌شده پیدا نشد.');
             }
@@ -45,6 +42,7 @@ class DischargeController extends Controller
             $model->admission_id = $admissionId;
         }
         if ($isSubmitted && $model->validate(['admission_id', 'description'])) {
+            Access::admission($model->admission_id);
             $db = Yii::$app->db;
             $transaction = $db->beginTransaction();
 
@@ -146,10 +144,7 @@ class DischargeController extends Controller
     {
         $admissionId = filter_var($model->admission_id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
         if ($admission === null && $admissionId !== false) {
-            $admission = Admission::find()
-                ->with(['patient', 'discharge'])
-                ->where(['id' => $model->admission_id])
-                ->one();
+            $admission = Access::admission($admissionId);
         }
 
         $data = $admission === null
