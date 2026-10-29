@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 /app/config/db.php
+/app/config/cookie-key.php
 
 # Required packages and generated Yii files
 /app/vendor/

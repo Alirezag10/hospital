@@ -1,4 +1,13 @@
 <?php
+$cookieKey = getenv('HOSPITAL_COOKIE_VALIDATION_KEY');
+if ($cookieKey === false || $cookieKey === '') {
+    $cookieKeyFile = __DIR__ . '/cookie-key.php';
+    $cookieKey = is_file($cookieKeyFile) ? require $cookieKeyFile : '';
+}
+if (!is_string($cookieKey) || strlen($cookieKey) < 32) {
+    throw new \RuntimeException('Set HOSPITAL_COOKIE_VALIDATION_KEY or create app/config/cookie-key.php with a random key of at least 32 characters.');
+}
+
 $config = [
     'id' => 'hospital',
     'name' => 'سامانه بیمارستان',
@@ -26,7 +35,7 @@ $config = [
         ],
         'session' => ['name' => 'HOSPITAL_SESSION', 'cookieParams' => ['httpOnly' => true, 'sameSite' => 'Lax']],
         'assetManager' => ['appendTimestamp' => true],
-        'request' => ['cookieValidationKey' => 'hospital-local-project-7c49a83f2d614b90a5e8f036c1bd7294'],
+        'request' => ['cookieValidationKey' => $cookieKey],
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
