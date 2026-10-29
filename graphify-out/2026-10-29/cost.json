@@ -1,0 +1,57 @@
+{
+  "runs": [
+    {
+      "date": "2026-10-05T21:52:32.028837+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 41
+    },
+    {
+      "date": "2026-10-10T15:18:59.918138+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 52
+    },
+    {
+      "date": "2026-10-15T22:53:34.993772+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 50,
+      "usage_unavailable": true
+    },
+    {
+      "date": "2026-10-20T19:30:15.306157+00:00",
+      "input_tokens": null,
+      "output_tokens": null,
+      "token_usage_available": false,
+      "api_tokens": 0,
+      "files": 91,
+      "note": "Local AST plus Codex session semantic extraction; exact session token usage unavailable."
+    },
+    {
+      "date": "2026-10-20T20:55:05.373828+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 69
+    },
+    {
+      "date": "2026-10-21T12:31:02.277562+00:00",
+      "input_tokens": null,
+      "output_tokens": null,
+      "files": 121,
+      "external_api_calls": 0,
+      "note": "Agent token usage was not exposed by this environment. AST extraction and verification ran locally; no external LLM API was called."
+    },
+    {
+      "date": "2026-10-22T11:24:55.045436+00:00",
+      "input_tokens": null,
+      "output_tokens": null,
+      "files": 116,
+      "external_api_calls": 0,
+      "note": "Local AST plus Codex subagent semantic extraction. Agent token usage was not exposed by this environment."
+    }
+  ],
+  "total_input_tokens": 0,
+  "total_output_tokens": 0,
+  "tracking_note": "Semantic extraction used a Codex subagent; actual token usage was unavailable. Recorded zeroes are not actual usage."
+}
